@@ -1,0 +1,42 @@
+name: Source checks and Windows Local build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-local.txt
+      - run: python -m pip install -r requirements-local.txt pytest==8.2.0
+      - run: python -m compileall -q main.py app.py cloud src tools
+      - run: python -m pytest -q tests/test_github_release_contract.py tests/test_ctv_payroll_policy.py tests/test_multi_employee_screenshots.py tests/test_downloads_export.py
+      - run: python tools/release_audit.py .
+  windows-local:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-build.txt
+      - run: python -m pip install -r requirements-build.txt
+      - name: Local installation diagnostics
+        run: python tools/check_local_install.py
+      - name: Local business and export regression tests
+        run: python -m pytest -q -p no:cacheprovider tests/test_github_release_contract.py tests/test_ctv_payroll_policy.py tests/test_multi_employee_screenshots.py tests/test_downloads_export.py tests/test_local_windows_release.py
+      - name: PyInstaller portable executable
+        run: python -m PyInstaller --noconfirm --clean --distpath release --workpath build ChamCong.spec
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ChamCong-Windows-EXE
+          path: release/ChamCong.exe
+          if-no-files-found: error
