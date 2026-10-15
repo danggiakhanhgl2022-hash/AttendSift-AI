@@ -1,18 +1,19 @@
-# Checklist ph?t h?nh 1.0.2
+# Checklist phát hành 1.0.2
 
-B?ng ch?ng ?o ???c: [b?o c?o ki?m ch?ng](VERIFICATION_1.0.2.md). B?n n?y d?ng nh?n release candidate.
+Bằng chứng: [báo cáo kiểm chứng](VERIFICATION_1.0.2.md). Bản này dùng nhãn release candidate.
 
-- [x] README VI/EN ph?n bi?t Windows Local v? cloud.
-- [x] T?i li?u bao g?m GMT+7, cron v? ch?nh s?ch l?u cloud 3 th?ng.
-- [x] C? h??ng d?n c?i ??t, chuy?n d? li?u v? m?u bi?n b?n b?n giao.
-- [x] C? ki?m th? ngu?n v? c?ng c? ki?m tra t?p runtime kh?ng ???c ??ng g?i.
-- [ ] Nh?n x?c nh?n EXE tr?n m?y Windows ??c l?p kh?ng c?i Python.
-- [ ] Ki?m tra c?a s? WebView2, Downloads v? Task Scheduler tr?n m?y ??ch.
-- [ ] X?c nh?n API Chatwork/AI th?t v?i t?i kho?n ???c ph?p.
-- [ ] M? workbook b?ng Microsoft Excel, kh?ng s?a ch?a file.
-- [ ] Ch?y th? retention tr?n PostgreSQL staging.
-- [ ] Ki?m tra l?ch s? repository v? quy?n t?i s?n tr??c khi public.
-- [ ] Ch? s? h?u x?c nh?n ?i?u ki?n s? d?ng/ph?n ph?i v? gi?y ph?p.
-- [ ] T?o tag tr?n GitHub, build t? ??ng tag, xu?t b?n ZIP v? checksum trong Releases.
+- [x] README VI/EN phân biệt Windows Local và cloud.
+- [x] Hướng dẫn bao gồm GMT+7, cron và thời hạn lưu cloud 3 tháng.
+- [x] Có hướng dẫn chuyển dữ liệu và biên bản bàn giao.
+- [x] Có kiểm thử nguồn và kiểm tra tệp runtime bị cấm.
+- [x] Tài liệu tiếng Việt lưu UTF-8, có kiểm tra dấu và ký tự thay thế.
+- [ ] Nghiệm thu EXE trên Windows độc lập không cài Python.
+- [ ] Kiểm tra WebView2, Downloads, Task Scheduler trên máy đích.
+- [ ] Xác nhận API thật bằng tài khoản được phép.
+- [ ] Microsoft Excel mở workbook không sửa chữa.
+- [ ] Thử retention trên PostgreSQL staging.
+- [ ] Kiểm tra lịch sử repository và quyền tài sản trước khi public.
+- [ ] Chủ sở hữu xác nhận điều kiện sử dụng và phân phối.
+- [ ] Tạo tag GitHub, build từ đúng tag và xuất bản ZIP/checksum.
 
-Kh?ng ghi nh?n m?c ch?a c? b?ng ch?ng l? ho?n t?t. Checksum gi?p ??i chi?u t?p, kh?ng thay th? k? s? hay ki?m tra b?o m?t ??c l?p.
+Không đánh dấu hoàn tất khi chưa có bằng chứng. Checksum không thay thế ký số hoặc kiểm tra bảo mật độc lập.

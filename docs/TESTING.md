@@ -1,8 +1,8 @@
-# Ki?m th? v? gi?i h?n b?ng ch?ng ? 1.0.2
+# Kiểm thử và giới hạn bằng chứng — 1.0.2
 
-K?t qu? c?a b?n hi?n t?i ???c ghi t?i [VERIFICATION_1.0.2](VERIFICATION_1.0.2.md). C?c b?o c?o ng?y c? ch? m? t? l?n ch?y t??ng ?ng.
+Kết quả hiện tại ở [báo cáo kiểm chứng](VERIFICATION_1.0.2.md). Báo cáo ngày cũ chỉ mô tả lần chạy tương ứng.
 
-## Ch?y l?i
+## Chạy lại
 
 ```powershell
 python -m pip install -r requirements-dev.txt
@@ -10,18 +10,19 @@ python -m pytest -q
 node tests/test_cloud_message_ui.cjs
 python tools/check_local_install.py
 python tools/release_audit.py .
+python tools/check_release_encoding.py .
 ```
 
-C?i `requirements-build.txt` khi build EXE. M?i tr??ng ch? c?i requirements Local c? th? thi?u dependencies cloud; c?i ?? requirements-dev tr??c khi k?t lu?n test cloud l?i. Node ch? c?n cho b?i test UI, kh?ng c?n tr?n m?y ng??i nh?n.
+Cài requirements-build.txt khi build EXE. Môi trường chỉ có dependencies Local có thể thiếu dependencies cloud. Node chỉ cần cho bài test UI, không cần trên máy người nhận.
 
-C?c fixture d?ng d? li?u gi? l?p. Ki?m th? g?m nghi?p v? nhi?u ng??i/nhi?u ng?y, b?ng ch?ng ngu?n, xu?t workbook, HTTP x?c th?c, m?c retention cu?i th?ng/n?m, ng?n ??ng b? nh?p l?i tin qu? h?n v? ki?m tra quy?n cron. Test kh?ng t? x?a database production.
+Fixture dùng dữ liệu giả. Kiểm thử gồm nhiều người/nhiều ngày, bằng chứng nguồn, workbook, HTTP xác thực, cutoff lịch, ngăn nhập lại tin hết hạn và quyền cron. Không tự xóa database production.
 
-## Nghi?m thu ri?ng
+## Kiểm tra riêng
 
-- EXE: ki?m tra th? vi?n v? template b?ng `--check-runtime`, ch?y HTTP local headless; ghi checksum ??ng EXE ?? th?.
-- M?y ng??i nh?n: m? c?a s?, quy?n ghi, WebView2, Downloads v? Task Scheduler.
-- T?ch h?p: Chatwork/AI b?ng t?i kho?n ???c ph?p, ??i chi?u s? tin v? quota.
-- Workbook: Microsoft Excel m? kh?ng s?a ch?a, ki?m tra c?ng th?c/gi? tr? v? ch?nh s?ch th?c t?.
-- Retention: th? tr?n PostgreSQL staging ??c l?p tr??c khi x?c nh?n SQL ?? nghi?m thu.
+- EXE: thư viện và template qua `--check-runtime`; chạy HTTP headless, ghi đúng checksum EXE đã thử.
+- Máy nhận: cửa sổ, WebView2, quyền ghi, Downloads và Task Scheduler.
+- API thật: Chatwork/AI bằng tài khoản được phép, đối chiếu số tin và quota.
+- Microsoft Excel: mở không sửa chữa, kiểm tra giá trị và chính sách.
+- Retention: thử SQL trên PostgreSQL staging độc lập.
 
-Kh?ng xem test skip l? ??t; kh?ng chuy?n tr?ng th?i pre-release th?nh stable ch? v? b? ki?m th? t? ??ng xanh. D?ng [bi?n b?n b?n giao](HANDOVER_ACCEPTANCE.md).
+Không xem skip là đạt hoặc tự chuyển stable khi kiểm thử tự động xanh. Dùng [biên bản bàn giao](HANDOVER_ACCEPTANCE.md).

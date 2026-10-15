@@ -1,49 +1,49 @@
-# C?i ??t AttendSift AI 1.0.2 tr?n Windows
+# Cài đặt AttendSift AI 1.0.2 trên Windows
 
-## Ch?n ??ng g?i
+## Chọn đúng gói
 
-| B?n ?ang c? | C?ch ch?y |
+| Bạn đang có | Cách chạy |
 |---|---|
-| ZIP portable c? `UngDung/ChamCong.exe` | Gi?i n?n, `KIEM_TRA.bat`, `BAT_DAU.bat`; kh?ng c?n Python |
-| ZIP m? ngu?n c? `main.py` v? `src/` | C?i Python r?i ch?y c?c BAT c?i ??t |
-| ???ng d?n website | D?ng tr?nh duy?t; d? li?u thu?c cloud, kh?ng n?m trong SQLite Local |
+| ZIP có `UngDung/ChamCong.exe` | Giải nén, chạy `KIEM_TRA.bat`, `BAT_DAU.bat`; không cần Python |
+| ZIP mã nguồn có `main.py`, `src/` | Cài Python rồi chạy các BAT cài đặt |
+| Đường dẫn website | Dùng trình duyệt; dữ liệu cloud không nằm trong SQLite Local |
 
-## C?i t? m? ngu?n
+## Cài từ mã nguồn
 
-1. C?i Python 3.11 x64 t? python.org, b?t Python Launcher. M?y c?n Internet ?? t?i th? vi?n.
-2. Gi?i n?n m? ngu?n v?o th? m?c c? quy?n ghi, v? d? `D:\AttendSift-AI_Source`; tr?nh Program Files v? SQLite tr?n ? chia s?.
-3. Ch?y `CAI_DAT_WINDOWS.bat`, ??i th?ng b?o th?nh c?ng. M?i tr??ng `.venv` ???c t?o ri?ng.
-4. Ch?y `KIEM_TRA_LOCAL_WINDOWS.bat`, r?i `CHAY_LOCAL_WINDOWS.bat`.
-5. M? `http://127.0.0.1:8766` n?u tr?nh duy?t ch?a t? m?.
-6. Thi?t l?p token Chatwork, ch?n ph?ng, ch?n nh? cung c?p AI v? ki?m tra k?t n?i.
-7. Th? tin gi?, t?o b?ng v? ??i chi?u Excel 4 sheet tr??c khi nh?p d? li?u th?t.
+1. Cài Python 3.11 x64 từ python.org, bật Python Launcher; cần Internet để tải thư viện.
+2. Giải nén vào thư mục có quyền ghi, ví dụ `D:\AttendSift-AI_Source`; tránh Program Files và SQLite trên ổ chia sẻ.
+3. Chạy `CAI_DAT_WINDOWS.bat`, đợi thông báo thành công. Môi trường `.venv` được tạo riêng.
+4. Chạy `KIEM_TRA_LOCAL_WINDOWS.bat`, rồi `CHAY_LOCAL_WINDOWS.bat`.
+5. Mở `http://127.0.0.1:8766` nếu trình duyệt chưa tự mở.
+6. Thiết lập token Chatwork, chọn phòng và kiểm tra kết nối AI.
+7. Thử tin giả, tạo bảng và đối chiếu Excel 4 sheet trước khi dùng dữ liệu thật.
 
-## Ch?y g?i portable tr?n m?y ng??i nh?n
+## Gói portable trên máy người nhận
 
-Xem [h??ng d?n chuy?n m?y](CHUYEN_MAY_WINDOWS.md). Gi?i n?n to?n b? g?i; EXE ch?a Python v? th? vi?n nh?ng m?y v?n c? th? c?n WebView2 ?? m? c?a s? ri?ng. N?u c?a s? ri?ng kh?ng m?, ?ng d?ng c? c? ch? m? tr?nh duy?t local.
+Xem [hướng dẫn chuyển máy](CHUYEN_MAY_WINDOWS.md). Giải nén toàn bộ gói. EXE chứa Python và thư viện; máy có thể cần WebView2 để mở cửa sổ riêng. Ứng dụng có cơ chế mở trình duyệt local nếu cửa sổ riêng không mở được.
 
-EXE ch?a k? s?. Khi b? ch?n, ki?m tra ngu?n nh?n, SHA256 v? nh? IT ki?m tra ch?nh s?ch m?y. Kh?ng coi vi?c c? checksum l? ch?ng nh?n an to?n ??c l?p.
+EXE chưa ký số. Khi bị chặn, kiểm tra nguồn nhận, SHA256 và nhờ IT kiểm tra chính sách máy. Checksum không thay thế chứng nhận an toàn độc lập.
 
-## D? li?u v? chuy?n m?y
+## Dữ liệu và chuyển máy
 
-D? li?u Local n?m c?nh EXE (ho?c t?i g?c m? ngu?n khi ch?y Python), trong c?c th? m?c `data`, `outputs`, `backups`, `logs`, `config`. File Excel ch?nh ???c l?u trong Downloads c?a t?i kho?n Windows.
+Dữ liệu Local nằm cạnh EXE, hoặc tại gốc mã nguồn khi chạy Python, trong `data`, `outputs`, `backups`, `logs`, `config`. File Excel chính lưu trong Downloads của tài khoản Windows.
 
-D?ng t?nh n?ng sao l?u/kh?i ph?c ?? chuy?n d? li?u; ??ng ?ng d?ng, sao l?u m?y ??ch tr??c khi kh?i ph?c. API key c?n nh?p l?i v? kh?a local g?n v?i t?i kho?n Windows qua DPAPI. L?u l?i l?ch tr?n m?y m?i ?? Task Scheduler d?ng ??ng ???ng d?n.
+Dùng sao lưu/khôi phục để chuyển dữ liệu, đóng ứng dụng và sao lưu máy đích trước khi khôi phục. Nhập lại API key vì khóa Local gắn với tài khoản Windows qua DPAPI. Lưu lại lịch trên máy mới để Task Scheduler dùng đúng đường dẫn.
 
-Ch?nh s?ch t? x?a 3 th?ng ch? ?p d?ng b?n cloud trong phi?n b?n n?y. Ng??i v?n h?nh Local t? qu?n l? sao l?u v? th?i h?n l?u.
+Chính sách tự xóa 3 tháng chỉ áp dụng cloud. Người vận hành Local tự quản lý sao lưu và thời hạn lưu.
 
-## Kh?c ph?c nhanh
+## Khắc phục nhanh
 
-| Hi?n t??ng | C?ch ki?m tra |
+| Hiện tượng | Kiểm tra |
 |---|---|
-| Kh?ng m? ho?c t?t ngay | Gi?i n?n ??y ??, quy?n ghi, `logs/application.log`; ch?y ki?m tra m?i tr??ng |
-| C?ng 8766 ?? d?ng | ??ng b?n c?; portable c? `CHAY_CONG_KHAC.bat` d?ng 8767 |
-| Kh?ng c? c?a s? ri?ng | Th? tr?nh duy?t local khi EXE c?n ch?y; ki?m tra WebView2 v?i IT |
-| Kh?ng ??c ???c key sau chuy?n m?y | Nh?p l?i kh?a tr?n t?i kho?n Windows ??ch |
-| Thi?u tin nh?n th?ng | ??i chi?u c?a s? API g?n nh?t v? ngu?n g?c; Local h? tr? nh?p l?ch s? |
-| Kh?ng th?y Excel | Xem ???ng d?n ?ng d?ng b?o v? Downloads c?a t?i kho?n hi?n t?i |
-| Excel b?o s?a ch?a file | Gi? b?n ?? che d? li?u ?? k? thu?t ki?m tra; kh?ng x?c nh?n nghi?m thu |
+| Không mở hoặc tắt ngay | Giải nén đầy đủ, quyền ghi, `logs/application.log`; chạy kiểm tra môi trường |
+| Cổng 8766 đã dùng | Đóng bản cũ; portable có `CHAY_CONG_KHAC.bat` dùng 8767 |
+| Không có cửa sổ riêng | Thử trình duyệt local khi EXE còn chạy; kiểm tra WebView2 |
+| Không đọc được key sau chuyển máy | Nhập lại trên tài khoản Windows đích |
+| Thiếu tin nhắn tháng | Đối chiếu cửa sổ API và nguồn gốc; Local hỗ trợ nhập lịch sử |
+| Không thấy Excel | Xem đường dẫn ứng dụng báo và Downloads của tài khoản |
+| Excel báo sửa chữa file | Giữ bản đã che dữ liệu để kỹ thuật kiểm tra; chưa xác nhận nghiệm thu |
 
-## Build cho ng??i b?o tr?
+## Build cho người bảo trì
 
-Build tr?n Windows b?ng `TAO_EXE_WINDOWS.bat` ho?c GitHub Actions. EXE t?i `release/ChamCong.exe` ph?i ???c ki?m tra runtime v? th? tr?n m?y nh?n. D?ng [quy tr?nh ph?t h?nh](PUBLISH_1.0.2.md) ?? ??ng g?i; kh?ng ch?p to?n b? th? m?c ?ang ch?a d? li?u nh?n vi?n cho ng??i kh?c.
+Build trên Windows bằng `TAO_EXE_WINDOWS.bat` hoặc GitHub Actions. EXE tại `release/ChamCong.exe` phải được kiểm tra runtime và thử trên máy nhận. Xem [quy trình phát hành](PUBLISH_1.0.2.md). Không chép thư mục chứa dữ liệu nhân viên cho người khác.

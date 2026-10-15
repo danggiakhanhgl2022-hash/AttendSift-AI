@@ -1,21 +1,22 @@
-# AttendSift AI 1.0.2 ? Windows & Cloud
+# AttendSift AI 1.0.2 — Windows & Cloud
 
-B?n ?ng vi?n ph?t h?nh g?p lu?ng ch?m c?ng Chatwork, c?i thi?n hi?n th? d? li?u cloud v? t?i li?u c?i ??t/b?n giao Windows.
+Bản ứng viên phát hành gộp luồng chấm công Chatwork, cải thiện hiển thị cloud và tài liệu bàn giao Windows.
 
-## ?i?m thay ??i
+## Thay đổi
 
-- T? l?m m?i danh s?ch sau ??ng b?; ph?n h?i s? l??ng v? b? l?c r? h?n.
-- Hi?n th? th?i gian tin nh?n cloud theo GMT+7, ??nh d?ng ng?y/th?ng/n?m v? gi? chu?i tr?n m?t d?ng.
-- S?a x?c th?c cron khi hostname deployment thay ??i; v?n y?u c?u secret h?p l?.
-- D?n tin nh?n, l?ch s?, phi?n ph?n t?ch v? Excel cloud c? h?n 3 th?ng; ng?n nh?p l?i tin h?t h?n.
-- H??ng d?n Windows Local/website, chuy?n m?y, nh?p l?i kh?a, ki?m ch?ng v? xu?t b?n th?ng nh?t.
+- Làm mới danh sách sau đồng bộ, phản hồi số lượng và bộ lọc rõ hơn.
+- Hiển thị giờ tin nhắn cloud theo GMT+7, ngày/tháng/năm, không ngắt chuỗi ngày giờ.
+- Sửa xác thực cron khi hostname deployment thay đổi, vẫn yêu cầu secret hợp lệ.
+- Dọn tin nhắn, lịch sử, phiên phân tích và Excel cloud cũ hơn 3 tháng; ngăn nhập lại tin hết hạn.
+- Thống nhất hướng dẫn Local/Cloud, chuyển máy, nhập lại khóa và kiểm chứng.
+- Sửa lỗi tạo tài liệu làm mất dấu tiếng Việt; lưu UTF-8 và kiểm tra nội dung sau đóng gói.
 
-## C?i ??t v? n?ng c?p
+## Cài đặt và nâng cấp
 
-Ng??i d?ng m?i: gi?i n?n g?i Windows, ??c trang h??ng d?n, ch?y ki?m tra r?i m? ?ng d?ng. Ng??i d?ng Local hi?n c?: ??ng ?ng d?ng, sao l?u d? li?u, gi? c?u h?nh ri?ng v? l?m theo h??ng d?n chuy?n m?y. Kh?ng ch?p d? li?u v?n h?nh v?o m? ngu?n c?ng khai.
+Người mới: giải nén Windows ZIP, đọc hướng dẫn, chạy kiểm tra rồi mở ứng dụng. Người dùng Local hiện có: đóng ứng dụng, sao lưu dữ liệu và làm theo hướng dẫn chuyển máy. Không đưa dữ liệu vận hành vào mã nguồn công khai.
 
-Cloud: t?i b?o c?o c?n gi? tr??c khi tri?n khai; cron h?p l? ??u ti?n c? th? x?a ngay d? li?u ?? qu? h?n. Retention ch? ?p d?ng cloud, kh?ng ?p d?ng SQLite Local ho?c Excel ?? t?i v?.
+Cloud: tải báo cáo cần giữ trước khi triển khai; cron hợp lệ đầu tiên có thể xóa ngay dữ liệu quá hạn. Chính sách không áp dụng SQLite Local hoặc Excel đã tải về.
 
-## Tr?ng th?i ki?m ch?ng
+## Kiểm chứng
 
-Xem `docs/VERIFICATION_1.0.2.md` v? manifest ?i k?m ??ng artifact. G?i EXE ch?a k? s?. C?n nghi?m thu m?y ng??i nh?n, API th?t, workbook trong Microsoft Excel v? SQL retention tr?n staging tr??c khi tuy?n b? ph?t h?nh ?n ??nh.
+Xem [báo cáo](VERIFICATION_1.0.2.md) và manifest đúng artifact. EXE chưa ký số. Máy nhận, API thật, Microsoft Excel và SQL retention trên staging cần được nghiệm thu riêng.

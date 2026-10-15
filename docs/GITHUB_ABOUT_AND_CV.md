@@ -1,15 +1,15 @@
-# N?i dung gi?i thi?u ? AttendSift AI 1.0.2
+# Nội dung giới thiệu — AttendSift AI 1.0.2
 
 ## GitHub About
 
-> H? tr? ch?m c?ng t? Chatwork: ph?n t?ch b?ng AI, ??i chi?u tin g?c, r? so?t v? xu?t Excel 4 sheet. Windows Local v? website cloud.
+> Hỗ trợ chấm công từ Chatwork: phân tích bằng AI, đối chiếu tin gốc, rà soát và xuất Excel 4 sheet. Windows Local và website cloud.
 
 ## Topics
 
 `python`, `flask`, `chatwork`, `attendance`, `excel`, `sqlite`, `postgresql`, `windows`, `vercel`, `ai`
 
-## Gi?i thi?u ng?n
+## Giới thiệu ngắn
 
-AttendSift AI h? tr? chuy?n b?o c?o Chatwork th?nh s? ki?n ch?m c?ng theo nh?n vi?n v? ng?y, c? ??i chi?u ngu?n v? b??c ki?m tra tr??c khi xu?t Excel. D? ?n c? b?n Windows Local d?ng SQLite v? b?n cloud d?ng PostgreSQL; b?n 1.0.2 b? sung hi?n th? gi? Vi?t Nam, s?a cron v? l?u d? li?u cloud trong 3 th?ng. ??y l? b?n ?ng vi?n ph?t h?nh; tr?ng th?i nghi?m thu ???c ghi trong b?o c?o ki?m ch?ng.
+AttendSift AI hỗ trợ chuyển báo cáo Chatwork thành sự kiện chấm công theo nhân viên và ngày, có đối chiếu nguồn và kiểm tra trước khi xuất Excel. Bản Windows Local dùng SQLite, bản cloud dùng PostgreSQL. Phiên bản 1.0.2 bổ sung giờ Việt Nam, sửa cron và lưu dữ liệu cloud trong 3 tháng. Đây là bản ứng viên phát hành; kết quả kiểm chứng được ghi riêng.
 
-Kh?ng m? t? l? ???c di?n ??n ch?ng nh?n, ch?nh x?c 100%, ?? b?o m?t tuy?t ??i ho?c mi?n ph? kh?ng gi?i h?n.
+Không mô tả là được diễn đàn chứng nhận, chính xác 100%, bảo mật tuyệt đối hoặc miễn phí không giới hạn.

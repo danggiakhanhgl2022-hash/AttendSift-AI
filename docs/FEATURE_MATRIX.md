@@ -1,16 +1,16 @@
-# Ma tr?n t?nh n?ng ? 1.0.2
+# Ma trận tính năng — 1.0.2
 
-| T?nh n?ng | Local | Cloud | B?ng ch?ng / gi?i h?n |
+| Tính năng | Local | Cloud | Bằng chứng / giới hạn |
 |---|---|---|---|
-| ??ng b? v? l?u Chatwork | SQLite | PostgreSQL | Test gi? l?p; API th?t c?n nghi?m thu |
-| AI v? ??i chi?u ngu?n | C? | C? | Kh?ng c? ch?ng nh?n ?? ch?nh x?c t?ng qu?t |
-| M?t tin nhi?u ng??i/nhi?u ng?y | C? | C? | C? test nghi?p v? |
-| R? so?t tr??c xu?t | C? | C? | C? test; c?n ??i chi?u quy ch? ??n v? |
-| Excel 4 sheet | C? | C? | Test c?u tr?c; Microsoft Excel c?n nghi?m thu |
-| Gi? tin nh?n GMT+7 trong b?n s?a m?i | Theo giao di?n Local | C? formatter m?i | Test UI cloud v? rollover ng?y |
-| Nh?p l?ch s?, backup/restore | C? | Kh?ng ph?i lu?ng Local | Kh?ng t? chuy?n d? li?u gi?a hai b?n |
-| L?ch ??ng b? | Task Scheduler | Vercel Cron | C?n ki?m tra c?u h?nh th?c t? |
-| X?a sau 3 th?ng | Ch?a ?p d?ng | C? | Test cutoff/quy?n; SQL staging ch?a nghi?m thu |
-| EXE portable | C? spec/build | Kh?ng ?p d?ng | Xem b?o c?o ??ng phi?n b?n; m?y nh?n c?n nghi?m thu |
+| Đồng bộ và lưu Chatwork | SQLite | PostgreSQL | Test giả lập; API thật cần nghiệm thu |
+| AI và đối chiếu nguồn | Có | Có | Chưa đo độ chính xác tổng quát |
+| Một tin nhiều người, nhiều ngày | Có | Có | Có test nghiệp vụ |
+| Rà soát trước xuất | Có | Có | Cần đối chiếu quy chế đơn vị |
+| Excel 4 sheet | Có | Có | Test cấu trúc; Microsoft Excel cần nghiệm thu |
+| Formatter GMT+7 trong bản sửa mới | Theo giao diện Local | Có | Test UI cloud và chuyển ngày |
+| Nhập lịch sử, backup/restore | Có | Không phải luồng Local | Không tự chuyển dữ liệu giữa hai bản |
+| Lịch đồng bộ | Task Scheduler | Vercel Cron | Kiểm tra cấu hình thực tế |
+| Xóa sau 3 tháng | Chưa áp dụng | Có | Test cutoff/quyền; SQL staging chưa nghiệm thu |
+| EXE portable | Có spec/build | Không áp dụng | Xem báo cáo; máy nhận cần nghiệm thu |
 
-Kh?ng suy ra dung l??ng g?i mi?n ph?, s? ng??i d?ng ho?c hi?u n?ng t? vi?c t?nh n?ng c? trong m?.
+Không suy ra hạn mức miễn phí, số người dùng hoặc hiệu năng từ việc tính năng có trong mã.

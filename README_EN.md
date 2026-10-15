@@ -2,7 +2,7 @@
 
 **Turn Chatwork reports into attendance records that can be reviewed against their source.**
 
-AI Department ? ??ng Gia Kh?nh ? Version 1.0.2
+AI Department | Dang Gia Khanh | Version 1.0.2
 
 [Vietnamese documentation](README.md) ? [Windows setup](docs/INSTALL_WINDOWS.md) ? [Verification](docs/VERIFICATION_1.0.2.md)
 

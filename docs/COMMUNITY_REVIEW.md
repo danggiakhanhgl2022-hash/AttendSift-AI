@@ -1,16 +1,17 @@
-# C? s? bi?n t?p v? ??ng g?i
+# Cơ sở biên tập và đóng gói
 
-Ng?y tham kh?o: 15/10/2026. ??y l? t? r? so?t d?a tr?n m? ngu?n, t?i li?u ch?nh th?c v? trao ??i c?ng khai; kh?ng ph?i s?n ph?m ?? ???c di?n ??n ??nh gi? hay ch?ng nh?n.
+Tham khảo ngày 15/10/2026. Đây là tự rà soát dựa trên mã nguồn, tài liệu chính thức và trao đổi công khai; không phải sản phẩm đã được diễn đàn đánh giá hoặc chứng nhận.
 
-## Nh?ng ?i?m ?? ?p d?ng
+## Điểm áp dụng
 
-1. README tr? l?i r? s?n ph?m l?m g?, h?u ?ch cho ai, c?ch b?t ??u, h? tr? v? ng??i b?o tr?. H??ng d?n d?i ???c ??a sang docs; c?c li?n k?t trong repo d?ng ???ng d?n t??ng ??i. Ngu?n: [GitHub Docs ? About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes).
-2. B?n EXE/ZIP d?nh cho ng??i d?ng ?i k?m release notes v? checksum trong Releases; c?y m? ngu?n v?n d?ng ?? b?o tr?. Ngu?n: [GitHub Docs ? About releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases).
-3. Ph?n bi?t g?i t? ch?a Python v?i m? ngu?n; build theo Windows v? ki?n tr?c ??ch. Ngu?n: [PyInstaller ? Operating mode](https://pyinstaller.org/en/stable/operating-mode.html).
+- README trả lời sản phẩm làm gì, hữu ích cho ai, cách bắt đầu, hỗ trợ và bảo trì; hướng dẫn dài ở docs, liên kết nội bộ tương đối. Nguồn: [GitHub Docs — About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes).
+- EXE/ZIP cho người dùng đi kèm release notes và checksum trong Releases. Nguồn: [GitHub Docs — About releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases).
+- Phân biệt gói tự chứa Python với mã nguồn; build theo hệ điều hành và kiến trúc đích. Nguồn: [PyInstaller — Operating mode](https://pyinstaller.org/en/stable/operating-mode.html).
 
-## Tham kh?o c?ng ??ng
+## Tham khảo cộng đồng
 
-- [GitHub Community: README n?n ch?a g??](https://github.com/orgs/community/discussions/177551) l? th?o lu?n c?ng ??ng ?? tham kh?o c?ch t? ch?c n?i dung, kh?ng ph?i ti?u chu?n b?t bu?c.
-- [Reddit r/learnpython: ph?n ph?i Python th?nh EXE](https://www.reddit.com/r/learnpython/comments/1eheyvu/) v? [th?o lu?n v? c?nh b?o antivirus](https://www.reddit.com/r/learnpython/comments/1mtmhbc/) cho th?y nhu c?u h? tr? ng??i nh?n v? c?c tr?i nghi?m kh?c nhau khi ph?n ph?i EXE. ??y l? ? ki?n c? nh?n; kh?ng d?ng ?? k?t lu?n g?i n?y an to?n ho?c ch?c ch?n b? c?nh b?o.
+[GitHub Community về nội dung README](https://github.com/orgs/community/discussions/177551) được dùng tham khảo cách tổ chức thông tin, không phải tiêu chuẩn bắt buộc.
 
-?? xu?t c?a ??t r? so?t: c?ng b? r? EXE ch?a k? s?, ??nh k?m checksum v? b?ng ch?ng runtime, c? h??ng d?n x? l? v?i IT, kh?ng h??ng d?n t?t b?o v? Windows. Gi? m?c release candidate ??n khi c? nghi?m thu tr?n m?y ??ch.
+[Reddit r/learnpython về phân phối EXE](https://www.reddit.com/r/learnpython/comments/1eheyvu/) và [cảnh báo antivirus](https://www.reddit.com/r/learnpython/comments/1mtmhbc/) ghi nhận trải nghiệm khác nhau. Đây là ý kiến cá nhân, không chứng minh gói này an toàn hoặc chắc chắn bị cảnh báo.
+
+Đề xuất áp dụng: ghi rõ EXE chưa ký số, có checksum và bằng chứng runtime, hướng dẫn làm việc với IT, giữ release candidate đến khi nghiệm thu máy đích.

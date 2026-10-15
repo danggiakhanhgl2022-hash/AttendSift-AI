@@ -38,10 +38,10 @@ flowchart TD
 - **Chưa chứng nhận:** an toàn tuyệt đối khi lộ cổng, độ chính xác AI, tái nhập dữ liệu mọi tình huống, phân quyền nhiều người, năng lực tải lớn, chạy Windows với API thật.
 - `cloud/` là một chế độ khác; muốn dùng chung dữ liệu đa máy phải triển khai cơ sở dữ liệu tập trung và kiểm tra bảo mật độc lập.
 
-## Cloud trong b?n 1.0.2
+## Cloud trong bản 1.0.2
 
-`cloud/app.py` ph?c v? HTTP c? x?c th?c; `cloud/repository.py` l?u PostgreSQL tr?n Neon. Cron h?p l? ch?y d?n d? li?u 3 th?ng tr??c khi ??ng b?. `cloud/retention.py` t?nh cutoff theo th?ng l?ch v? GMT+7. File Excel l?u trong `cc_files`, snapshot/k?t qu? trong `cc_sessions`; d?n file tr??c phi?n ?? gi? quan h? kh?a ngo?i.
+`cloud/app.py` phục vụ HTTP có xác thực; `cloud/repository.py` lưu PostgreSQL trên Neon. Cron hợp lệ dọn dữ liệu trước khi đồng bộ. `cloud/retention.py` tính cutoff theo tháng lịch và GMT+7. File Excel lưu trong cc_files, snapshot và kết quả trong cc_sessions; dọn file trước phiên để giữ quan hệ khóa ngoại.
 
-Giao d?ch d?n kh?a c?c b?ng li?n quan trong th?i gian ng?n, ??t lock timeout 5 gi?y v? ho?n phi?n ?ang c? lease x? l?. Khi l?i, giao d?ch rollback. ??ng b? b? qua tin g?i tr??c cutoff ?? kh?ng nh?p l?i d? li?u h?t h?n. Kh?a/c?u h?nh trong `cc_settings` kh?ng b? d?n.
+Giao dịch dọn khóa các bảng liên quan trong thời gian ngắn, đặt lock timeout 5 giây và hoãn phiên đang có lease. Lỗi sẽ rollback bước dọn. Đồng bộ bỏ qua tin gửi trước cutoff để không nhập lại dữ liệu hết hạn. Cấu hình và khóa trong cc_settings không bị dọn.
 
-`cloud/static/cloud.js` v? `public/static/cloud.js` c?n c?ng n?i dung. Formatter th?i gian ch? thay ??i c?ch hi?n th?; b?n tin ngu?n trong database v?n gi? timestamp c? m?i gi?. Xem [v?n h?nh cloud](CLOUD_OPERATIONS.md).
+Hai bản cloud/static/cloud.js và public/static/cloud.js cần cùng nội dung. Formatter chỉ đổi hiển thị, không sửa timestamp trong database. Xem [vận hành cloud](CLOUD_OPERATIONS.md).

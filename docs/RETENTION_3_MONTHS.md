@@ -1,27 +1,20 @@
-# T? ??ng d?n d? li?u sau 3 th?ng
+# Tự động dọn dữ liệu cloud sau 3 tháng
 
-Cron `/api/cron/sync` ?? c? s?n s? d?n d? li?u m?i ng?y, tr??c khi ??ng b? Chatwork.
-Ch? y?u c?u c? Bearer CRON_SECRET h?p l? m?i ???c ch?y t?c v? n?y.
-Kh?ng c?n th?m cron ho?c ch?y SQL th? c?ng.
+Cron `/api/cron/sync` dọn dữ liệu trước khi đồng bộ Chatwork. Chỉ yêu cầu có Bearer CRON_SECRET hợp lệ được chạy; không cần thêm cron hoặc chạy SQL thủ công.
 
-- Tin nh?n: t?nh 3 th?ng theo th?i ?i?m g?i, m?i gi? Vi?t Nam.
-- Phi?n ph?n t?ch, k?t qu? v? Excel c?a phi?n: t?nh 3 th?ng t? l?c t?o phi?n.
-- L?ch s? thao t?c: x?a b?n ghi qu? 3 th?ng ho?c g?n v?i phi?n b? x?a.
-- B?n s?a tin nh?n c? c?ng ???c d?n. ??ng b? kh?ng nh?p l?i tin qu? h?n.
-- Phi?n c? lease x? l? c?n hi?u l?c ???c ho?n d?n ??n l?n cron ti?p theo.
-- Gi? nguy?n c?u h?nh, kh?a API, th?ng tin ph?ng v? t?i kho?n ??ng nh?p.
+| Dữ liệu | Cách tính hạn |
+|---|---|
+| Tin nhắn gốc | 3 tháng lịch từ thời điểm gửi |
+| Phiên phân tích, bản chụp nguồn, kết quả và Excel của phiên | 3 tháng lịch từ thời điểm tạo phiên |
+| Lịch sử thao tác | Bản ghi quá 3 tháng hoặc gắn với phiên bị xóa |
+| Bản sửa tin nhắn | Bản sửa quá 3 tháng hoặc thuộc tin nhắn gốc bị dọn |
 
-V? d? ng?y 15/10 l?c 13:00 s? d?n d? li?u tr??c 15/07 l?c 13:00.
-Ng?y cu?i th?ng ???c ?i?u ch?nh theo s? ng?y th?c t? c?a th?ng ??ch.
-D? li?u c? s? b? x?a ? l?n cron h?p l? ??u ti?n sau tri?n khai.
-H?y t?i file Excel c?n l?u tr??c khi tri?n khai; h? th?ng kh?ng t? sao l?u.
-File ?? t?i v? m?y kh?ng b? x?a. Ch?c n?ng n?y ch? t?c ??ng c? s? d? li?u cloud.
+Cutoff tính theo giờ Việt Nam. Ví dụ 15/10 lúc 13:00 sẽ dọn dữ liệu trước 15/07 lúc 13:00. Ngày cuối tháng được điều chỉnh theo số ngày thực tế của tháng đích. Tin đúng cutoff được giữ.
 
-Xem ph?n h?i cron: tr??ng `retention.cutoff` v? `retention.deleted`.
-Xem l?ch s?: m?c `retention` ghi s? b?n ghi ?? d?n, kh?ng ghi n?i dung nh?n vi?n.
-N?u ??ng b? Chatwork l?i sau b??c d?n, d? li?u qu? h?n v?n ?? ???c d?n.
-N?u b??c d?n l?i, to?n b? giao d?ch d?n rollback v? cron tr? l?i ?? ki?m tra.
+Đồng bộ không nhập lại tin quá hạn. Phiên có lease xử lý còn hiệu lực được hoãn đến lần cron sau. Cấu hình, khóa API, thông tin phòng và tài khoản đăng nhập được giữ lại.
 
-Ch?nh s?ch n?y gi?i h?n th?i gian l?u, kh?ng b?o ??m l??ng d? li?u trong 3 th?ng
-lu?n n?m trong gi?i h?n g?i mi?n ph?. PostgreSQL th??ng t?i s? d?ng ch? tr?ng
-sau khi x?a; dung l??ng hi?n th? c? th? kh?ng gi?m ngay.
+**Lần cron hợp lệ đầu tiên sau triển khai có thể xóa ngay dữ liệu đã quá hạn.** Hãy tải Excel cần giữ trước. Ứng dụng không tự sao lưu trước khi xóa. File đã tải về máy không bị tác động; chính sách này không áp dụng SQLite Local.
+
+Phản hồi cron có `retention.cutoff` và `retention.deleted`. Lịch sử `retention` ghi số bản ghi đã dọn, không ghi nội dung nhân viên. Đồng bộ Chatwork lỗi sau bước dọn không khôi phục dữ liệu đã xóa. Nếu bước dọn lỗi, giao dịch dọn rollback.
+
+Thời hạn lưu giúp kiểm soát tích lũy, không bảo đảm dữ liệu 3 tháng luôn vừa hạn mức miễn phí. PostgreSQL thường tái sử dụng chỗ trống; dung lượng hiển thị có thể không giảm ngay. Nghiệm thu SQL trên staging trước khi xác nhận vận hành ổn định.

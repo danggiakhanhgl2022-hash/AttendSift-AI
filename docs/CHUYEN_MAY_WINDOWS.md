@@ -58,6 +58,6 @@ Nếu đổi chỗ thư mục EXE, vào Thiết lập và **Lưu lịch** lại 
 
 Để gỡ bản portable, đóng ứng dụng và gỡ lịch đã tạo trong Task Scheduler nếu có; giữ bản sao lưu cần thiết trước khi xóa thư mục.
 
-## 7. Nghi?m thu v? d? li?u cloud
+## 7. Nghiệm thu và dữ liệu cloud
 
-D?ng [bi?n b?n b?n giao](HANDOVER_ACCEPTANCE.md) ?? ki?m tra tr?n m?y nh?n. Ch?nh s?ch x?a 3 th?ng ch? ?p d?ng website cloud; kh?ng x?a SQLite Local ho?c Excel ?? t?i v?. Xem [v?n h?nh cloud](CLOUD_OPERATIONS.md).
+Dùng [biên bản bàn giao](HANDOVER_ACCEPTANCE.md) để kiểm tra trên máy nhận. Chính sách xóa 3 tháng chỉ áp dụng website cloud; không xóa SQLite Local hoặc Excel đã tải về. Xem [vận hành cloud](CLOUD_OPERATIONS.md).

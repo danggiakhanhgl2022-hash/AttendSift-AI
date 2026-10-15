@@ -1,35 +1,33 @@
-# V?n h?nh website AttendSift AI 1.0.2
+# Vận hành website AttendSift AI 1.0.2
 
-## Th?nh ph?n v? thi?t l?p
+## Thành phần và cấu hình
 
-Website d?ng Flask tr?n Vercel v? PostgreSQL tr?n Neon. Local Windows d?ng SQLite ri?ng; hai b?n kh?ng t? trao ??i d? li?u.
+Website dùng Flask trên Vercel và PostgreSQL trên Neon. Local Windows dùng SQLite riêng; hai bản không tự trao đổi dữ liệu.
 
-D?ng `.env.example` v? ph?n ki?m tra c?u h?nh trong `cloud/app.py` l?m ngu?n tham chi?u. Thi?t l?p DATABASE_URL, session secret, password hash qu?n tr?, allowed hosts v? CRON_SECRET qua bi?n m?i tr??ng c?a hosting; kh?ng ??a gi? tr? th?t v?o repository. B?n c?p nh?t retention d?ng b?ng ?? c?, kh?ng c?n th?m migration ri?ng. C?i m?i database v?n c?n ch?y `python -m cloud.migrate` trong m?i tr??ng ???c c?u h?nh.
+Dùng `.env.example` và phần kiểm tra cấu hình trong `cloud/app.py` làm tham chiếu. Thiết lập DATABASE_URL, session secret, password hash quản trị, allowed hosts và CRON_SECRET qua biến môi trường hosting; không đưa giá trị thật vào repository. Retention dùng bảng đã có, không cần migration riêng. Cài mới database vẫn cần chạy `python -m cloud.migrate` trong môi trường đã cấu hình.
 
-## Sau m?i l?n c?p nh?t GitHub
+## Sau mỗi lần cập nhật
 
-1. Ki?m tra deployment ??ng commit v? tr?ng th?i Ready trong Vercel.
-2. M? website, ??ng nh?p, ki?m tra ph?ng v? nh? cung c?p AI.
-3. ??ng b?, ki?m tra s? tin v? b? l?c. Th?i gian tin nh?n hi?n th? GMT+7.
-4. Ki?m tra log endpoint `/api/cron/sync`; HTTP 200 ch? x?c nh?n y?u c?u ho?n t?t, c?n xem d? li?u/k?t qu? ?? x?c nh?n nghi?p v?.
-5. X?c nh?n t?i nguy?n `cloud/static/cloud.js` v? `public/static/cloud.js` c?ng n?i dung; t?i l?i Ctrl+F5 sau khi tri?n khai.
+1. Kiểm tra deployment đúng commit và trạng thái Ready.
+2. Đăng nhập website, kiểm tra phòng và nhà cung cấp AI.
+3. Đồng bộ, đối chiếu số tin và bộ lọc. Thời gian hiển thị GMT+7.
+4. Xem log `/api/cron/sync`; HTTP 200 chỉ xác nhận yêu cầu hoàn tất, vẫn cần kiểm tra kết quả nghiệp vụ.
+5. Giữ `cloud/static/cloud.js` và `public/static/cloud.js` cùng nội dung; tải lại Ctrl+F5.
 
-## Cron v? retention
+## Cron và retention
 
-`vercel.json` d?ng l?ch `0 6 * * *`: m?c d? ki?n 13:00 gi? Vi?t Nam m?i ng?y. ??y l? c?u h?nh l?ch, kh?ng cam k?t th?i ?i?m th?c thi ch?nh x?c c?a g?i hosting.
+Lịch `0 6 * * *` trong vercel.json tương ứng mốc dự kiến 13:00 giờ Việt Nam mỗi ngày. Cấu hình lịch không cam kết thời điểm thực thi chính xác của hosting.
 
-Endpoint ki?m tra Bearer CRON_SECRET t?i thi?u 32 k? t?. Ch? endpoint cron ?? x?c th?c ???c ngo?i l? host khi deployment URL thay ??i. Kh?ng ??a token v?o URL hay ch?p token trong log h? tr?.
+Endpoint yêu cầu Bearer CRON_SECRET tối thiểu 32 ký tự. Chỉ cron đã xác thực được ngoại lệ host khi deployment URL thay đổi. Không đưa token vào URL hoặc ảnh hỗ trợ.
 
-M?i l?n cron h?p l?: d?n d? li?u h?t h?n b?ng m?t giao d?ch PostgreSQL, ghi s? l??ng d?n, r?i ??ng b? Chatwork. N?u ??ng b? sau ?? l?i, giao d?ch d?n ?? ho?n t?t. N?u d?n l?i, rollback b??c d?n v? cron tr? l?i. Phi?n c? lease ?ang ho?t ??ng ???c ho?n t?i l?n sau.
+Mỗi lần cron hợp lệ: dọn dữ liệu quá hạn trong một giao dịch PostgreSQL, ghi số lượng dọn, rồi đồng bộ Chatwork. Nếu đồng bộ sau đó lỗi, bước dọn đã hoàn tất. Nếu dọn lỗi, rollback giao dịch dọn và cron trả lỗi. Phiên đang có lease được hoãn tới lần sau.
 
-??c [ch?nh s?ch 3 th?ng](RETENTION_3_MONTHS.md) tr??c khi tri?n khai l?n ??u. ??y l? x?a d? li?u th?t, kh?ng c? t?nh n?ng t? kh?i ph?c d? li?u ?? x?a trong ?ng d?ng. T?i b?o c?o c?n gi?; ch? d?a v?o backup nh? cung c?p khi ?? ki?m tra ?i?u ki?n v? th?i h?n c?a t?i kho?n.
+Đọc [chính sách 3 tháng](RETENTION_3_MONTHS.md) trước khi triển khai. Ứng dụng không tự khôi phục dữ liệu đã xóa. Tải báo cáo cần giữ; chỉ dựa vào backup nhà cung cấp khi đã kiểm tra điều kiện tài khoản.
 
-## Theo d?i dung l??ng
+## Dung lượng và nghiệm thu
 
-Theo d?i Storage v? c?c h?n m?c trong console Neon/Vercel c?a t?i kho?n th?c t?. Kh?ng ?p d?ng m?t con s? h?n m?c c? ??nh t? t?i li?u c?. D? li?u 3 th?ng v?n c? th? v??t quota n?u l??ng tin/file l?n. PostgreSQL c? th? t?i s? d?ng ch? tr?ng sau DELETE; dung l??ng hi?n th? kh?ng nh?t thi?t gi?m ngay.
+Theo dõi Storage và hạn mức thực tế trong console Neon/Vercel. Dữ liệu 3 tháng vẫn có thể vượt quota nếu lượng tin hoặc file lớn. PostgreSQL có thể tái sử dụng chỗ trống sau DELETE; dung lượng hiển thị không nhất thiết giảm ngay.
 
-## Ki?m ch?ng tr??c khi nghi?m thu
+Trên PostgreSQL staging độc lập, tạo dữ liệu trước, đúng và sau cutoff; thử cron hợp lệ và không hợp lệ; đối chiếu file, phiên, message version và settings. Không dùng production để thử xóa.
 
-Ki?m th? t? ??ng d?ng d? li?u gi? l?p, kh?ng thay th? nghi?m thu SQL tr?n PostgreSQL. Tr?n database staging ??c l?p, t?o d? li?u tr??c/??ng/sau cutoff; th? cron h?p l? v? kh?ng h?p l?; ??i chi?u file, phi?n, message version v? settings tr??c/sau. Kh?ng d?ng production ?? th? x?a.
-
-Sau ?? x?c nh?n k?t n?i th?t v?i t?i kho?n ???c c?p ph?p, quy?n c?a ph?ng Chatwork v? kh? n?ng m? Excel b?ng Microsoft Excel. Ghi ng?y, phi?n b?n v? k?t qu? trong bi?n b?n b?n giao.
+Xác nhận API thật bằng tài khoản được phép và mở Excel bằng Microsoft Excel. Ghi ngày, phiên bản và kết quả trong biên bản bàn giao.

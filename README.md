@@ -1,74 +1,74 @@
 # AttendSift AI
 
-**Chuy?n b?o c?o Chatwork th?nh b?ng ch?m c?ng c? th? ki?m tra v? ??i chi?u.**
+**Chuyển báo cáo Chatwork thành bảng chấm công có thể kiểm tra và đối chiếu.**
 
-B? ph?n AI ? ??ng Gia Kh?nh ? Phi?n b?n 1.0.2
+Bộ phận AI · Đặng Gia Khánh · Phiên bản 1.0.2
 
-[H??ng d?n Windows](docs/INSTALL_WINDOWS.md) ? [V?n h?nh website](docs/CLOUD_OPERATIONS.md) ? [B?n giao m?y m?i](docs/CHUYEN_MAY_WINDOWS.md) ? [Ki?m ch?ng](docs/VERIFICATION_1.0.2.md) ? [English](README_EN.md)
+[Hướng dẫn Windows](docs/INSTALL_WINDOWS.md) · [Vận hành website](docs/CLOUD_OPERATIONS.md) · [Bàn giao máy mới](docs/CHUYEN_MAY_WINDOWS.md) · [Kiểm chứng](docs/VERIFICATION_1.0.2.md) · [English](README_EN.md)
 
-AttendSift AI h? tr? ng??i ph? tr?ch t?ng h?p tin b?o t?ng ca, ngh?, ?i mu?n v? ngh? b? trong Chatwork. ?ng d?ng l?u tin ngu?n, d?ng AI h? tr? ph?n t?ch, ?p d?ng quy t?c nghi?p v?, cho ph?p ki?m tra/ch?nh s?a tr??c khi xu?t Excel. M?i k?t qu? c? tham chi?u v? tin g?c ?? ??i chi?u.
+AttendSift AI hỗ trợ người phụ trách tổng hợp tin báo tăng ca, nghỉ, đi muộn và nghỉ bù trong Chatwork. Ứng dụng lưu tin nguồn, dùng AI hỗ trợ phân tích, áp dụng quy tắc nghiệp vụ và cho phép kiểm tra, chỉnh sửa trước khi xuất Excel. Mỗi kết quả có tham chiếu về tin gốc để đối chiếu.
 
-**Tr?ng th?i:** b?n ?ng vi?n ph?t h?nh ?? nghi?m thu n?i b?. C? ki?m th? t? ??ng v? quy tr?nh ??ng g?i Windows; xem b?ng ch?ng th?c t? trong [b?o c?o ki?m ch?ng](docs/VERIFICATION_1.0.2.md). Vi?c ch?y ???c tr?n m?y build ch?a thay th? nghi?m thu tr?n m?y ng??i nh?n ho?c x?c nh?n ?? ch?nh x?c v?i to?n b? d? li?u th?c t?.
+**Trạng thái:** bản ứng viên phát hành để nghiệm thu nội bộ. Có kiểm thử tự động và quy trình đóng gói Windows; xem [bằng chứng kiểm chứng](docs/VERIFICATION_1.0.2.md). Việc chạy được trên máy build chưa thay thế nghiệm thu trên máy người nhận hoặc xác nhận độ chính xác với toàn bộ dữ liệu thực tế.
 
-## Ch?n c?ch s? d?ng
+## Chọn cách sử dụng
 
-| | Windows Local | Website Cloud |
+| Nội dung | Windows Local | Website Cloud |
 |---|---|---|
-| M? ?ng d?ng | EXE portable ho?c ch?y t? m? ngu?n | Tr?nh duy?t, ??ng nh?p website |
-| L?u d? li?u | SQLite trong th? m?c ?ng d?ng | PostgreSQL tr?n Neon |
-| L?ch ??ng b? | Windows Task Scheduler; m?y c?n b?t, t?i kho?n ?? ??ng nh?p | Vercel Cron, kh?ng c?n m?y c? nh?n b?t |
-| K?t n?i AI/Chatwork | Thi?t l?p ri?ng tr?n m?y | Thi?t l?p ri?ng tr?n website |
-| T? x?a sau 3 th?ng | Ch?a ?p d?ng ch?nh s?ch cloud | C?, khi cron h?p l? ch?y |
-| Python tr?n m?y ng??i d?ng | Kh?ng c?n v?i g?i EXE; c?n n?u ch?y m? ngu?n | Kh?ng c?n |
+| Mở ứng dụng | EXE portable hoặc chạy từ mã nguồn | Trình duyệt, đăng nhập website |
+| Lưu dữ liệu | SQLite trong thư mục ứng dụng | PostgreSQL trên Neon |
+| Lịch đồng bộ | Windows Task Scheduler; máy cần bật, tài khoản đã đăng nhập | Vercel Cron, không cần máy cá nhân bật |
+| Kết nối AI/Chatwork | Thiết lập riêng trên máy | Thiết lập riêng trên website |
+| Tự xóa sau 3 tháng | Chưa áp dụng chính sách cloud | Có, khi cron hợp lệ chạy |
+| Python trên máy người dùng | Không cần với gói EXE; cần nếu chạy mã nguồn | Không cần |
 
-**Local v? cloud kh?ng t? ??ng b? database ho?c kh?a API v?i nhau.** Local l?u d? li?u t?i m?y nh?ng v?n g?i n?i dung c?n ph?n t?ch t?i nh? cung c?p AI ???c c?u h?nh. Internet v? h?n m?c API c?n cho c?c thao t?c k?t n?i; g?i ph?n m?m kh?ng bao g?m chi ph? API.
+**Local và cloud không tự đồng bộ database hoặc khóa API với nhau.** Local lưu dữ liệu tại máy nhưng vẫn gửi nội dung cần phân tích tới nhà cung cấp AI được cấu hình. Internet và hạn mức API cần cho thao tác kết nối; gói phần mềm không bao gồm chi phí API.
 
-## Quy tr?nh l?m vi?c
+## Quy trình làm việc
 
-1. **K?t n?i:** nh?p token Chatwork, ki?m tra quy?n truy c?p v? ch?n ph?ng; c?u h?nh Gemini, OpenAI ho?c Claude v?i model t?i kho?n h? tr?.
-2. **??ng b?:** nh?n tin g?n nh?t, l?u d? li?u ngu?n, ki?m tra ph?m vi th?ng v? m?c ??y ?? c?a d? li?u.
-3. **Ph?n t?ch:** t?ch s? ki?n theo nh?n vi?n ? ng?y ? lo?i; ??i chi?u ngu?n v? quy t?c ?p d?ng.
-4. **R? so?t:** ki?m tra tr??ng h?p thi?u th?ng tin ho?c ch?a ch?c ch?n; x?c nh?n/ch?nh s?a tr??c khi xu?t.
-5. **Xu?t Excel:** l?u b?o c?o 4 sheet v? ??i chi?u tr??c khi d?ng cho c?ng vi?c ch?nh th?c.
+1. **Kết nối:** nhập token Chatwork, kiểm tra quyền và chọn phòng; cấu hình Gemini, OpenAI hoặc Claude với model được tài khoản hỗ trợ.
+2. **Đồng bộ:** nhận tin gần nhất, lưu tin nguồn và kiểm tra phạm vi dữ liệu.
+3. **Phân tích:** tách sự kiện theo nhân viên × ngày × loại; đối chiếu nguồn và quy tắc áp dụng.
+4. **Rà soát:** kiểm tra trường hợp thiếu thông tin hoặc chưa chắc chắn; xác nhận, chỉnh sửa trước khi xuất.
+5. **Xuất Excel:** lưu báo cáo 4 sheet và đối chiếu trước khi dùng chính thức.
 
-| Sheet | N?i dung |
+| Sheet | Nội dung |
 |---|---|
-| `1_TIN_NHAN_GOC` | Ngu?n tin d?ng ?? ??i chi?u |
-| `2_CHAM_CONG` | S? ki?n ch?m c?ng chi ti?t |
-| `3_TONG_KET` | T?ng h?p theo nh?n vi?n |
-| `4_CAN_KIEM_TRA` | Nh?ng tr??ng h?p c?n r? so?t |
+| `1_TIN_NHAN_GOC` | Nguồn tin dùng để đối chiếu |
+| `2_CHAM_CONG` | Sự kiện chấm công chi tiết |
+| `3_TONG_KET` | Tổng hợp theo nhân viên |
+| `4_CAN_KIEM_TRA` | Những trường hợp cần rà soát |
 
-## Quy t?c nghi?p v?
+## Quy tắc nghiệp vụ
 
-- M?t tin c? th? t?o nhi?u d?ng cho nhi?u ng??i v? nhi?u ng?y. OT c?a m?i ng??i ???c ghi ri?ng, kh?ng chia t?ng ph?t cho s? ng??i.
-- Ng?y s? ki?n ???c l?y t? n?i dung c? b?ng ch?ng, c? th? kh?c ng?y g?i tin.
-- Kh?ng t? suy ?o?n h? t?n ??y ?? ch? t? t?n ng?n. Ng??i ???c g?n r? `(CTV)` v? tin ph?p n?m ch? gi? ngu?n theo ch?nh s?ch hi?n t?i; t?n ng?n kh?ng m?c nhi?n b? coi l? CTV.
-- C?c quy t?c n?y l? ch?nh s?ch c?a ?ng d?ng hi?n t?i, c?n ???c ??n v? s? d?ng x?c nh?n; kh?ng thay th? quy ch? nh?n s? c?a ??n v?.
+- Một tin có thể tạo nhiều dòng cho nhiều người và nhiều ngày. OT của mỗi người được ghi riêng, không chia tổng phút cho số người.
+- Ngày sự kiện được lấy từ nội dung có bằng chứng, có thể khác ngày gửi tin.
+- Không tự suy đoán họ tên đầy đủ từ tên ngắn. Người được gắn rõ `(CTV)` và tin phép năm chỉ giữ nguồn theo chính sách hiện tại; tên ngắn không mặc nhiên bị coi là CTV.
+- Đây là chính sách của phiên bản hiện tại, cần được đơn vị sử dụng xác nhận; không thay thế quy chế nhân sự của đơn vị.
 
-V? d? **gi? l?p**: ?Ng?y 5/10: Lan OT 1h; Minh + B?nh OT 2h? t?o ba d?ng: Lan 60 ph?t, Minh 120 ph?t, B?nh 120 ph?t. Chi ti?t t?i [quy t?c nghi?p v?](docs/BUSINESS_RULES.md).
+Ví dụ **giả lập**: “Ngày 5/10: Lan OT 1h; Minh + Bình OT 2h” tạo ba dòng: Lan 60 phút, Minh 120 phút, Bình 120 phút. Xem [quy tắc nghiệp vụ](docs/BUSINESS_RULES.md).
 
-## Thay ??i trong b?n 1.0.2
+## Cập nhật trong bản 1.0.2
 
-- Danh s?ch cloud l?m m?i sau ??ng b?, c? t?ng s? tin v? ph?n h?i r? khi b? l?c kh?ng h?p l?.
-- C?t th?i gian tin nh?n cloud hi?n th? `dd/mm/yyyy HH:mm:ss`, m?i gi? Vi?t Nam GMT+7; tr?nh ng?t d?ng gi?a chu?i ng?y gi?.
-- Cron cho ph?p hostname deployment thay ??i khi ??ng endpoint v? Bearer secret h?p l?; c?c y?u c?u kh?c v?n ki?m tra host.
-- Cron d?n d? li?u cloud c? h?n 3 th?ng v? ng?n nh?p l?i tin nh?n qu? h?n.
-- G?p h??ng d?n s? d?ng, b?n giao Windows, v?n h?nh cloud v? th?ng tin ki?m ch?ng cho c?ng m?t phi?n b?n.
+- Danh sách cloud tự làm mới sau đồng bộ, hiển thị tổng số tin và phản hồi khi bộ lọc không hợp lệ.
+- Thời gian tin nhắn cloud hiển thị `dd/mm/yyyy HH:mm:ss`, múi giờ Việt Nam GMT+7, giữ chuỗi ngày giờ trên một dòng.
+- Cron chấp nhận hostname deployment thay đổi khi đúng endpoint và Bearer secret hợp lệ; các yêu cầu khác vẫn kiểm tra host.
+- Cron dọn dữ liệu cloud cũ hơn 3 tháng và ngăn nhập lại tin nhắn quá hạn.
+- Gộp hướng dẫn cài đặt, chuyển máy, vận hành cloud và thông tin kiểm chứng cho cùng một phiên bản.
 
-## B?t ??u tr?n Windows
+## Bắt đầu trên Windows
 
-### Ng??i nh?n g?i EXE
+### Người nhận gói EXE
 
-1. Nh?n `AttendSift-AI_Windows_1.0.2.zip` c?ng checksum t? ng??i b?n giao ho?c m?c Releases khi ?? ???c xu?t b?n.
-2. Gi?i n?n to?n b? v?o th? m?c c? quy?n ghi, v? d? `D:\AttendSift-AI`; kh?ng ch?y b?n trong ZIP.
-3. ??c `DOC_TRUOC_KHI_CHAY.html`, ch?y `KIEM_TRA.bat`, r?i `BAT_DAU.bat`.
-4. Nh?p kh?a c?a ng??i s? d?ng, th? d? li?u gi? v? ??i chi?u m?t file Excel tr??c khi nghi?m thu.
+1. Nhận `AttendSift-AI_Windows_1.0.2.zip` và checksum từ người bàn giao hoặc mục Releases khi đã được xuất bản.
+2. Giải nén toàn bộ vào thư mục có quyền ghi, ví dụ `D:\AttendSift-AI`; không chạy bên trong ZIP.
+3. Đọc `DOC_TRUOC_KHI_CHAY.html`, chạy `KIEM_TRA.bat`, rồi `BAT_DAU.bat`.
+4. Nhập khóa của người sử dụng, thử dữ liệu giả và đối chiếu một file Excel trước khi nghiệm thu.
 
-EXE l? b?n portable cho Windows 10/11 x64, ch?a k? s?. N?u b? ch?nh s?ch m?y ch?n, g?i checksum cho IT ?? ki?m tra. Xem [h??ng d?n b?n giao](docs/CHUYEN_MAY_WINDOWS.md).
+EXE portable dành cho Windows 10/11 x64, chưa ký số. Nếu bị chính sách máy chặn, gửi checksum cho IT kiểm tra. Xem [hướng dẫn bàn giao](docs/CHUYEN_MAY_WINDOWS.md).
 
-### Ng??i ch?y m? ngu?n
+### Người chạy mã nguồn
 
-C?i Python 3.11 x64, gi?i n?n m? ngu?n r?i l?n l??t ch?y:
+Cài Python 3.11 x64, giải nén mã nguồn rồi lần lượt chạy:
 
 ```text
 CAI_DAT_WINDOWS.bat
@@ -76,51 +76,51 @@ KIEM_TRA_LOCAL_WINDOWS.bat
 CHAY_LOCAL_WINDOWS.bat
 ```
 
-??a ch? m?c ??nh: `http://127.0.0.1:8766`. M? ngu?n ZIP kh?ng ch?a s?n EXE. Quy tr?nh ??y ?? t?i [INSTALL_WINDOWS](docs/INSTALL_WINDOWS.md).
+Địa chỉ mặc định: `http://127.0.0.1:8766`. ZIP mã nguồn không chứa sẵn EXE. Xem [hướng dẫn cài đặt](docs/INSTALL_WINDOWS.md).
 
-## D? li?u cloud v? th?i h?n l?u
+## Dữ liệu cloud và thời hạn lưu
 
-Cron hi?n ???c c?u h?nh m?i ng?y l?c **13:00 gi? Vi?t Nam** (`0 6 * * *` UTC); th?i ?i?m th?c thi th?c t? ph? thu?c d?ch v? hosting. Ch? y?u c?u c? `CRON_SECRET` h?p l? ???c th?c hi?n t?c v? d?n d? li?u.
+Cron được cấu hình mỗi ngày lúc **13:00 giờ Việt Nam** (`0 6 * * *` UTC); thời điểm thực thi thực tế phụ thuộc dịch vụ hosting. Chỉ yêu cầu có `CRON_SECRET` hợp lệ được thực hiện tác vụ dọn.
 
-- Tin nh?n: qu? 3 th?ng t?nh t? th?i ?i?m g?i.
-- Phi?n ph?n t?ch, k?t qu? v? Excel li?n quan: qu? 3 th?ng t?nh t? th?i ?i?m t?o phi?n. B?n ch?p ngu?n trong phi?n ?i theo th?i h?n c?a phi?n.
-- L?ch s? thao t?c v? b?n s?a tin nh?n c? ???c d?n theo [ch?nh s?ch chi ti?t](docs/RETENTION_3_MONTHS.md).
-- C?u h?nh v? kh?a k?t n?i ???c gi? l?i; d? li?u qu? h?n b? x?a ? l?n cron h?p l? ??u ti?n sau tri?n khai. File ?? t?i v? m?y kh?ng b? t?c ??ng.
+- Tin nhắn: quá 3 tháng tính từ thời điểm gửi.
+- Phiên phân tích, kết quả và Excel liên quan: quá 3 tháng tính từ thời điểm tạo phiên. Bản chụp nguồn trong phiên đi theo thời hạn của phiên.
+- Lịch sử thao tác và bản sửa tin nhắn được dọn theo [chính sách chi tiết](docs/RETENTION_3_MONTHS.md).
+- Cấu hình và khóa kết nối được giữ lại. File đã tải về máy không bị tác động.
 
-**H?y t?i b?o c?o c?n l?u l?u d?i tr??c h?n.** Ch?nh s?ch th?i gian l?u gi?p ki?m so?t t?ch l?y d? li?u, kh?ng b?o ??m d? li?u trong 3 th?ng lu?n v?a h?n m?c g?i mi?n ph?. Xem [v?n h?nh cloud](docs/CLOUD_OPERATIONS.md).
+**Tải báo cáo cần lưu lâu dài trước hạn.** Dữ liệu quá hạn có thể bị xóa ngay ở lần cron hợp lệ đầu tiên sau triển khai. Thời hạn lưu giúp kiểm soát tích lũy, không bảo đảm dữ liệu 3 tháng luôn vừa hạn mức miễn phí. Xem [vận hành cloud](docs/CLOUD_OPERATIONS.md).
 
-## Gi?i h?n c?n bi?t
+## Giới hạn cần biết
 
-Chatwork c? th? ch? tr? c?a s? t?i ?a 100 tin g?n nh?t trong m?t l?n l?y d? li?u. ??ng b? th?nh c?ng kh?ng ch?ng minh ?? c? ??y ?? l?ch s? th?ng; h?y ??i chi?u ngu?n tr??c khi xu?t. Local c? ch?c n?ng nh?p l?ch s? ???c l?u h?p l?.
+Chatwork có thể chỉ trả cửa sổ tối đa 100 tin gần nhất trong một lần lấy dữ liệu. Đồng bộ thành công không chứng minh đã có đầy đủ lịch sử tháng; cần đối chiếu nguồn trước khi xuất. Local hỗ trợ nhập lịch sử được lưu hợp lệ.
 
-AI c? th? nh?m ng??i, ng?y ho?c th?i l??ng. K?t qu? c?n ng??i ph? tr?ch ki?m tra tr??c khi s? d?ng ch?nh th?c. EXE c?n ???c th? tr?n m?y ??ch; ki?m th? m? ngu?n kh?ng ??ng ngh?a Microsoft Excel ?? m? workbook kh?ng s?a ch?a ho?c API th?t ?? ???c nghi?m thu.
+AI có thể nhầm người, ngày hoặc thời lượng. Người phụ trách cần kiểm tra trước khi dùng chính thức. Kiểm thử tự động không thay thế nghiệm thu trên máy người nhận, kiểm tra Microsoft Excel, API thật hoặc PostgreSQL staging.
 
-## Giao di?n
+## Giao diện
 
-![Giao di?n Local ?? che d? li?u ri?ng t?](docs/images/01-local-interface-redacted.png)
+![Giao diện Local đã che dữ liệu riêng tư](docs/images/01-local-interface-redacted.png)
 
-| Ngu?n tin | Chi ti?t ch?m c?ng | T?ng k?t |
+| Nguồn tin | Chi tiết chấm công | Tổng kết |
 |---|---|---|
-| ![Ngu?n ?? ?n d? li?u](docs/images/02-source-sheet-redacted.png) | ![Chi ti?t ?? ?n d? li?u](docs/images/03-attendance-sheet-redacted.png) | ![T?ng k?t ?? ?n d? li?u](docs/images/04-summary-sheet-redacted.png) |
+| ![Nguồn đã ẩn dữ liệu](docs/images/02-source-sheet-redacted.png) | ![Chi tiết đã ẩn dữ liệu](docs/images/03-attendance-sheet-redacted.png) | ![Tổng kết đã ẩn dữ liệu](docs/images/04-summary-sheet-redacted.png) |
 
-?nh minh h?a Local ?? che th?ng tin c? nh?n; kh?ng d?ng ?? x?c nh?n b? c?c cloud m?i nh?t ho?c ?? ch?nh x?c tr?n to?n b? d? li?u th?c t?.
+Ảnh minh họa Local đã che thông tin cá nhân; không xác nhận bố cục cloud mới nhất hoặc độ chính xác trên toàn bộ dữ liệu thực tế.
 
-## D?nh cho ng??i b?o tr?
+## Dành cho người bảo trì
 
 ```text
-src/                  Local: SQLite, ??ng b?, ph?n t?ch, xu?t Excel
-cloud/                Cloud: Flask, PostgreSQL, x?c th?c, cron, retention
-static/, templates/   Giao di?n v? m?u workbook Local
-public/static/        B?n t?i nguy?n cloud ph?c v? qua hosting
-tests/               Ki?m th? b?ng d? li?u gi? l?p
-tools/               Ch?n ?o?n, ki?m tra v? ??ng g?i
-docs/                S? d?ng, v?n h?nh, ki?m ch?ng v? b?n giao
+src/                  Local: SQLite, đồng bộ, phân tích, xuất Excel
+cloud/                Cloud: Flask, PostgreSQL, xác thực, cron, retention
+static/, templates/   Giao diện và mẫu workbook Local
+public/static/        Tài nguyên cloud phục vụ qua hosting
+tests/                Kiểm thử bằng dữ liệu giả lập
+tools/                Chẩn đoán, kiểm tra và đóng gói
+docs/                 Sử dụng, vận hành, kiểm chứng và bàn giao
 ```
 
-Xem [ki?m th?](docs/TESTING.md), [checklist ph?t h?nh](docs/RELEASE_CHECKLIST.md), [h??ng d?n ??ng GitHub](docs/PUBLISH_1.0.2.md), [changelog](CHANGELOG.md), [ki?n tr?c](docs/ARCHITECTURE.md).
+Xem [kiểm thử](docs/TESTING.md), [checklist phát hành](docs/RELEASE_CHECKLIST.md), [đăng GitHub](docs/PUBLISH_1.0.2.md), [changelog](CHANGELOG.md), [kiến trúc](docs/ARCHITECTURE.md).
 
-## H? tr?, d? li?u v? quy?n s? d?ng
+## Hỗ trợ và quyền sử dụng
 
-Khi b?o l?i, g?i phi?n b?n, b??c t?i hi?n v? th?ng b?o ?? che d? li?u; kh?ng g?i API key, database, tin nh?n vi?n ho?c Excel th?t l?n GitHub. H??ng d?n t?i [CONTRIBUTING](CONTRIBUTING.md) v? [SECURITY](SECURITY.md).
+Bảo trì: **Bộ phận AI · Đặng Gia Khánh**. Khi báo lỗi, gửi phiên bản, bước tái hiện và thông báo đã che dữ liệu; không gửi API key, database, tin nhân viên hoặc Excel thật lên GitHub. Xem [CONTRIBUTING](CONTRIBUTING.md) và [SECURITY](SECURITY.md).
 
-D? ?n ch?a c?p gi?y ph?p m? ngu?n m?; xem [LICENSE_DECISION](LICENSE_DECISION.md). Quy?n s? d?ng n?i b? v? ph?n ph?i cho b?n kh?c c?n ???c ch? s? h?u x?c nh?n. C?c gi?y ph?p th? vi?n b?n th? ba v?n ?p d?ng. ?ng d?ng kh?ng li?n k?t ch?nh th?c v?i Chatwork hay nh? cung c?p AI.
+Dự án chưa cấp giấy phép mã nguồn mở; xem [LICENSE_DECISION](LICENSE_DECISION.md). Quyền sử dụng và phân phối cần được chủ sở hữu xác nhận. Giấy phép thư viện bên thứ ba vẫn áp dụng. Ứng dụng không liên kết chính thức với Chatwork hay nhà cung cấp AI.

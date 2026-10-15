@@ -1,37 +1,34 @@
-# ??ng m? ngu?n v? b?n giao b?n 1.0.2
+# Đăng mã nguồn và bàn giao bản 1.0.2
 
-## Ba ??u ra kh?c nhau
+## Ba đầu ra
 
-| ??u ra | D?ng cho |
+| Đầu ra | Dùng cho |
 |---|---|
-| Th? m?c `UPLOAD_GITHUB_1.0.2` | K?o n?i dung b?n trong l?n g?c repository GitHub; gi? ???ng d?n t??ng ??i |
-| `AttendSift-AI_Source_1.0.2.zip` | M? ngu?n ??y ??, kh?ng c? `.git`, EXE, kh?a hay database v?n h?nh |
-| `AttendSift-AI_Windows_1.0.2.zip` | G?i portable ?? ??a cho ng??i d?ng Windows; c? EXE, h??ng d?n, ngu?n v? manifest |
+| Thư mục cập nhật GitHub | Kéo nội dung bên trong lên gốc repository, giữ đường dẫn tương đối |
+| `AttendSift-AI_Source_1.0.2.zip` | Mã nguồn đầy đủ, không có .git, EXE, khóa hoặc database vận hành |
+| `AttendSift-AI_Windows_1.0.2.zip` | Portable có EXE, hướng dẫn, nguồn và manifest |
 
-## C?p nh?t b?ng tr?nh duy?t
+## Cập nhật bằng trình duyệt
 
-1. M? repository ? Add file ? Upload files tr?n nh?nh `main`.
-2. M? th? m?c `UPLOAD_GITHUB_1.0.2` b?ng File Explorer; ch?n n?i dung b?n trong v? k?o v?o khung upload. Kh?ng t?i th? m?c bao ngo?i.
-3. Ki?m tra ???ng d?n: `README.md`, `cloud/retention.py`...; kh?ng ?? ti?n t? `UPLOAD_GITHUB_1.0.2/`.
-4. Nh?p m? t? `Consolidate AttendSift AI 1.0.2 documentation and release bundle` r?i commit.
-5. Ki?m tra Actions v? deployment. README m? t? t?nh n?ng theo phi?n b?n, kh?ng thay th? ki?m tra deployment th?c t?.
+1. Repository → Add file → Upload files trên nhánh main.
+2. Mở thư mục cập nhật bằng File Explorer, chọn nội dung bên trong và kéo vào khung upload. Không kéo thư mục bao ngoài.
+3. Kiểm tra đường dẫn: `README.md`, `docs/INSTALL_WINDOWS.md`... phải nằm đúng vị trí.
+4. Commit, kiểm tra Actions và deployment.
+5. Với bản sửa UTF-8, tải lại các tệp đã sửa rồi kiểm tra tiếng Việt trên README.
 
-Kh?ng ??a EXE/ZIP/database v?o c?y m? ngu?n qua trang upload n?y. T?p c? d?u ch?m ??u nh? `.github/` c?n hi?n ???c khi ch?n t?p n?u b?n c?p nh?t c? ch?a ch?ng.
+Không đưa EXE, ZIP hoặc database vào cây mã nguồn. ZIP Windows dùng làm asset trong Releases.
 
-## Ph?t h?nh g?i Windows
+## Phát hành Windows
 
-Sau khi x?c nh?n code tr?n GitHub ??ng n?i dung v? ki?m tra b?n EXE:
+1. Repository → Releases → Draft a new release.
+2. Chọn đúng commit và tag `v1.0.2-rc.1`.
+3. Tiêu đề: `AttendSift AI 1.0.2 — Windows & Cloud`.
+4. Dùng [release notes](RELEASE_NOTES_1.0.2.md), đính kèm ZIP và checksum.
+5. Giữ nhãn pre-release đến khi hoàn thành [biên bản nghiệm thu](HANDOVER_ACCEPTANCE.md).
 
-1. Repository ? Releases ? Draft a new release.
-2. Ch?n commit ph? h?p v? tag `v1.0.2-rc.1` cho b?n ?ng vi?n ph?t h?nh.
-3. Ti?u ??: `AttendSift AI 1.0.2 ? Windows & Cloud`.
-4. D?ng n?i dung trong [release notes](RELEASE_NOTES_1.0.2.md).
-5. ??nh k?m ZIP Windows v? `.zip.sha256`; c? th? ??nh k?m ZIP ngu?n v? checksum.
-6. ??nh d?u pre-release cho ??n khi ho?n th?nh bi?n b?n nghi?m thu tr?n m?y ??ch.
+Manifest ghi commit nguồn của bản build cục bộ. Tải bằng trình duyệt tạo commit GitHub khác. Muốn liên kết commit chính xác cho phát hành công khai, build và đóng gói từ tag GitHub cuối cùng; không sửa tay manifest để giả trùng commit.
 
-Manifest `source_commit` l? commit c?a b?n build c?c b?. N?u t?i m? l?n b?ng tr?nh duy?t, GitHub t?o commit kh?c. ?? c? li?n k?t commit ch?nh x?c cho ph?t h?nh c?ng khai, build/??ng g?i l?i t? tag GitHub cu?i c?ng; kh?ng s?a tay manifest ?? gi? tr?ng commit.
-
-## T?i t?o g?i tr?n Windows
+## Tái tạo gói
 
 ```powershell
 python -m pip install -r requirements-build.txt -r requirements-web.txt
@@ -40,14 +37,10 @@ node tests/test_cloud_message_ui.cjs
 python -m PyInstaller --noconfirm --clean --distpath release --workpath build ChamCong.spec
 ```
 
-D?ng ??ng m?i tr??ng Python khi ch?y c?c b??c. Node ch? d?ng ki?m th? UI cloud, kh?ng ph?i y?u c?u tr?n m?y ng??i nh?n. Th? EXE v?i `--check-runtime REPORT.json` v? `--headless --port PORT`, ??i chi?u HTTP local. B?o c?o verification ch? ???c ghi `tests_passed`/`runtime_passed` khi th?c s? ??t; ghi th?m checksum EXE v? c?c gi?i h?n c?n l?i.
+Dùng đúng môi trường Python. Node chỉ cần cho kiểm thử UI. Thử EXE bằng `--check-runtime REPORT.json` và `--headless --port PORT`; đối chiếu HTTP local. Báo cáo verification chỉ ghi đạt khi thực sự đạt và phải có SHA256 đúng EXE đã thử.
 
 ```powershell
 python tools/package_windows.py --exe release/ChamCong.exe --output release/AttendSift-AI_Windows_1.0.2.zip --verification release/verification.json
 ```
 
-C?ng c? ??ng g?i d?ng danh s?ch t?p ???c Git theo d?i: th?m ??y ?? thay ??i v?o Git v? ki?m tra tr??c khi ch?y. Ki?m tra ZIP kh?ng ch?a credentials, d? li?u nh?n vi?n ho?c runtime database.
-
-## Nghi?m thu tr?n m?y ng??i nh?n
-
-D?ng [m?u bi?n b?n](HANDOVER_ACCEPTANCE.md). Kh?ng ??nh d?u ho?n t?t c?c m?c API th?t, Microsoft Excel, Windows s?ch ho?c staging retention n?u ch?a c? b?ng ch?ng. Ph?n ph?i n?i b? c?n th?a thu?n quy?n s? d?ng; repository ch?a c?p gi?y ph?p m? ngu?n m?.
+Công cụ dùng danh sách Git theo dõi và yêu cầu mã nguồn đã commit sạch. Kiểm tra ZIP không chứa dữ liệu vận hành. Quyền sử dụng và phân phối cần được chủ sở hữu xác nhận; dự án chưa cấp giấy phép mã nguồn mở.

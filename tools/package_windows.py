@@ -5,6 +5,7 @@ import html
 import json
 from pathlib import Path
 import subprocess
+import sys
 import zipfile
 
 
@@ -22,6 +23,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--verification', type=Path, required=True)
     args = parser.parse_args()
+    subprocess.check_call([sys.executable, str(ROOT / 'tools/check_release_encoding.py'), str(ROOT)])
     executable = args.exe.read_bytes()
     if executable[:2] != b'MZ':
         raise SystemExit('Expected a Windows PE executable.')

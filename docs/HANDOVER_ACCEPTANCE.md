@@ -1,32 +1,32 @@
-# Bi?n b?n b?n giao AttendSift AI 1.0.2
+# Biên bản bàn giao AttendSift AI 1.0.2
 
-Ng?y: __________  Ng??i b?n giao: __________  Ng??i nh?n: __________
+Ngày: __________  Người bàn giao: __________  Người nhận: __________
 
-M?y/Windows: __________  T?i kho?n s? d?ng: __________
+Máy/Windows: __________  Tài khoản: __________
 
-T?n g?i: __________  SHA256: __________  Commit ngu?n: __________
+Tên gói: __________  SHA256: __________  Commit nguồn: __________
 
-| N?i dung | ??t / Ch?a ??t | Ghi ch? |
+| Nội dung | Đạt / Chưa đạt | Ghi chú |
 |---|---|---|
-| Checksum ZIP kh?p, gi?i n?n ??y ??, th? m?c c? quy?n ghi | | |
-| KIEM_TRA.bat b?o ??t; m? ???c ?ng d?ng | | |
-| K?t n?i Chatwork c?a ng??i nh?n, ch?n ??ng ph?ng | | |
-| K?t n?i AI v? model ???c t?i kho?n h? tr? | | |
-| ??ng b? v? ??i chi?u s? tin/ph?m vi l?ch s? | | |
-| Tin gi? nhi?u ng??i/nhi?u ng?y c? OT ri?ng ??ng | | |
-| R? so?t/ch?nh s?a k?t qu? tr??c xu?t | | |
-| Excel ?? 4 sheet; Microsoft Excel m? kh?ng s?a ch?a file | | |
-| ???ng d?n Downloads ??ng t?i kho?n | | |
-| Sao l?u/kh?i ph?c d? li?u th? th?nh c?ng | | |
-| L?ch Windows ch?y ??ng ???ng d?n khi m?y b?t/??ng nh?p | | |
-| Cloud n?u d?ng: deployment, GMT+7, cron v? d? li?u ??ng | | |
-| Cloud n?u d?ng: th? retention tr?n staging, ki?m tra c?u h?nh ???c gi? | | |
-| ?? gi?i th?ch h?n 3 th?ng cloud, c?ch t?i b?o c?o v? chi ph? API | | |
+| Checksum ZIP khớp, giải nén đủ, thư mục có quyền ghi | | |
+| KIEM_TRA.bat đạt; mở được cửa sổ ứng dụng | | |
+| Kết nối Chatwork của người nhận, chọn đúng phòng | | |
+| Kết nối AI và model được tài khoản hỗ trợ | | |
+| Đồng bộ, đối chiếu số tin và phạm vi lịch sử | | |
+| Tin giả nhiều người/nhiều ngày có OT riêng đúng | | |
+| Rà soát, chỉnh sửa trước xuất | | |
+| Excel đủ 4 sheet, Microsoft Excel mở không sửa chữa | | |
+| Downloads đúng tài khoản | | |
+| Sao lưu, khôi phục dữ liệu thử | | |
+| Lịch Windows chạy đúng đường dẫn khi máy bật và đăng nhập | | |
+| Cloud nếu dùng: deployment, GMT+7, cron và dữ liệu đúng | | |
+| Cloud nếu dùng: retention staging đúng, cấu hình được giữ | | |
+| Đã giải thích thời hạn lưu cloud, cách tải báo cáo và phí API | | |
 
-Kh?ng ghi m?t kh?u/token ho?c n?i dung nh?n s? v?o bi?n b?n ??a l?n GitHub.
+Không ghi token, mật khẩu hoặc nội dung nhân sự vào biên bản đưa lên GitHub.
 
-T?n t?i c?n x? l?: ________________________________________________
+Tồn tại cần xử lý: ________________________________________________
 
-K?t lu?n: [ ] Ch?p nh?n d?ng th?  [ ] C?n s?a tr??c khi s? d?ng
+Kết luận: [ ] Chấp nhận dùng thử  [ ] Cần sửa trước khi sử dụng
 
-X?c nh?n ng??i b?n giao: __________  Ng??i nh?n: __________
+Người bàn giao: __________  Người nhận: __________
