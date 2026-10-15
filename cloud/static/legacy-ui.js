@@ -10,7 +10,7 @@
 
     const header = document.createElement('header');
     header.className = 'header';
-    header.innerHTML = '<h1>ChamCong / Chatwork</h1><span class="version" id="appVersion">v2.0</span><span id="pageLabel" hidden></span>';
+    header.innerHTML = '<h1>ChamCong / Chatwork</h1><span class="version" id="appVersion">Bộ phận AI · Đặng Gia Khánh</span><span id="pageLabel" hidden></span>';
 
     const skipLink = document.createElement('a');
     skipLink.className = 'skip-link';

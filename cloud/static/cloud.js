@@ -7,7 +7,7 @@ const month=id=>{const [year,month]=$ (id).value.split('-').map(Number);return {
 function article(parent,title,content){const node=document.createElement('article'),strong=document.createElement('strong'),pre=document.createElement('pre');strong.textContent=title;pre.textContent=content;node.append(strong,pre);parent.append(node);return node;}
 function bind(id,action){$(id).addEventListener('click',async()=>{const button=$(id);button.disabled=true;try{await action();}catch(error){status(error.message);}finally{button.disabled=false;}});}
 const headerActions=document.createElement('div');headerActions.className='header-actions';
-const version=$('appVersion');version.textContent='Cloud · Neon';headerActions.append(version);
+const version=$('appVersion');version.textContent='Bộ phận AI · Đặng Gia Khánh';headerActions.append(version);
 const logout=document.createElement('button');logout.id='logout';logout.textContent='Đăng xuất';headerActions.append(logout);document.querySelector('body > .header').append(headerActions);
 async function loadConfig(){
  const config=await api('/api/config');
