@@ -46,6 +46,17 @@ let messageRequestId=0;
 const vnDateFormatter=new Intl.DateTimeFormat('en-GB',{
  timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'
 });
+const vnTimeFormatter=new Intl.DateTimeFormat('en-GB',{
+ timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit',
+ hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+});
+function messageTime(raw){
+ if(raw===null||raw===undefined||raw==='')return '';
+ const date=new Date(raw);
+ if(Number.isNaN(date.getTime()))return String(raw);
+ const parts=Object.fromEntries(vnTimeFormatter.formatToParts(date).map(part=>[part.type,part.value]));
+ return `${parts.day}/${parts.month}/${parts.year} ${parts.hour}:${parts.minute}:${parts.second}`;
+}
 function messageDay(raw){
  const date=new Date(raw);
  if(Number.isNaN(date.getTime()))return null;
@@ -88,8 +99,9 @@ function renderMessages(){
  const body=document.createElement('tbody');
  for(const message of messages){
   const row=document.createElement('tr');
-  for(const [index,value] of [message.send_time,message.name,message.body].entries()){
+  for(const [index,value] of [messageTime(message.send_time),message.name,message.body].entries()){
    const cell=document.createElement('td');cell.textContent=value??'';
+   if(index===0)cell.style.whiteSpace='nowrap';
    if(index===2)cell.className='message-body';row.append(cell);
   }
   body.append(row);

@@ -43,6 +43,10 @@ async function main(){
  const script=fs.readFileSync(path.join(__dirname,'../cloud/static/cloud.js'),'utf8');
  vm.runInContext(script,context,{filename:'cloud.js'});
  await flush();
+ assert.equal(vm.runInContext("messageTime('2026-09-25T00:59:12+00:00')",context),'25/09/2026 07:59:12');
+ assert.equal(vm.runInContext("messageTime('2026-09-30T18:30:00Z')",context),'01/10/2026 01:30:00');
+ assert.equal(vm.runInContext("messageTime(null)",context),'');
+ assert.equal(get('messages').children[0].children[1].children[0].children[0].style.whiteSpace,'nowrap');
  assert.equal(get('messages').children[0].tagName,'table','Initial config loads existing messages automatically');
  assert.equal(get('messages').children[0].children[1].children.length,100,'Displays all 100 cached messages, including context');
  assert.match(get('messageViewSummary').textContent,/100\/100/);
