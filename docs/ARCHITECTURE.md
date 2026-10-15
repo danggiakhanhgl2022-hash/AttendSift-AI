@@ -37,3 +37,11 @@ flowchart TD
 - **Có trong mã:** kiểm tra Host/Origin, CSRF cho mutation, giới hạn file upload, log xoay vòng, bộ kiểm thử chính sách.
 - **Chưa chứng nhận:** an toàn tuyệt đối khi lộ cổng, độ chính xác AI, tái nhập dữ liệu mọi tình huống, phân quyền nhiều người, năng lực tải lớn, chạy Windows với API thật.
 - `cloud/` là một chế độ khác; muốn dùng chung dữ liệu đa máy phải triển khai cơ sở dữ liệu tập trung và kiểm tra bảo mật độc lập.
+
+## Cloud trong b?n 1.0.2
+
+`cloud/app.py` ph?c v? HTTP c? x?c th?c; `cloud/repository.py` l?u PostgreSQL tr?n Neon. Cron h?p l? ch?y d?n d? li?u 3 th?ng tr??c khi ??ng b?. `cloud/retention.py` t?nh cutoff theo th?ng l?ch v? GMT+7. File Excel l?u trong `cc_files`, snapshot/k?t qu? trong `cc_sessions`; d?n file tr??c phi?n ?? gi? quan h? kh?a ngo?i.
+
+Giao d?ch d?n kh?a c?c b?ng li?n quan trong th?i gian ng?n, ??t lock timeout 5 gi?y v? ho?n phi?n ?ang c? lease x? l?. Khi l?i, giao d?ch rollback. ??ng b? b? qua tin g?i tr??c cutoff ?? kh?ng nh?p l?i d? li?u h?t h?n. Kh?a/c?u h?nh trong `cc_settings` kh?ng b? d?n.
+
+`cloud/static/cloud.js` v? `public/static/cloud.js` c?n c?ng n?i dung. Formatter th?i gian ch? thay ??i c?ch hi?n th?; b?n tin ngu?n trong database v?n gi? timestamp c? m?i gi?. Xem [v?n h?nh cloud](CLOUD_OPERATIONS.md).

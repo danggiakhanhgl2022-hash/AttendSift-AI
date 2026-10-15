@@ -1,16 +1,16 @@
-# Ma trận trạng thái tính năng
+# Ma tr?n t?nh n?ng ? 1.0.2
 
-| Tính năng | Có trong mã | Có bài test | Xác nhận Windows thật |
-|---|:---:|:---:|:---:|
-| Giao diện Đồng bộ / Xuất công / Lịch sử / Thiết lập | Có | Một phần | Có ảnh/video người dùng; chưa nghiệm thu máy sạch |
-| Lưu Chatwork → SQLite | Có | Có | Chưa kiểm tra API thật trong lần đánh giá này |
-| AI phân tích và soát nguồn | Có | Có (mẫu mô phỏng) | Chưa đo độ chính xác tổng quát |
-| Một tin nhiều người/multiple dates | Có | Có | Cần kiểm tra thêm dữ liệu thực theo kỳ |
-| Phép năm / CTV chỉ lưu tin | Có | Có | Cần rà soát chính sách nơi sử dụng |
-| Excel 4 sheet | Có | Có (cấu trúc) | Có ảnh WPS; Microsoft Excel cần nghiệm thu |
-| Xuất Downloads | Có | Có (mock/path test) | Cần test khi Downloads bị đổi đường dẫn |
-| Windows `.bat` cài/khởi chạy | Có | Static checks | Chưa thử hoàn chỉnh trên máy Windows mới |
-| PyInstaller EXE | Có workflow/spec | Cấu hình tĩnh | **Chưa xác nhận EXE hoạt động** |
-| Web hosting dùng chung | Có module cloud | Một phần | Ngoài phạm vi bản Local |
+| T?nh n?ng | Local | Cloud | B?ng ch?ng / gi?i h?n |
+|---|---|---|---|
+| ??ng b? v? l?u Chatwork | SQLite | PostgreSQL | Test gi? l?p; API th?t c?n nghi?m thu |
+| AI v? ??i chi?u ngu?n | C? | C? | Kh?ng c? ch?ng nh?n ?? ch?nh x?c t?ng qu?t |
+| M?t tin nhi?u ng??i/nhi?u ng?y | C? | C? | C? test nghi?p v? |
+| R? so?t tr??c xu?t | C? | C? | C? test; c?n ??i chi?u quy ch? ??n v? |
+| Excel 4 sheet | C? | C? | Test c?u tr?c; Microsoft Excel c?n nghi?m thu |
+| Gi? tin nh?n GMT+7 trong b?n s?a m?i | Theo giao di?n Local | C? formatter m?i | Test UI cloud v? rollover ng?y |
+| Nh?p l?ch s?, backup/restore | C? | Kh?ng ph?i lu?ng Local | Kh?ng t? chuy?n d? li?u gi?a hai b?n |
+| L?ch ??ng b? | Task Scheduler | Vercel Cron | C?n ki?m tra c?u h?nh th?c t? |
+| X?a sau 3 th?ng | Ch?a ?p d?ng | C? | Test cutoff/quy?n; SQL staging ch?a nghi?m thu |
+| EXE portable | C? spec/build | Kh?ng ?p d?ng | Xem b?o c?o ??ng phi?n b?n; m?y nh?n c?n nghi?m thu |
 
-Không suy ra số lượng người dùng, thời gian xử lý hoặc độ chính xác AI khi chưa có đo lường/nhật ký kiểm định.
+Kh?ng suy ra dung l??ng g?i mi?n ph?, s? ng??i d?ng ho?c hi?u n?ng t? vi?c t?nh n?ng c? trong m?.

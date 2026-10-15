@@ -28,6 +28,10 @@ def main():
     verification = json.loads(args.verification.read_text(encoding='utf-8-sig'))
     if verification.get('runtime_passed') is not True or verification.get('tests_passed') is not True:
         raise SystemExit('Runtime and source checks must pass before packaging.')
+    if verification.get('exe_sha256') != hashlib.sha256(executable).hexdigest():
+        raise SystemExit('Verification report does not match this EXE.')
+    if git('status', '--porcelain', '--untracked-files=normal').strip():
+        raise SystemExit('Commit the reviewed source before packaging.')
     files = [p for p in git('ls-files', '-z').decode('utf-8').split('\0') if p]
     # Never copy the workspace wholesale: only reviewed, tracked source is included.
     for name in files:

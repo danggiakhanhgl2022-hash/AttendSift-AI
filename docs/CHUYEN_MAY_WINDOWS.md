@@ -1,4 +1,4 @@
-# ChamCongChatwork 1.0.1 — chạy trên máy Windows khác
+# ChamCongChatwork 1.0.2 — chạy trên máy Windows khác
 
 **Bộ phận AI · Đặng Gia Khánh**
 
@@ -57,3 +57,7 @@ Nếu đổi chỗ thư mục EXE, vào Thiết lập và **Lưu lịch** lại 
 - Lỗi API: kiểm tra token, model, quota và kết nối Internet. Không gửi key hoặc tin nhắn nhân viên trong ảnh báo lỗi.
 
 Để gỡ bản portable, đóng ứng dụng và gỡ lịch đã tạo trong Task Scheduler nếu có; giữ bản sao lưu cần thiết trước khi xóa thư mục.
+
+## 7. Nghi?m thu v? d? li?u cloud
+
+D?ng [bi?n b?n b?n giao](HANDOVER_ACCEPTANCE.md) ?? ki?m tra tr?n m?y nh?n. Ch?nh s?ch x?a 3 th?ng ch? ?p d?ng website cloud; kh?ng x?a SQLite Local ho?c Excel ?? t?i v?. Xem [v?n h?nh cloud](CLOUD_OPERATIONS.md).

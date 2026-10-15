@@ -1,44 +1,49 @@
-# Cài đặt và chuyển máy Windows (Local)
+# C?i ??t AttendSift AI 1.0.2 tr?n Windows
 
-## Điều kiện
+## Ch?n ??ng g?i
 
-- Windows 10/11 64-bit, quyền cài Python/cài thư viện. Tốt nhất dùng **Python 3.11 x64**, bật Python Launcher.
-- Truy cập Internet khi cài pip và khi sử dụng Chatwork/AI API.
-- Thư mục có quyền ghi, ví dụ `C:\ChamCongChatwork`; tránh `Program Files` và thư mục chia sẻ/đồng bộ tài khoản.
-
-## Từ mã nguồn
-
-1. Vào trang repository GitHub > `Code` > `Download ZIP`; giải nén tại máy đích.
-2. Cài Python 3.11 x64 nếu chưa có (theo python.org, chọn launcher/Add to PATH).
-3. Nhấp đúp `CAI_DAT_WINDOWS.bat`; kiểm tra thông báo hoàn tất, không đóng khi đang cài.
-4. Nhấp đúp `KIEM_TRA_LOCAL_WINDOWS.bat`; kiểm tra dependencies và mẫu workbook.
-5. Nhấp đúp `CHAY_LOCAL_WINDOWS.bat`. Mở `http://127.0.0.1:8766` nếu trình duyệt không tự bật.
-6. Trong Thiết lập, cấu hình Chatwork Room ID/API key và khóa AI chính chủ. Chỉ thử lần đầu bằng dữ liệu được phép xử lý.
-7. Xuất bảng công 4 sheet, kiểm tra ở `Downloads`, mở bằng Excel/WPS và soát ít nhất 3 trường hợp OT nhóm.
-
-### Build EXE trên Windows
-
-Chạy `TAO_EXE_WINDOWS.bat` hoặc workflow Windows trong Actions; kiểm tra file phát hành dưới thư mục `release/`. Kiểm tra trên một máy Windows khác **không có Python** và xác nhận lịch sử, cấu hình khóa, bản Excel.
-
-**Quan trọng:** file `ChamCong.exe` không có sẵn trong repository này. GitHub Actions được cấu hình, nhưng không có nghĩa là bản build đã được ký số hoặc chứng nhận sạch bởi Windows Defender.
-
-## Chuyển dữ liệu từ máy cũ
-
-- Mặc định: mỗi máy tự tạo một SQLite trống (`data/chamcong.db`).
-- Muốn chuyển lịch sử: đóng hẳn app ở cả hai máy; sao lưu rồi copy riêng file `data/chamcong.db` sang cùng vị trí trên máy mới. Sao lưu trước khi ghi đè file hiện có.
-- Có thể chuyển `outputs/sessions/` nếu có nhu cầu lưu các bản Excel cũ.
-- **Không copy** file `*.credentials` từ tài khoản Windows cũ: DPAPI mã hóa theo tài khoản/máy và không dùng được ở nơi khác. Nhập lại khóa API trên máy mới.
-- Không để nhiều máy ghi chung một file SQLite qua OneDrive/SMB vì dễ lỗi hoặc tranh chấp dữ liệu.
-
-## Xử lý lỗi thường gặp
-
-| Triệu chứng | Kiểm tra |
+| B?n ?ang c? | C?ch ch?y |
 |---|---|
-| `.bat` tắt nhanh | Chạy từ Command Prompt để đọc lỗi; xác nhận Python 3.11 và Internet |
-| Port 8766 bị chiếm | Tắt cửa sổ/ứng dụng cũ đang mở cổng đó |
-| Không thấy Excel trong Downloads | Kiểm tra thông báo đường dẫn của app và quyền ghi Downloads, thử đường dẫn chuyển vị trí |
-| Không đọc được API key sau chuyển máy | Nhập lại khóa trên tài khoản Windows đích |
-| Excel báo `[Repaired]` | Giữ file lỗi và kiểm tra bằng Microsoft Excel; không coi WPS mở được là đảm bảo |
-| Thiếu các tin cũ | API có giới hạn lịch sử, nên đối chiếu dữ liệu gốc và nhật ký lần đồng bộ |
+| ZIP portable c? `UngDung/ChamCong.exe` | Gi?i n?n, `KIEM_TRA.bat`, `BAT_DAU.bat`; kh?ng c?n Python |
+| ZIP m? ngu?n c? `main.py` v? `src/` | C?i Python r?i ch?y c?c BAT c?i ??t |
+| ???ng d?n website | D?ng tr?nh duy?t; d? li?u thu?c cloud, kh?ng n?m trong SQLite Local |
 
-Tính năng Local không yêu cầu PostgreSQL. `cloud/` và `requirements-web.txt` là **tùy chọn khác**, không dùng trong các bước trên.
+## C?i t? m? ngu?n
+
+1. C?i Python 3.11 x64 t? python.org, b?t Python Launcher. M?y c?n Internet ?? t?i th? vi?n.
+2. Gi?i n?n m? ngu?n v?o th? m?c c? quy?n ghi, v? d? `D:\AttendSift-AI_Source`; tr?nh Program Files v? SQLite tr?n ? chia s?.
+3. Ch?y `CAI_DAT_WINDOWS.bat`, ??i th?ng b?o th?nh c?ng. M?i tr??ng `.venv` ???c t?o ri?ng.
+4. Ch?y `KIEM_TRA_LOCAL_WINDOWS.bat`, r?i `CHAY_LOCAL_WINDOWS.bat`.
+5. M? `http://127.0.0.1:8766` n?u tr?nh duy?t ch?a t? m?.
+6. Thi?t l?p token Chatwork, ch?n ph?ng, ch?n nh? cung c?p AI v? ki?m tra k?t n?i.
+7. Th? tin gi?, t?o b?ng v? ??i chi?u Excel 4 sheet tr??c khi nh?p d? li?u th?t.
+
+## Ch?y g?i portable tr?n m?y ng??i nh?n
+
+Xem [h??ng d?n chuy?n m?y](CHUYEN_MAY_WINDOWS.md). Gi?i n?n to?n b? g?i; EXE ch?a Python v? th? vi?n nh?ng m?y v?n c? th? c?n WebView2 ?? m? c?a s? ri?ng. N?u c?a s? ri?ng kh?ng m?, ?ng d?ng c? c? ch? m? tr?nh duy?t local.
+
+EXE ch?a k? s?. Khi b? ch?n, ki?m tra ngu?n nh?n, SHA256 v? nh? IT ki?m tra ch?nh s?ch m?y. Kh?ng coi vi?c c? checksum l? ch?ng nh?n an to?n ??c l?p.
+
+## D? li?u v? chuy?n m?y
+
+D? li?u Local n?m c?nh EXE (ho?c t?i g?c m? ngu?n khi ch?y Python), trong c?c th? m?c `data`, `outputs`, `backups`, `logs`, `config`. File Excel ch?nh ???c l?u trong Downloads c?a t?i kho?n Windows.
+
+D?ng t?nh n?ng sao l?u/kh?i ph?c ?? chuy?n d? li?u; ??ng ?ng d?ng, sao l?u m?y ??ch tr??c khi kh?i ph?c. API key c?n nh?p l?i v? kh?a local g?n v?i t?i kho?n Windows qua DPAPI. L?u l?i l?ch tr?n m?y m?i ?? Task Scheduler d?ng ??ng ???ng d?n.
+
+Ch?nh s?ch t? x?a 3 th?ng ch? ?p d?ng b?n cloud trong phi?n b?n n?y. Ng??i v?n h?nh Local t? qu?n l? sao l?u v? th?i h?n l?u.
+
+## Kh?c ph?c nhanh
+
+| Hi?n t??ng | C?ch ki?m tra |
+|---|---|
+| Kh?ng m? ho?c t?t ngay | Gi?i n?n ??y ??, quy?n ghi, `logs/application.log`; ch?y ki?m tra m?i tr??ng |
+| C?ng 8766 ?? d?ng | ??ng b?n c?; portable c? `CHAY_CONG_KHAC.bat` d?ng 8767 |
+| Kh?ng c? c?a s? ri?ng | Th? tr?nh duy?t local khi EXE c?n ch?y; ki?m tra WebView2 v?i IT |
+| Kh?ng ??c ???c key sau chuy?n m?y | Nh?p l?i kh?a tr?n t?i kho?n Windows ??ch |
+| Thi?u tin nh?n th?ng | ??i chi?u c?a s? API g?n nh?t v? ngu?n g?c; Local h? tr? nh?p l?ch s? |
+| Kh?ng th?y Excel | Xem ???ng d?n ?ng d?ng b?o v? Downloads c?a t?i kho?n hi?n t?i |
+| Excel b?o s?a ch?a file | Gi? b?n ?? che d? li?u ?? k? thu?t ki?m tra; kh?ng x?c nh?n nghi?m thu |
+
+## Build cho ng??i b?o tr?
+
+Build tr?n Windows b?ng `TAO_EXE_WINDOWS.bat` ho?c GitHub Actions. EXE t?i `release/ChamCong.exe` ph?i ???c ki?m tra runtime v? th? tr?n m?y nh?n. D?ng [quy tr?nh ph?t h?nh](PUBLISH_1.0.2.md) ?? ??ng g?i; kh?ng ch?p to?n b? th? m?c ?ang ch?a d? li?u nh?n vi?n cho ng??i kh?c.

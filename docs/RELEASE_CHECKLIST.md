@@ -1,15 +1,18 @@
-# Pre-release checklist (RC)
+# Checklist ph?t h?nh 1.0.2
 
-> Chưa đạt Production Ready. Checklist bên dưới chỉ đánh dấu các bằng chứng đã có.
+B?ng ch?ng ?o ???c: [b?o c?o ki?m ch?ng](VERIFICATION_1.0.2.md). B?n n?y d?ng nh?n release candidate.
 
-- [x] Có mã nguồn, README VI/EN, tài liệu kiến trúc, hướng dẫn Local.
-- [x] Có `.gitignore`, không kèm SQLite/log/credentials trong gói đã rà soát.
-- [x] Có screenshot đã che dữ liệu riêng tư.
-- [x] Có script kiểm tra cấu trúc gói và tests chạy thử (xem verification).
-- [ ] Nhận phản hồi trên Windows sạch từ ít nhất một máy độc lập.
-- [ ] EXE chạy thành công và xuất Excel trên máy đích (có biên bản/ngày thử).
-- [ ] `4_CAN_KIEM_TRA` được chụp an toàn, dữ liệu demo giả.
-- [ ] Đối chiếu tình huống với Chatwork API thật trong môi trường đã được cấp phép.
-- [ ] Quét toàn bộ commit history / secrets / dependency advisories trước khi public.
-- [ ] Chọn giấy phép sử dụng; kiểm tra quyền tài sản bên thứ ba (ảnh, model 3D, thư viện).
-- [ ] Tạo tag release và công bố checksum của artifact được kiểm tra.
+- [x] README VI/EN ph?n bi?t Windows Local v? cloud.
+- [x] T?i li?u bao g?m GMT+7, cron v? ch?nh s?ch l?u cloud 3 th?ng.
+- [x] C? h??ng d?n c?i ??t, chuy?n d? li?u v? m?u bi?n b?n b?n giao.
+- [x] C? ki?m th? ngu?n v? c?ng c? ki?m tra t?p runtime kh?ng ???c ??ng g?i.
+- [ ] Nh?n x?c nh?n EXE tr?n m?y Windows ??c l?p kh?ng c?i Python.
+- [ ] Ki?m tra c?a s? WebView2, Downloads v? Task Scheduler tr?n m?y ??ch.
+- [ ] X?c nh?n API Chatwork/AI th?t v?i t?i kho?n ???c ph?p.
+- [ ] M? workbook b?ng Microsoft Excel, kh?ng s?a ch?a file.
+- [ ] Ch?y th? retention tr?n PostgreSQL staging.
+- [ ] Ki?m tra l?ch s? repository v? quy?n t?i s?n tr??c khi public.
+- [ ] Ch? s? h?u x?c nh?n ?i?u ki?n s? d?ng/ph?n ph?i v? gi?y ph?p.
+- [ ] T?o tag tr?n GitHub, build t? ??ng tag, xu?t b?n ZIP v? checksum trong Releases.
+
+Kh?ng ghi nh?n m?c ch?a c? b?ng ch?ng l? ho?n t?t. Checksum gi?p ??i chi?u t?p, kh?ng thay th? k? s? hay ki?m tra b?o m?t ??c l?p.

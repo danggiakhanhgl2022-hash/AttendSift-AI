@@ -1,30 +1,27 @@
-# Phương pháp kiểm thử và bằng chứng
+# Ki?m th? v? gi?i h?n b?ng ch?ng ? 1.0.2
 
-## Những gì đã thực sự chạy trong đợt chuẩn bị portfolio
+K?t qu? c?a b?n hi?n t?i ???c ghi t?i [VERIFICATION_1.0.2](VERIFICATION_1.0.2.md). C?c b?o c?o ng?y c? ch? m? t? l?n ch?y t??ng ?ng.
 
-- Mã Python: `python -m compileall -q main.py app.py cloud src tools`.
-- Kiểm tra cấu trúc gói và tệp bị cấm bằng `python tools/release_audit.py .`.
-- Kiểm thử nhóm nghiệp vụ chạy bằng `pytest` trên Linux; kết quả thực đo trong lần đóng gói được ghi tại `docs/VERIFICATION_2026-10-14.md`.
-- Đầu vào kiểm thử là các fixture/tin nhắn giả lập hoặc đã ẩn danh; không phải đo trên toàn bộ lịch sử công ty.
-
-## Tự chạy test
+## Ch?y l?i
 
 ```powershell
-# Trong thư mục project đã cài môi trường
-.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
-# Kiểm tra riêng nghiệp vụ OT và Local
-.venv\Scripts\python.exe -m pytest -q tests/test_policy_october_2026_acceptance.py tests/test_multi_employee_screenshots.py tests/test_downloads_export.py
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+node tests/test_cloud_message_ui.cjs
+python tools/check_local_install.py
+python tools/release_audit.py .
 ```
 
-Một số test phụ thuộc Windows DPAPI, WebView, Flask hoặc môi trường native; không coi các bài *skip* là đã vượt qua. Khi CI Windows thật chạy, phải lưu link tới GitHub Actions run thành công và screenshot thủ công.
+C?i `requirements-build.txt` khi build EXE. M?i tr??ng ch? c?i requirements Local c? th? thi?u dependencies cloud; c?i ?? requirements-dev tr??c khi k?t lu?n test cloud l?i. Node ch? c?n cho b?i test UI, kh?ng c?n tr?n m?y ng??i nh?n.
 
-## Tiêu chuẩn nghiệm thu phát hành (chưa hoàn tất)
+C?c fixture d?ng d? li?u gi? l?p. Ki?m th? g?m nghi?p v? nhi?u ng??i/nhi?u ng?y, b?ng ch?ng ngu?n, xu?t workbook, HTTP x?c th?c, m?c retention cu?i th?ng/n?m, ng?n ??ng b? nh?p l?i tin qu? h?n v? ki?m tra quy?n cron. Test kh?ng t? x?a database production.
 
-1. Cài Python + `.bat` trên Windows sạch.
-2. Build/khởi chạy EXE từ runner Windows, nhận đủ dependencies và mở được UI.
-3. Kiểm thử API Chatwork thật với môi trường được cấp quyền; kiểm tra giới hạn lịch sử và trường hợp đồng bộ lại.
-4. Kiểm tra xử lý **1 tin nhiều người/nhiều ngày**, OT mỗi người, không tạo tên mơ hồ.
-5. Mở Excel 4 sheet bằng **Microsoft Excel** không `[Repaired]`; kiểm tra format, giá trị và nội dung nguồn.
-6. Kiểm tra bản quyền, riêng tư, dữ liệu và khả năng khôi phục backup.
+## Nghi?m thu ri?ng
 
-Khi những bước này chưa có chứng cứ, chỉ ghi **release candidate/technical preview**.
+- EXE: ki?m tra th? vi?n v? template b?ng `--check-runtime`, ch?y HTTP local headless; ghi checksum ??ng EXE ?? th?.
+- M?y ng??i nh?n: m? c?a s?, quy?n ghi, WebView2, Downloads v? Task Scheduler.
+- T?ch h?p: Chatwork/AI b?ng t?i kho?n ???c ph?p, ??i chi?u s? tin v? quota.
+- Workbook: Microsoft Excel m? kh?ng s?a ch?a, ki?m tra c?ng th?c/gi? tr? v? ch?nh s?ch th?c t?.
+- Retention: th? tr?n PostgreSQL staging ??c l?p tr??c khi x?c nh?n SQL ?? nghi?m thu.
+
+Kh?ng xem test skip l? ??t; kh?ng chuy?n tr?ng th?i pre-release th?nh stable ch? v? b? ki?m th? t? ??ng xanh. D?ng [bi?n b?n b?n giao](HANDOVER_ACCEPTANCE.md).

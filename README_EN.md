@@ -1,44 +1,42 @@
-# ChamCongChatwork — Local-first Attendance from Chatwork
+# AttendSift AI
 
-[Tiếng Việt](README.md) · [Windows setup](docs/INSTALL_WINDOWS.md) · [Architecture](docs/ARCHITECTURE.md) · [Testing status](docs/TESTING.md)
+**Turn Chatwork reports into attendance records that can be reviewed against their source.**
 
-**Release Candidate — portfolio/technical demonstration, not a certified production release.** A Windows-local Python/Flask application that interprets semi-structured attendance reports in Chatwork messages, links extracted events to source messages, and exports a four-sheet Excel workbook.
+AI Department ? ??ng Gia Kh?nh ? Version 1.0.2
 
-![Redacted screenshot of the desktop UI](docs/images/01-local-interface-redacted.png)
+[Vietnamese documentation](README.md) ? [Windows setup](docs/INSTALL_WINDOWS.md) ? [Verification](docs/VERIFICATION_1.0.2.md)
 
-> The screenshots are derived from actual application/Excel captures with employee records **opaquely redacted**. No private chat messages, employee spreadsheets or private demo footage are redistributed in this repository.
+AttendSift AI stores source messages, uses an AI provider to assist with event extraction, applies business rules, and lets an operator review the results before exporting a four-sheet Excel workbook. It handles messages mentioning multiple people and dates, with separate overtime amounts for each person.
 
-## Why it exists
+## Deployment options
 
-Real-world messages often list several employees and several dates in one post. Attendance extraction should produce one event per employee/date/category, applying the stated overtime **to each mentioned person** rather than splitting it among them. The source record must remain auditable, and ambiguous claims must be reviewable.
+| | Windows Local | Cloud website |
+|---|---|---|
+| Storage | Per-installation SQLite | Neon PostgreSQL |
+| Launch | Portable EXE or Python source | Browser with authentication |
+| Scheduling | Windows Task Scheduler | Vercel Cron |
+| Automatic retention | Cloud policy does not apply | Three calendar months |
 
-## Implemented components (as observed in source)
+These deployments do not automatically share data or API credentials. Local processing still sends relevant content to the configured AI service. Internet access and API quota are required for remote operations.
 
-- Chatwork message sync and local SQLite storage.
-- AI provider adapters and rules-based source reconciliation.
-- Multi-person, multi-date, multi-duration overtime extraction with source IDs.
-- Source-only handling of annual-leave requests and explicitly labelled contractors `(CTV)` per current business policy.
-- Review workflow for ambiguous/unsupported attendance interpretations.
-- Four-sheet Excel output: source messages, detailed events, summary, review queue.
-- Local Windows launch via browser / desktop webview and a Windows build workflow.
+## Windows quick start
 
-### Fictional scenario
+For a verified portable bundle, extract the entire ZIP, read `DOC_TRUOC_KHI_CHAY.html`, run `KIEM_TRA.bat`, then `BAT_DAU.bat`. The target machine does not need Python. Enter the recipient's Chatwork and AI credentials; do not transfer Windows-encrypted credentials from another account.
 
-A single fictional report contains **Lan 1h, Minh & Bình 2h** on Oct 5 and **Lan 1h30, Minh 30m, Nam 1h** on Oct 7. The result is **six independently linked overtime rows**, not a shared 2-hour pool.
+For source installation, use Python 3.11 x64 and run `CAI_DAT_WINDOWS.bat`, `KIEM_TRA_LOCAL_WINDOWS.bat`, then `CHAY_LOCAL_WINDOWS.bat`. The default address is `http://127.0.0.1:8766`. Source ZIPs do not contain a prebuilt EXE.
 
-## Run on another Windows PC
+## Version 1.0.2
 
-Requires Windows 10/11 x64, Python 3.11 x64, and Internet for initial dependencies plus live API calls.
+- Refresh cloud messages after synchronization and improve filter feedback.
+- Display cloud message timestamps in Vietnam time with an unbroken date/time string.
+- Authenticate cron independently of a rotating deployment hostname, only on its exact endpoint.
+- Remove expired cloud messages, analysis sessions, reports and activity history during authorized daily cron runs; keep connection settings.
+- Consolidate setup, handoff, release and operations documentation.
 
-1. Download repository ZIP and extract it to a writable folder.
-2. Run `CAI_DAT_WINDOWS.bat`.
-3. Run `CHAY_LOCAL_WINDOWS.bat` and visit `http://127.0.0.1:8766`.
-4. Supply your own Chatwork/AI credentials in Settings; do not reuse encrypted credentials from another Windows account.
+Messages expire three calendar months after sending. Analysis sessions and their source snapshots/results/Excel expire three months after session creation. Download reports needed for long-term storage before expiry. Retention does not guarantee that three months of usage will fit a free hosting plan.
 
-For a standalone EXE, build on Windows using `TAO_EXE_WINDOWS.bat` or GitHub Actions and **validate the binary on a clean Windows machine** before distributing it. GitHub Pages cannot host this Python backend. The optional `cloud/` variant requires separate infrastructure and is not needed for the local application.
+## Validation and limitations
 
-## Evidence and important limits
+This is an internal release candidate. See the verification report for measured results and remaining acceptance tasks. Chatwork's recent-message window may omit earlier history. AI results require human review. Clean-machine Windows acceptance, live provider validation and Microsoft Excel checks must be recorded separately.
 
-Source compilation and selected unit/regression tests have been executed; **Windows desktop acceptance, live Chatwork/AI end-to-end tests, and Microsoft Excel compatibility have not been fully verified in this environment**. See [test methodology](docs/TESTING.md), [feature matrix](docs/FEATURE_MATRIX.md), and [release checklist](docs/RELEASE_CHECKLIST.md).
-
-Use with synthetic data first. The project is not officially affiliated with Chatwork or AI vendors. This repository is **not automatically open-source licensed**; see [licensing decision](LICENSE_DECISION.md) before distributing/reusing code.
+No open-source license has been granted; see [LICENSE_DECISION.md](LICENSE_DECISION.md). Keep credentials, employee data and runtime databases out of public uploads. Report issues using synthetic examples through the repository's contribution and security guidance.
