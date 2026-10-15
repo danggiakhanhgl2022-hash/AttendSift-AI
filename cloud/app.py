@@ -192,7 +192,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
             return jsonify(success=False,error='Tác vụ đang được xử lý. Thử lại sau.'),409
         if isinstance(error,(AIHTTPError,AIResponseError)):
             event_id=track_failure('upstream')
-            return jsonify(success=False,error='Dịch vụ phân tích chưa sẵn sàng. Thử lại sau.',error_id=event_id),502
+            return jsonify(success=False,error=str(error),error_id=event_id),502
         if isinstance(error,PublicError):
             return jsonify(success=False,error=str(error)),400
         if isinstance(error,ValueError):
@@ -227,12 +227,64 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
         return value
 
     def settings():
-        provider = env.get('AI_PROVIDER','gemini')
+        saved = repo.get_setting('ai_connection', {})
+        provider = saved.get('provider') or env.get('AI_PROVIDER','gemini')
         key_name = {'gemini':'GEMINI_API_KEY','anthropic':'ANTHROPIC_API_KEY',
-                    'openai':'OPENAI_API_KEY','openai_compatible':'OPENAI_API_KEY'}.get(provider)
-        if not key_name or not env.get(key_name):
+                    'openai':'OPENAI_API_KEY'}.get(provider)
+        from .credentials import unseal
+        key = unseal(saved.get('encrypted_key',''), secret) if saved.get('encrypted_key') else ''
+        key = key or env.get(key_name or '', '')
+        if not key_name or not key:
             raise ValueError('Chưa cấu hình API key AI phía máy chủ.')
-        return {'provider':provider,'model':env.get('AI_MODEL') or None,'base_url':env.get('AI_BASE_URL') or None},env[key_name]
+        return {'provider':provider,'model':saved.get('model') or env.get('AI_MODEL') or None,
+                'base_url':None}, key
+
+    def chatwork_key():
+        from .credentials import unseal
+        saved = repo.get_setting('chatwork_connection', {})
+        key = unseal(saved.get('encrypted_key',''), secret) if saved.get('encrypted_key') else ''
+        return key or env.get('CHATWORK_API_KEY','')
+
+    @app.post('/api/config/ai')
+    def save_ai_connection():
+        data = body()
+        provider = data.get('provider', 'gemini')
+        model = data.get('model', '')
+        key = data.get('api_key', '')
+        if provider not in {'gemini','openai','anthropic'}:
+            raise PublicError('Chọn Google Gemini, OpenAI hoặc Claude.')
+        if not isinstance(model, str) or len(model) > 150 or not isinstance(key, str) or len(key) > 4096:
+            raise PublicError('Model hoặc API key không hợp lệ.')
+        key, model = key.strip(), model.strip()
+        saved = repo.get_setting('ai_connection', {})
+        if not key:
+            if saved.get('provider') == provider:
+                from .credentials import unseal
+                key = unseal(saved.get('encrypted_key', ''), secret)
+            key = key or env.get({'gemini':'GEMINI_API_KEY','openai':'OPENAI_API_KEY','anthropic':'ANTHROPIC_API_KEY'}[provider], '')
+        if not key:
+            raise PublicError('Nhập API key để kiểm tra kết nối.')
+        adapter = ai_factory(provider=provider, model=model or None, base_url=None, api_key=key)
+        adapter.test_connection()
+        from .credentials import seal
+        repo.set_setting('ai_connection', {'provider':provider, 'model':adapter.model, 'encrypted_key':seal(key,secret)})
+        repo.log('settings','success','Đã kiểm tra và lưu kết nối AI.')
+        return ok({'provider':provider,'model':adapter.model,'connected':True})
+
+    @app.post('/api/config/chatwork')
+    def save_chatwork_connection():
+        data = body()
+        key = data.get('api_key', '')
+        if not isinstance(key, str) or len(key) > 4096:
+            raise PublicError('API token không hợp lệ.')
+        key = key.strip() or chatwork_key()
+        if not key:
+            raise PublicError('Nhập API token Chatwork.')
+        chatwork_factory(key).get_rooms()
+        from .credentials import seal
+        repo.set_setting('chatwork_connection', {'encrypted_key':seal(key,secret)})
+        repo.log('settings','success','Đã kiểm tra và lưu kết nối Chatwork.')
+        return ok({'connected':True})
 
     @app.get('/health')
     def health():
@@ -283,23 +335,30 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
     @app.get('/api/config')
     def config_status():
         selected=repo.get_setting('room',{'room_id':env.get('CHATWORK_ROOM_ID',''),'room_name':''})
-        return ok({'room':selected,'ai_provider':env.get('AI_PROVIDER','gemini'),
-                   'ai_model':env.get('AI_MODEL',''),'has_chatwork_key':bool(env.get('CHATWORK_API_KEY')),
+        saved = repo.get_setting('ai_connection', {})
+        try:
+            ai, key = settings()
+            has_ai_key = bool(key)
+        except ValueError:
+            ai = {'provider':saved.get('provider') or env.get('AI_PROVIDER','gemini'), 'model':saved.get('model') or env.get('AI_MODEL','')}
+            has_ai_key = False
+        return ok({'room':selected,'ai_provider':ai['provider'], 'has_ai_key':has_ai_key,
+                   'ai_model':ai['model'],'has_chatwork_key':bool(chatwork_key()),
                    'schedule':'13:00 UTC+7 (06:00 UTC); cloud Cron',
-                   'keys_managed_in':'Vercel Environment Variables'})
+                   'keys_managed_in':'Encrypted Neon settings / Vercel Environment Variables'})
 
     @app.get('/api/rooms')
     def rooms():
-        if not env.get('CHATWORK_API_KEY'):
+        if not chatwork_key():
             raise ValueError('Chưa cấu hình CHATWORK_API_KEY phía máy chủ.')
-        return ok(chatwork_factory(env['CHATWORK_API_KEY']).get_rooms())
+        return ok(chatwork_factory(chatwork_key()).get_rooms())
 
     @app.post('/api/room')
     def select_room():
         value=body().get('room_id')
         if not isinstance(value,str) or not value.isdigit():
             raise ValueError('Room ID không hợp lệ.')
-        available=chatwork_factory(env.get('CHATWORK_API_KEY','')).get_rooms()
+        available=chatwork_factory(chatwork_key()).get_rooms()
         selected=next((r for r in available if str(r.get('room_id'))==value),None)
         if not selected:
             raise ValueError('Room không thuộc quyền API.')
@@ -308,10 +367,10 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
 
     def run_sync():
         selected=room()
-        if not env.get('CHATWORK_API_KEY'):
+        if not chatwork_key():
             raise ValueError('Chưa cấu hình CHATWORK_API_KEY.')
         with repo.lease('sync:'+selected,seconds=120) as owner:
-            adapter=chatwork_factory(env['CHATWORK_API_KEY'])
+            adapter=chatwork_factory(chatwork_key())
             raw=adapter.get_recent_messages(selected)
             messages=[]
             for item in raw:
