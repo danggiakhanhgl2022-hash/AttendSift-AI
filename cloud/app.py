@@ -401,7 +401,9 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
     def cron():
         if not cron_authorized():
             return jsonify(success=False,error='Unauthorized'),401
-        return ok(run_sync())
+        retention = repo.purge_expired()
+        repo.log('retention', 'success', '?? d?n d? li?u c? h?n 3 th?ng.', details=retention)
+        return ok({**run_sync(), 'retention': retention})
 
     @app.get('/api/messages')
     def messages():

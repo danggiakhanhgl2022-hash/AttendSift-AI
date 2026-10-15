@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from datetime import datetime
 import hashlib
 import uuid
+from .retention import retention_cutoff
 
 
 class LeaseBusy(ValueError):
@@ -64,10 +65,14 @@ class PostgresRepository:
             raise LeaseBusy('Thao tác đã hết hạn; dữ liệu chưa được ghi. Hãy thử lại.')
 
     def save_messages(self, room, messages, owner):
-        counts = {'added': 0, 'updated': 0, 'unchanged': 0}
+        counts = {'added': 0, 'updated': 0, 'unchanged': 0, 'skipped_old': 0}
+        cutoff = retention_cutoff()
         with self.connection() as conn:
             self._assert_lease(conn, 'sync:'+room, owner)
             for message in messages:
+                if datetime.fromisoformat(message['send_time']) < cutoff:
+                    counts['skipped_old'] += 1
+                    continue
                 digest = hashlib.sha256(message['body'].encode('utf-8')).hexdigest()
                 old = conn.execute('SELECT body,content_hash,account_id,name,send_time FROM cc_messages WHERE room_id=%s AND message_id=%s FOR UPDATE', (room, message['message_id'])).fetchone()
                 same_metadata=bool(old and old['account_id']==str(message.get('account_id') or '')
@@ -87,6 +92,36 @@ class PostgresRepository:
                 counts['updated' if old else 'added'] += 1
             conn.execute("INSERT INTO cc_settings(key,value) VALUES(%s,%s) ON CONFLICT(key) DO UPDATE SET value=excluded.value", ('last_sync:'+room, self.json(datetime.now().astimezone().isoformat())))
         return counts
+
+    def purge_expired(self):
+        """Delete expired business data atomically; retain configuration and keys."""
+        cutoff = retention_cutoff()
+        with self.connection() as conn:
+            # Serialize with writers and lease acquisition for this short transaction.
+            # A session already being processed is deferred until its lease expires.
+            conn.execute("SET LOCAL lock_timeout = '5s'")
+            conn.execute("""LOCK TABLE cc_leases, cc_sessions, cc_files,
+                cc_actions, cc_messages, cc_message_versions IN SHARE ROW EXCLUSIVE MODE""")
+            expired = """SELECT session_id FROM cc_sessions s
+                WHERE s.created_at < %s AND NOT EXISTS (
+                    SELECT 1 FROM cc_leases l WHERE l.resource='session:' || s.session_id
+                    AND l.expires_at > now())"""
+            counts = {}
+            counts['files'] = conn.execute(
+                'DELETE FROM cc_files WHERE session_id IN (' + expired + ')', (cutoff,)).rowcount
+            counts['actions'] = conn.execute(
+                'DELETE FROM cc_actions WHERE created_at < %s OR session_id IN (' + expired + ')',
+                (cutoff, cutoff)).rowcount
+            counts['sessions'] = conn.execute(
+                'DELETE FROM cc_sessions WHERE session_id IN (' + expired + ')', (cutoff,)).rowcount
+            counts['message_versions'] = conn.execute("""DELETE FROM cc_message_versions v
+                WHERE v.version_time < %s OR EXISTS (
+                    SELECT 1 FROM cc_messages m WHERE m.room_id=v.room_id
+                    AND m.message_id=v.message_id AND m.send_time < %s)""",
+                (cutoff, cutoff)).rowcount
+            counts['messages'] = conn.execute(
+                'DELETE FROM cc_messages WHERE send_time < %s', (cutoff,)).rowcount
+        return {'cutoff': cutoff.isoformat(), 'deleted': counts}
 
     def messages(self, room, start, end):
         with self.connection() as conn:

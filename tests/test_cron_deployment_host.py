@@ -7,6 +7,10 @@ from tests.test_cloud_web import MemoryRepository
 SECRET = 'synthetic-cron-secret-32-chars-minimum-123456'
 
 class Repo(MemoryRepository):
+    def purge_expired(self):
+        self.purge_calls = getattr(self, "purge_calls", 0) + 1
+        return {"deleted": {}, "cutoff": "synthetic"}
+
     @contextmanager
     def lease(self, resource, seconds=120):
         yield 'synthetic-lease-token'
@@ -23,7 +27,8 @@ class Chatwork:
 
 
 def test_cron_deployment_host_requires_strong_bearer_token():
-    app = create_app(repository=Repo(), chatwork_factory=Chatwork, config={
+    repo = Repo()
+    app = create_app(repository=repo, chatwork_factory=Chatwork, config={
         'CHAMCONG_SESSION_SECRET': 'synthetic-local-session-secret-123456789',
         'CHAMCONG_ADMIN_PASSWORD_HASH': PASSWORD_HASHER.hash('synthetic-password'),
         'CHAMCONG_ALLOWED_HOSTS': 'attend-sift-ai.vercel.app',
@@ -43,3 +48,5 @@ def test_cron_deployment_host_requires_strong_bearer_token():
             'Authorization': 'Bearer wrong'}).status_code == 403
     assert client.get(path, headers={'Host': 'attend-sift-ai.vercel.app'}).status_code == 401
     assert client.get('/api/config', headers=correct_header).status_code == 403
+
+    assert repo.purge_calls == 1, "Only an authorized cron may delete data"
