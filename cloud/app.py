@@ -141,12 +141,22 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
     if not hosts:
         raise RuntimeError('Cần CHAMCONG_ALLOWED_HOSTS; không mặc định mở dữ liệu nhân viên ra Internet.')
 
+    def cron_authorized():
+        """Trust a Cron request only after verifying Vercel's secret, not its rotating host."""
+        cron_secret = env.get('CRON_SECRET', '')
+        return (len(cron_secret) >= 32 and
+                secrets.compare_digest(request.headers.get('Authorization', ''),
+                                       'Bearer ' + cron_secret))
+
     @app.before_request
     def protection():
         g.request_id = uuid.uuid4().hex
         if app.debug:
             return jsonify(success=False,error='Chế độ debug không được phép trên web này.'),503
-        if request.host.split(':')[0].lower() not in hosts:
+        # Vercel Cron targets the production *deployment* URL, which can rotate.
+        # Only the exact Cron endpoint with a valid Bearer secret bypasses host validation.
+        if (request.host.split(':')[0].lower() not in hosts and
+                not (request.endpoint == 'cron' and cron_authorized())):
             return jsonify(success=False, error='Host không hợp lệ.'), 403
         if request.endpoint in {'static', 'health', 'readiness', 'login', 'cron'}:
             return None
@@ -389,8 +399,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
 
     @app.get('/api/cron/sync')
     def cron():
-        cron_secret=env.get('CRON_SECRET','')
-        if len(cron_secret)<32 or not secrets.compare_digest(request.headers.get('Authorization',''),'Bearer '+cron_secret):
+        if not cron_authorized():
             return jsonify(success=False,error='Unauthorized'),401
         return ok(run_sync())
 

@@ -26,13 +26,102 @@ $('provider').addEventListener('change',()=>{$('model').value='';updateProviderA
 bind('saveAI',async()=>{status('Đang kiểm tra kết nối AI…');await api('/api/config/ai',{provider:$('provider').value,model:$('model').value,api_key:$('aiKey').value});$('aiKey').value='';await loadConfig();status('Đã kiểm tra và lưu kết nối AI.');});
 bind('saveChatwork',async()=>{status('Đang kiểm tra Chatwork…');await api('/api/config/chatwork',{api_key:$('chatworkKey').value});$('chatworkKey').value='';await loadConfig();$('roomsButton').click();status('Đã kiểm tra và lưu kết nối Chatwork.');});
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>document.querySelector('[data-section="'+button.dataset.go+'"]').click()));
-document.querySelectorAll('[data-section]').forEach(button=>{button.dataset.tab=button.dataset.section;button.addEventListener('click',()=>{const tab=button.dataset.tab;status('');document.querySelectorAll('[data-section]').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-current',active?'page':'false');});document.body.dataset.page=tab;['sync','export','history','settings'].forEach(id=>{$(id).hidden=id!==tab;$(id).classList.toggle('active',id===tab);});if(tab==='settings')loadConfig().catch(error=>status(error.message));});});
+document.querySelectorAll('[data-section]').forEach(button=>{button.dataset.tab=button.dataset.section;button.addEventListener('click',()=>{const tab=button.dataset.tab;status('');document.querySelectorAll('[data-section]').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-current',active?'page':'false');});document.body.dataset.page=tab;['sync','export','history','settings'].forEach(id=>{$(id).hidden=id!==tab;$(id).classList.toggle('active',id===tab);});if(tab==='settings')loadConfig().catch(error=>status(error.message));if(tab==='sync'&&!messageDataLoaded)loadMessages().catch(error=>status('Không tải được tin đã lưu: '+error.message));});});
 bind('logout',async()=>{await api('/logout',{});location.assign('/login');});
-bind('syncButton',async()=>{status('Đang đồng bộ…');const result=await api('/api/sync',{});$('lastSync').textContent=new Date().toLocaleString('vi-VN');status(`Nhận ${result.received} tin; thêm ${result.added}, sửa ${result.updated}, giữ ${result.unchanged}. API trả cửa sổ gần nhất, không xác minh đủ lịch sử.`);});
+bind('syncButton',async()=>{
+ status('Đang đồng bộ…');
+ const result=await api('/api/sync',{});
+ $('lastSync').textContent=new Date().toLocaleString('vi-VN');
+ // Sync and listing are distinct operations. Do not require a second button click.
+ try {
+  const loaded=await loadMessages();
+  status(`Đồng bộ: ${result.received} tin nhận, ${result.added} tin mới, ${result.updated} tin sửa. ${loaded ? 'Danh sách đã làm mới.' : 'Đang chờ tải danh sách.'} API chỉ trả cửa sổ gần nhất.`);
+ } catch(error) {
+  status(`Đã đồng bộ ${result.received} tin nhưng chưa tải được danh sách: ${error.message}. Hãy bấm “Lọc tin nhắn” để thử lại.`);
+ }
+});
 let cachedMessages=[];
-function renderMessages(){const sender=$('messageSender').value.trim().toLocaleLowerCase('vi'),keyword=$('messageKeyword').value.trim().toLocaleLowerCase('vi');const start=$('messageStart').value,end=$('messageEnd').value;const messages=cachedMessages.filter(m=>{const date=new Date(m.send_time);const day=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok'}).format(date);return (!start||day>=start)&&(!end||day<=end)&&(m.name||'').toLocaleLowerCase('vi').includes(sender)&&(m.body||'').toLocaleLowerCase('vi').includes(keyword);});$('messages').replaceChildren();if(!messages.length){const empty=document.createElement('p');empty.className='empty';empty.textContent='Không có tin nhắn phù hợp.';$('messages').append(empty);return;}const table=document.createElement('table'),head=document.createElement('thead'),tr=document.createElement('tr');for(const title of ['Thời gian','Người gửi','Nội dung gốc']){const th=document.createElement('th');th.textContent=title;tr.append(th);}head.append(tr);table.append(head);const body=document.createElement('tbody');for(const message of messages){const row=document.createElement('tr');for(const [index,value] of [message.send_time,message.name,message.body].entries()){const cell=document.createElement('td');cell.textContent=value;if(index===2)cell.className='message-body';row.append(cell);}body.append(row);}table.append(body);$('messages').append(table);}
-bind('messagesButton',async()=>{const data=month('sourceMonth');const result=await api(`/api/messages?month=${data.month}&year=${data.year}`);cachedMessages=result.messages;renderMessages();status(`${result.message_count} tin trong kỳ; ${result.target_month_count} tin gửi trong tháng.`);});
-for(const id of ['messageSender','messageKeyword','messageStart','messageEnd'])$(id).addEventListener('input',renderMessages);
+let messageDataLoaded=false;
+let messageRequestId=0;
+const vnDateFormatter=new Intl.DateTimeFormat('en-GB',{
+ timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'
+});
+function messageDay(raw){
+ const date=new Date(raw);
+ if(Number.isNaN(date.getTime()))return null;
+ const parts=Object.fromEntries(vnDateFormatter.formatToParts(date).map(part=>[part.type,part.value]));
+ return `${parts.year}-${parts.month}-${parts.day}`;
+}
+function emptyMessage(text,warning=false){
+ const line=document.createElement('p');
+ line.className=warning?'warning':'empty';
+ line.textContent=text;
+ $('messages').replaceChildren(line);
+}
+function renderMessages(){
+ const start=$('messageStart').value,end=$('messageEnd').value;
+ if(start&&end&&start>end){
+  emptyMessage('Khoảng ngày không hợp lệ: “Từ ngày” phải trước hoặc bằng “Đến ngày”. Hãy sửa lại ngày hoặc xóa bộ lọc.',true);
+  $('messageViewSummary').textContent=`Đã tải ${cachedMessages.length} tin; chưa lọc vì khoảng ngày bị ngược.`;
+  return;
+ }
+ const sender=$('messageSender').value.trim().toLocaleLowerCase('vi');
+ const keyword=$('messageKeyword').value.trim().toLocaleLowerCase('vi');
+ const messages=cachedMessages.filter(message=>{
+  const day=messageDay(message.send_time);
+  return day!==null&&(!start||day>=start)&&(!end||day<=end)
+   &&String(message.name||'').toLocaleLowerCase('vi').includes(sender)
+   &&String(message.body||'').toLocaleLowerCase('vi').includes(keyword);
+ });
+ $('messageViewSummary').textContent=`Đang hiển thị ${messages.length}/${cachedMessages.length} tin đã tải trong kỳ.`;
+ if(!messages.length){
+  emptyMessage(cachedMessages.length
+   ?'Có tin đã lưu nhưng không có tin khớp bộ lọc hiện tại. Hãy kiểm tra ngày, tháng, tên người gửi hoặc từ khóa.'
+   :'Chưa có tin đã lưu trong kỳ này. Kiểm tra nhóm, tháng xem rồi thử đồng bộ.');
+  return;
+ }
+ const table=document.createElement('table'),head=document.createElement('thead'),tr=document.createElement('tr');
+ for(const title of ['Thời gian','Người gửi','Nội dung gốc']){
+  const th=document.createElement('th');th.textContent=title;tr.append(th);
+ }
+ head.append(tr);table.append(head);
+ const body=document.createElement('tbody');
+ for(const message of messages){
+  const row=document.createElement('tr');
+  for(const [index,value] of [message.send_time,message.name,message.body].entries()){
+   const cell=document.createElement('td');cell.textContent=value??'';
+   if(index===2)cell.className='message-body';row.append(cell);
+  }
+  body.append(row);
+ }
+ table.append(body);$('messages').replaceChildren(table);
+}
+async function loadMessages(){
+ const data=month('sourceMonth');
+ if(!Number.isInteger(data.month)||data.month<1||data.month>12||!Number.isInteger(data.year)){
+  throw Error('Hãy chọn tháng cần xem hợp lệ.');
+ }
+ const requestId=++messageRequestId;
+ const result=await api(`/api/messages?month=${data.month}&year=${data.year}`);
+ if(requestId!==messageRequestId)return false; // Do not show a stale month after a faster response.
+ cachedMessages=Array.isArray(result.messages)?result.messages:[];
+ messageDataLoaded=true;
+ renderMessages();
+ return true;
+}
+bind('messagesButton',async()=>{
+ await loadMessages();
+ status(`Đã tải ${cachedMessages.length} tin trong kỳ; ${cachedMessages.filter(message=>messageDay(message.send_time)?.startsWith($('sourceMonth').value)).length} tin gửi trong tháng.`);
+});
+for(const id of ['messageSender','messageKeyword','messageStart','messageEnd']){
+ $(id).addEventListener('input',renderMessages);
+}
+$('sourceMonth').addEventListener('change',()=>{
+ // Date filters from another month must not silently hide this month's results.
+ $('messageStart').value='';$('messageEnd').value='';
+ loadMessages().then(()=>status('Đã cập nhật tin theo tháng xem.'))
+  .catch(error=>status(`Không tải được tin nhắn: ${error.message}`));
+});
 async function loadSession(){
  current=await api('/api/sessions/'+sid);
  $('reviewPanel').hidden=false;
@@ -79,10 +168,10 @@ function renderHistory(){
 bind('historyButton',async()=>{[savedSessions,savedActions]=await Promise.all([api('/api/sessions'),api('/api/history')]);renderHistory();});
 bind('filterHistory',async()=>{renderHistory();});
 bind('roomsButton',async()=>{const rooms=await api('/api/rooms');$('rooms').replaceChildren();rooms.forEach(room=>{const option=document.createElement('option');option.value=String(room.room_id);option.textContent=room.name;$('rooms').append(option);});});
-bind('roomButton',async()=>{await api('/api/room',{room_id:$('rooms').value});await loadConfig();status('Đã lưu phòng cloud.');});
+bind('roomButton',async()=>{await api('/api/room',{room_id:$('rooms').value});messageDataLoaded=false;cachedMessages=[];await loadConfig();await loadMessages();status('Đã lưu phòng cloud và tải tin nhắn của nhóm đã chọn.');});
 const today=new Date();const initial=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;$('sourceMonth').value=initial;$('exportMonth').value=initial;
 
 const reviewSpec=[['employee_name','Họ tên','text'],['event_date','Ngày sự kiện','date'],['event_type','Loại sự kiện','text'],['ot_minutes','Số phút OT','number'],['minutes_not_compensated','Phút không bù','number'],['minutes_compensated','Phút đã bù','number'],['leave_days','Số ngày nghỉ','number'],['ot_used_minutes','Phút tăng ca dùng nghỉ bù','number'],['ot_credit_date','Ngày dùng tăng ca nghỉ bù','date'],['identity_evidence','Bằng chứng tên trong tin nguồn','text'],['start_time','Giờ bắt đầu','time'],['end_time','Giờ kết thúc','time'],['reason','Lý do','text']];
 function renderReviewFields(values){$('reviewFields').replaceChildren();for(const [key,title,type] of reviewSpec){const label=document.createElement('label');label.textContent=title;const input=document.createElement('input');input.id='review-'+key;input.type=type;if(type==='number'){input.min='0';input.step='any';}input.value=values[key]??'';input.addEventListener('input',()=>{try{const changes=JSON.parse($('reviewJson').value);changes[key]=type==='number'?(input.value===''?null:Number(input.value)):input.value;$('reviewJson').value=JSON.stringify(changes,null,2);}catch(error){status('JSON chưa hợp lệ; sửa dữ liệu bổ sung trước.');}});label.append(input);$('reviewFields').append(label);}}
 function reviewChanges(){return JSON.parse($('reviewJson').value);}
-loadConfig().catch(error=>status(error.message));
+loadConfig().then(config=>{if(config.room?.room_id)return loadMessages();}).catch(error=>status(error.message));
