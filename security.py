@@ -1,32 +1,64 @@
-"""Authentication primitives; no credential is returned to browser settings."""
-import hashlib
-from argon2 import PasswordHasher, Type, extract_parameters
-from argon2.exceptions import InvalidHashError, VerificationError
+"""Windows user-bound credentials, deliberately outside SQLite backups."""
+import base64
+import ctypes
+from ctypes import wintypes
+import json
+import os
+from pathlib import Path
 
-PASSWORD_HASHER = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=4, type=Type.ID)
+
+class SecretError(ValueError):
+    pass
 
 
-def validate_admin_hash(encoded):
+def dpapi(data, decrypt=False):
+    if os.name != 'nt':
+        raise SecretError('Kho khóa yêu cầu Windows. Vui lòng nhập lại API key trên Windows.')
+    class Blob(ctypes.Structure):
+        _fields_ = [('size', wintypes.DWORD), ('data', ctypes.POINTER(ctypes.c_ubyte))]
+    buffer = ctypes.create_string_buffer(data)
+    source = Blob(len(data), ctypes.cast(buffer, ctypes.POINTER(ctypes.c_ubyte)))
+    target = Blob()
+    crypt = ctypes.WinDLL('crypt32', use_last_error=True)
+    fn = crypt.CryptUnprotectData if decrypt else crypt.CryptProtectData
+    fn.argtypes = [ctypes.POINTER(Blob), ctypes.c_void_p, ctypes.c_void_p,
+                   ctypes.c_void_p, ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(Blob)]
+    fn.restype = wintypes.BOOL
+    if not fn(ctypes.byref(source), None, None, None, None, 1, ctypes.byref(target)):
+        raise SecretError('Không giải mã được khóa trên tài khoản này. Vui lòng nhập lại API key.')
     try:
-        parameters = extract_parameters(encoded)
-        if (parameters.type != Type.ID or parameters.version != 19 or
-                not 19456 <= parameters.memory_cost <= 262144 or
-                not 2 <= parameters.time_cost <= 6 or
-                not 1 <= parameters.parallelism <= 8 or
-                parameters.salt_len < 16 or parameters.hash_len < 16):
-            raise ValueError()
-    except (InvalidHashError, ValueError, TypeError):
-        raise RuntimeError('Cần hash mật khẩu Argon2id hợp lệ; tạo lại bằng tools/hash_admin_password.py.') from None
+        return ctypes.string_at(target.data, target.size)
+    finally:
+        free = ctypes.WinDLL('kernel32').LocalFree
+        free.argtypes = [ctypes.c_void_p]
+        free.restype = ctypes.c_void_p
+        free(target.data)
 
 
-def verify_admin_password(encoded, password):
-    if not isinstance(password, str) or not 1 <= len(password) <= 256:
-        return False
-    try:
-        return PASSWORD_HASHER.verify(encoded, password)
-    except (VerificationError, InvalidHashError):
-        return False
+class SecretStore:
+    def __init__(self, db_path):
+        self.path = Path(str(db_path) + '.credentials')
+
+    def _read(self):
+        if not self.path.exists():
+            return {}
+        return json.loads(self.path.read_text(encoding='utf-8'))
+
+    def get(self, key):
+        encoded = self._read().get(key)
+        if not encoded:
+            return None
+        return dpapi(base64.b64decode(encoded), decrypt=True).decode('utf-8')
+
+    def set(self, key, value):
+        data = self._read()
+        if value:
+            data[key] = base64.b64encode(dpapi(str(value).encode('utf-8'))).decode('ascii')
+        else:
+            data.pop(key, None)
+        temporary = self.path.with_suffix('.credentials.tmp')
+        temporary.write_text(json.dumps(data), encoding='utf-8')
+        os.replace(temporary, self.path)
 
 
-def token_digest(token):
-    return hashlib.sha256(token.encode('utf-8')).hexdigest()
+SECRET_KEYS = {'chatwork_api_key', 'ai_api_key'}
