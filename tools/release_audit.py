@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 BLOCKED_DIRS = {'data', 'outputs', 'output', 'backups', 'logs', 'config', '.venv', 'deploy/bundle'}
-BLOCKED_SUFFIXES = {'.db', '.sqlite', '.sqlite3', '.credentials', '.exe', '.zip', '.csv', '.log'}
+BLOCKED_SUFFIXES = {'.db', '.sqlite', '.sqlite3', '.credentials', '.exe', '.zip', '.csv', '.log', '.pyc', '.pyo'}
 
 
 def main(path):

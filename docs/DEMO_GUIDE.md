@@ -1,5 +1,11 @@
 # Demo dự án có thể chia sẻ công khai
 
+## Bộ hình hiện tại — 16/10/2026
+
+Xem [Product Tour](PRODUCT_TOUR.md) để dùng đủ **5 tab và 5 sheet** từ dữ liệu giả lập. Ảnh UI chụp thật ứng dụng Local; ảnh workbook được dựng từ giá trị xuất và ghi nhãn rõ, không trình bày như ảnh WPS/Excel. [Nguồn ảnh và tái tạo](images/story/README.md).
+
+Các mục ảnh cũ bên dưới được giữ để ghi nguồn lịch sử. Kịch bản demo hiện tại: Đồng bộ → Nhân viên → Xuất công → tổng kết → dòng cần kiểm tra → CTV → lịch sử. Chỉ dùng người, phòng và tin giả lập; không quay khóa hoặc dữ liệu vận hành thật.
+
 ## Ảnh thực đã nhận và cách sử dụng
 
 | Tệp ảnh | Nội dung thể hiện | Phần đã ẩn |
@@ -15,10 +21,10 @@
 
 ## Kịch bản video demo 60–90 giây (ghi mới bằng dữ liệu giả)
 
-1. Mở app tại `127.0.0.1`, giới thiệu bốn tab và mô hình Local.
+1. Mở app tại `127.0.0.1`, giới thiệu năm tab và phân biệt Local với Cloud.
 2. Dùng một room demo giả hoặc fixture không phải Chatwork nội bộ; hiển thị một tin có 2 ngày và nhiều người.
 3. Tạo phiên chấm công, chỉ ra **6 dòng OT độc lập** từ một tin; chú thích nguồn.
-4. Mở workbook 4 sheet; xem tên sheet, lọc dữ liệu, kiểm tra số phút.
+4. Mở workbook 5 sheet; kiểm tra tổng chính thức, phút nghỉ có lương, dòng tên trùng và CTV riêng.
 5. Mở thư mục Downloads chứng minh vị trí file.
 6. Nêu giới hạn: mẫu demo, chưa xác nhận chính xác mọi tin tự nhiên và phụ thuộc cấu hình AI/API.
 

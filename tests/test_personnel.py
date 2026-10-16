@@ -70,10 +70,12 @@ def test_empty_requires_explicit_confirmation(registry):
 @pytest.mark.parametrize('name,expected',[
     ('Lan Demo','official'), ('An Demo','contractor'),
     ('An Demo (CTV)','contractor'), ('An','unresolved'),
-    ('Lan Demo (CTV)','unresolved'), ('','unresolved')])
+    ('Lan Demo (CTV)','official'), ('','unresolved')])
 def test_classification(registry,name,expected):
     row=event(name)
     assert classify(row,roster(registry),[message(name+' OT 1h')]) == expected
+    if name=='Lan Demo (CTV)':
+        assert row['needs_review'] and not row['employee_match_verified']
 
 
 def test_alias_unicode_and_review_override(registry):
@@ -127,14 +129,21 @@ def test_mixed_report_five_sheets_and_safe_raw(registry):
     finally:workbook.close()
 
 
-def test_generic_leave_has_two_rows_and_no_missing_days_warning(registry):
+def test_generic_leave_preserves_source_without_calculating_leave_days(registry):
     registry.import_entries(['Lan Demo'])
     source=[message('Em xin phép nghỉ ngày 05/10 (thứ 2) và sáng ngày 06/10 (thứ 3)\nLý do: Việc giả lập','Lan Demo')]
     rows=finalize([],source,10,2026,'test',employee_registry=registry.snapshot())
     active=[e for e in rows if not e.get('is_excluded')]
-    assert [(e['event_date'],e['leave_days']) for e in active]==[('2026-10-05',1),('2026-10-06',.5)]
-    assert all(not e['validation_errors'] for e in active)
-    assert all(not e.get('event_subtype') for e in active)
+    assert active==[]
+    buffer=BytesIO()
+    export_to_excel(rows,{'month':10,'year':2026,'snapshot':source,
+                         'ai_settings':{'employee_registry':registry.snapshot()}},buffer)
+    wb=openpyxl.load_workbook(BytesIO(buffer.getvalue()),data_only=True)
+    try:
+        assert wb['1_TIN_NHAN_GOC']['E5'].value==source[0]['body']
+        assert wb['2_CHAM_CONG']['A5'].value is None
+        assert wb['3_TONG_KET']['A5'].value is None
+    finally:wb.close()
 
 
 def test_local_snapshot_and_reclassification_preserve_history(service, registry):
@@ -214,16 +223,27 @@ def test_ai_cannot_invent_official_full_name(registry):
     row=event('Lan Demo')
     row['identity_evidence']='An'
     classify(row,registry.snapshot(),[message('An OT 1h')])
-    assert row['classification']=='unresolved'
+    assert row['classification']=='official'
+    assert row['needs_review'] and not row['employee_match_verified']
+    from src.services.validation import validate_set
+    validate_set([row],[message('An OT 1h')],10,2026)
+    assert row['validation_warnings']
+    buffer=BytesIO()
+    export_to_excel([row],{'month':10,'year':2026,'snapshot':[message('An OT 1h')],
+                          'ai_settings':{'employee_registry':registry.snapshot()}},buffer)
+    wb=openpyxl.load_workbook(BytesIO(buffer.getvalue()),data_only=True)
+    try:
+        assert wb['2_CHAM_CONG']['A5'].value is None
+        assert wb['4_CAN_KIEM_TRA']['F5'].value=='Cần kiểm tra (chưa tính công)'
+    finally:wb.close()
 
 
 def test_unrelated_ctv_word_does_not_change_first_person_leave(registry):
     registry.import_entries(['Lan Demo'])
     source=[message('Em xin phép nghỉ sáng ngày 05/10\nEm nhờ CTV hỗ trợ công việc.','Lan Demo')]
     active=[e for e in finalize([],source,10,2026,'test',employee_registry=registry.snapshot()) if not e.get('is_excluded')]
-    assert len(active)==1
-    assert active[0]['classification']=='official'
-    assert active[0]['leave_days']==.5
+    assert active==[]  # Ordinary leave stays in source; the CTV context adds no OT.
+    assert registry.snapshot()['employees'][0]['full_name']=='Lan Demo'
 
 
 @pytest.mark.parametrize('duration',['2h','30ph','2 giờ','30 phút'])

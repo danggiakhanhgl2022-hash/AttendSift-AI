@@ -1,42 +1,48 @@
-# Rà soát kiến trúc và cách trình bày — 16/10/2026
+# Nguồn tham khảo, cách chọn ý tưởng và đánh đổi
 
-## Cách chọn tài liệu
+Đối chiếu ngày **16/10/2026** · [Kiến trúc](ARCHITECTURE.md) · [Loạt bài](articles/README.md)
 
-Không có cơ sở trong đợt rà soát này để xếp một diễn đàn là “top 1” hoặc “top 2”. Thay vào đó, dùng tài liệu chính thức cho phương pháp và bài viết có tác giả cho lập luận; thảo luận cộng đồng dùng để tìm câu hỏi và phản biện. Không coi việc được đăng trên một trang lớn là chứng nhận cho AttendSift AI.
+## Tiêu chí thay cho một bảng xếp hạng không có căn cứ
 
-## Những nguồn đáng giữ và cách áp dụng
+Ưu tiên nguồn gốc có tác giả, bài mới phù hợp bối cảnh và tài liệu phương pháp chính thức. **InfoQ** và **Stack Overflow Blog** cung cấp các góc nhìn kỹ thuật có tác giả; **C4**, **Diátaxis** và **GitHub Docs** hỗ trợ cách tổ chức sơ đồ/tài liệu. Không có dữ liệu trong đợt này để khẳng định một trang là “top 1” hay “top 2” hiện tại. Nguồn không đánh giá hoặc chứng nhận AttendSift AI.
 
-| Nguồn | Điểm rút ra | Áp dụng vào sản phẩm |
-|---|---|---|
-| [C4 System Context](https://c4model.com/diagrams/system-context) | Sơ đồ tổng quan tập trung người và hệ thống liên quan | Sơ đồ đầu giải thích ai dùng, nhận tin từ đâu, gửi nội dung cho ai |
-| [Dan Haywood trên InfoQ: In Defence of the Monolith](https://www.infoq.com/articles/monolith-defense-part-1/) | Cả kiến trúc một khối lẫn dịch vụ nhỏ đều có đánh đổi; ranh giới mô-đun cần rõ | Giữ gói triển khai đơn giản, mô tả trách nhiệm và chỗ phụ thuộc còn tồn tại |
-| [GitHub Docs: About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) | README giúp người đọc hiểu giá trị, bắt đầu và tìm hỗ trợ | Mở đầu bằng công việc thực tế, sau đó quy trình, cài đặt và giới hạn |
-| [GitHub Community: Nội dung README](https://github.com/orgs/community/discussions/177551) | Nhiều cách tổ chức tùy đối tượng | Dùng như tham khảo biên tập, không coi là tiêu chuẩn bắt buộc |
+## Những bài đã đọc và cách áp dụng
 
-Bài InfoQ xuất bản năm 2017, được dùng cho nguyên tắc đánh đổi chứ không đại diện bảng xếp hạng xu hướng năm 2026. C4 và tài liệu GitHub được đối chiếu tại thời điểm rà soát.
+| Nguồn gốc | Ngày xuất bản | Ý chính được chọn | Áp dụng vào tài liệu dự án |
+|---|---|---|---|
+| [Pierre Pureur & Kurt Bittner — You’ve Generated Your MVP Using AI…](https://www.infoq.com/articles/ai-generated-mvp/) | 12/02/2026 | Kiểm tra chất lượng và giả định bằng thử nghiệm, nói rõ đánh đổi | Mỗi tuyên bố có bằng chứng và phạm vi, tách kiểm thử giả lập khỏi nghiệm thu thật |
+| [Adora Nwodo & Peter O'Connor — Organizing productive platform teams](https://stackoverflow.blog/2026/03/09/organizing-productive-platform-teams/) | 09/03/2026 | Giảm gánh nặng phối hợp, tổ chức theo năng lực | Mượn góc nhìn để trình bày theo câu hỏi của người phụ trách, không sao chép mô hình đội platform |
+| [Pureur & Bittner — Three Questions That Help You Build a Better Software Architecture](https://www.infoq.com/articles/three-questions-better-architecture/) | 21/10/2025 | Giá trị, hiệu năng/quy mô và khả năng duy trì là các câu hỏi ưu tiên | Giải thích sản phẩm và tiêu chí trước khi kể tên công nghệ |
+| [Pureur & Bittner — Software Architecture and the Art of Experimentation](https://www.infoq.com/articles/architecture-experimentation/) | 17/12/2024 | Dùng thử nghiệm để xem xét giả định | Ghi điều kiện thay đổi kiến trúc và phần chưa được đo |
+| [Martin Fowler — Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) | 01/07/2015 | Lợi ích độc lập đi cùng chi phí phân tán/vận hành | Giữ cách đánh giá theo bối cảnh; chưa chọn tách microservices |
+| [C4 — System Context](https://c4model.com/diagrams/system-context), [Container](https://c4model.com/diagrams/container) | Không gán ngày xuất bản; đọc 16/10/2026 | Đi từ người/hệ thống đến ứng dụng/kho dữ liệu | Tách sơ đồ ngữ cảnh khỏi sơ đồ hai môi trường |
+| [Diátaxis](https://diataxis.fr/) | Không gán ngày xuất bản; đọc 16/10/2026 | Tổ chức theo nhu cầu học, làm, tra cứu và hiểu | README dẫn đường; hướng dẫn thao tác và bài giải thích có chỗ riêng |
+| [GitHub Docs — About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) | Tài liệu cập nhật liên tục; đọc 16/10/2026 | Giới thiệu dự án, bắt đầu sử dụng và tìm hỗ trợ | README có giá trị, ảnh, cách chạy, giới hạn và liên kết tài liệu |
 
-## Chọn điểm nổi bật có bằng chứng
+Bài 2015/2024 được dùng cho lập luận nền, không làm bằng chứng xu hướng năm 2026. Bản tóm tắt là diễn giải ngắn; mở liên kết gốc để đọc ngữ cảnh và các lập luận phản biện đầy đủ.
 
-**Giữ:** liên kết tin gốc, snapshot danh sách theo phiên, nhóm chính thức/CTV tách biệt, rà soát tên mơ hồ và bộ kiểm thử.
+## Từ nhiều ý tưởng đến một lựa chọn có lý do
 
-**Giảm nhấn mạnh:** số lượng công nghệ, mô hình kiến trúc thời thượng, các tuyên bố “thông minh tuyệt đối”, “tự động hoàn toàn” hoặc “chuẩn doanh nghiệp” chưa có đo lường.
+| Ý tưởng | Quyết định | Lý do | Nhược điểm còn lại |
+|---|---|---|---|
+| Bắt đầu từ con người | Giữ | Người mới hiểu tác vụ trước cấu trúc mã | Cần liên kết đủ sâu cho người bảo trì |
+| Sơ đồ nhiều cấp | Giữ vừa đủ | Ngữ cảnh và Local/Cloud có câu hỏi khác nhau | Phải cập nhật khi đổi ranh giới |
+| Nhiều dịch vụ độc lập | Chưa chọn | Chưa có số liệu nhu cầu mở rộng/triển khai riêng | Một gói vẫn cần giữ mô-đun rõ |
+| Toàn bộ kiểm tra giao cho AI | Không chọn | Gợi ý có thể thiếu nguồn hoặc sai người/ngày | Quy tắc xác định vẫn chưa hiểu mọi câu |
+| Chặn toàn bộ Excel khi có một dòng mơ hồ | Không dùng trong quy tắc hiện tại | Người dùng cần file để đối chiếu trước | Cần nhãn rõ và theo dõi sheet chưa tính công |
+| Đưa mọi tài liệu vào README | Không chọn | Trang đầu cần có nhịp đọc và điểm nhấn | Phải kiểm tra liên kết và hướng dẫn đọc tiếp |
+| Ảnh đẹp làm bằng chứng sản phẩm đúng | Không chọn | Ảnh chỉ chứng minh phần nhìn thấy | Cần kiểm thử và nghiệm thu riêng |
 
-Đây là quyết định biên tập của đợt rà soát, không phải kết luận trực tiếp của một diễn đàn về sản phẩm.
+Những quyết định này là phân tích của dự án, không phải các bài tham khảo cùng khuyên một giải pháp cụ thể cho AttendSift AI.
 
-## Cân bằng thay vì che nhược điểm
+## Cân bằng ưu và nhược thế nào?
 
-Tự phân loại CTV giúp giảm thao tác nhưng phụ thuộc danh sách đúng. Snapshot tăng khả năng giải thích nhưng tăng dung lượng. Gói Windows dễ bàn giao nhưng cần quản lý phiên bản và chính sách máy. Cloud thuận truy cập nhưng phát sinh phụ thuộc mạng, quota và thời hạn lưu.
+Mỗi lựa chọn được ghi theo bốn phần: lợi ích, chi phí, biện pháp giảm và điều kiện xem xét lại. Ví dụ snapshot giúp giải thích phiên cũ nhưng tăng dung lượng; retention giảm dữ liệu lưu nhưng tạo trách nhiệm tải báo cáo dài hạn. Không coi một ưu điểm tự triệt tiêu nhược điểm khác, và không cắt quyền riêng tư để đổi lấy cách trình bày ấn tượng.
 
-Một ưu điểm không tự triệt tiêu nhược điểm khác. Tài liệu ghi riêng cách giảm rủi ro và phần vẫn cần nghiệm thu. Chỉ tuyên bố điều có trong mã hoặc đã được kiểm tra.
+Xem [bảng đánh đổi chi tiết](articles/05-LUA_CHON_VA_DANH_DOI.md). Các đề xuất hàng đợi, bảng nhân viên quan hệ hoặc dịch vụ độc lập là hướng tương lai, chưa được mô tả như khả năng đã có.
 
-## Kết cấu bài giới thiệu đề xuất
+## Điểm nhấn được giữ trong phần giới thiệu
 
-1. Tình huống cụ thể người dùng đang gặp.
-2. Kết quả ứng dụng tạo ra và cách kiểm tra.
-3. Một ví dụ giả lập ngắn.
-4. Ba điểm thiết kế có giá trị.
-5. Sơ đồ tổng quan, rồi mới đến mô-đun.
-6. Bảng quyết định, lợi ích, giới hạn và cách giảm nhược điểm.
-7. Bằng chứng kiểm thử, cài đặt và bước tiếp theo.
+Phần tiêu đề và bìa tiếp tục được đối chiếu với trang giới thiệu sản phẩm chính thức của Notion, Slack và Linear. Xem [cách chọn tiêu đề, bố cục và nguồn tham khảo](BO_CUC_GIOI_THIEU_SAN_PHAM.md). Đây là tham khảo biên tập, không phải bằng chứng hiệu quả chuyển đổi.
 
-Kết cấu này được áp dụng trong README và ARCHITECTURE. Các phần vận hành và kiểm chứng giữ ở tài liệu riêng để phần giới thiệu không trở thành nhật ký kỹ thuật.
+**Truy nguồn → đối chiếu theo phiên → tách dòng chưa rõ → bàn giao được.** Đây là chuỗi giá trị có liên kết tới mã và kiểm thử. Số công nghệ, cảnh 3D và số bài viết chỉ hỗ trợ cách giới thiệu; không được dùng thay độ đúng hoặc lợi ích đã đo.

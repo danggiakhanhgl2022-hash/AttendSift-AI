@@ -296,7 +296,7 @@ class ExportService:
     def review(self,sid,result_id,changes=None,exclude=False):
         with self.db.operation_lock:
             session=self._session(sid)
-            if session['status'] not in {'ready','review'}:
+            if session['status'] not in {'ready','review','exported'}:
                 raise ExportServiceError('Phiên không ở trạng thái cho phép kiểm tra.')
             rows=self.get_results(sid,True)
             row=next((r for r in rows if r['result_id']==result_id),None)
@@ -325,7 +325,7 @@ class ExportService:
                     if before!=value:
                         conn.execute('INSERT INTO corrections(result_id,session_id,field_name,old_value,new_value,corrected_at,correction_type) VALUES(?,?,?,?,?,?,?)',
                             (result_id,sid,field,encoded(before),encoded(value),self.db.now_vn(),'exclude' if exclude else 'review'))
-                payload={k:v for k,v in row.items() if k in allowed or k in {'confidence','needs_review','review_reason','validation_errors','validation_warnings','classification_reason','employee_match_verified','source_employee_name','source_person_id','classification_confirmed','leave_period','leave_source_verified'}}
+                payload={k:v for k,v in row.items() if k in allowed or k in {'confidence','needs_review','review_reason','validation_errors','validation_warnings','classification_reason','employee_match_verified','source_employee_name','source_person_id','classification_confirmed','leave_period','leave_source_verified','paid_break_minutes'}}
                 conn.execute('UPDATE ai_results SET payload=?,employee_name=?,display_name=?,person_id=?,is_excluded=?,needs_review=0,validation_errors=?,review_state=?,updated_at=? WHERE result_id=? AND session_id=?',
                     (encoded(payload),str(row.get('employee_name') or ''),str(row.get('employee_name') or ''),str(row.get('person_id') or ''),int(exclude),encoded(row['validation_errors']),'excluded' if exclude else 'confirmed',self.db.now_vn(),result_id,sid))
             remaining=self.get_results_for_review(sid)
@@ -368,7 +368,8 @@ class ExportService:
                 raise ExportServiceError('Phiên chưa sẵn sàng xuất.')
             if not self.verify_source_integrity(sid)['valid']:
                 raise ExportServiceError('Tin nguồn đã đổi. Vui lòng tạo lại bảng.')
-            results=self.get_results(sid)
+            all_results=self.get_results(sid,True)
+            results=[r for r in all_results if not r.get('is_excluded')]
             validate_set(results,session['snapshot_data'],session['month'],session['year'])
             # Unverified results are exported to sheet 4 only, never to payroll.
             from ..utils.excel_export import export_to_excel, verify_workbook
@@ -386,7 +387,7 @@ class ExportService:
             publish=monthly.with_suffix('.pending.xlsx')
             self.session_repo.update_session(sid,status='exporting',file_path=str(archived))
             try:
-                export_to_excel(self.get_results(sid,True),{**session,'snapshot':session['snapshot_data']},str(pending))
+                export_to_excel(all_results,{**session,'snapshot':session['snapshot_data']},str(pending))
                 verify_workbook(pending)
                 digest=hashlib.sha256(pending.read_bytes()).hexdigest()
                 os.replace(pending,archived)

@@ -99,17 +99,24 @@ def test_room_change_keeps_snapshot_room(service,event):
     assert service.verify_source_integrity(sid)['valid']
 
 
-def test_pending_blocks_then_confirmation_exports(service,event):
+def test_pending_exports_to_review_then_confirmation_counts_attendance(service,event):
     event['needs_review']=True;event['review_reason']='Cần đối chiếu'
     sid=analyzed(service,event)
-    with pytest.raises(ExportServiceError,match='chưa hợp lệ'):service.export_to_excel(sid)
+    draft=service.export_to_excel(sid)
+    wb=openpyxl.load_workbook(draft['file_path'])
+    try:
+        assert wb['2_CHAM_CONG']['A5'].value is None
+        assert wb['3_TONG_KET']['A5'].value is None
+        assert wb['4_CAN_KIEM_TRA']['F5'].value=='Cần kiểm tra (chưa tính công)'
+        assert wb['1_TIN_NHAN_GOC']['A5'].value=='m1'
+    finally:wb.close()
     row=service.get_results(sid)[0]
     service.review(sid,row['result_id'],{'reason':'Đã kiểm tra'})
     updated=service.get_results(sid)[0]
     assert updated['review_state']=='confirmed'
     assert updated['ai_raw_output']['reason']=='Công việc giả lập'
     assert service.session_repo.get_corrections(sid)
-    result=service.export_to_excel(sid)
+    result=service.export_to_excel(sid,overwrite=True)
     assert Path(result['file_path']).exists()
     wb=openpyxl.load_workbook(result['file_path'])
     assert wb.sheetnames==['1_TIN_NHAN_GOC','2_CHAM_CONG','3_TONG_KET','4_CAN_KIEM_TRA']
@@ -130,7 +137,7 @@ def test_mandatory_error_cannot_be_confirmed_but_can_be_excluded(service,event):
     assert service.export_to_excel(sid)['event_count']==0
 
 
-def test_outside_month_auto_excluded_but_september_message_for_october_kept(service,event):
+def test_outside_month_and_annual_leave_remain_source_only(service,event):
     message=service.message_repo.get_by_id('m1')
     message.update(send_time='2026-09-23T08:00:00+07:00',body='Người giả lập A xin về sớm 30 phút ngày 23/09. Xin nghỉ ngày 01/10.')
     service.message_repo.save_messages_batch([message])
@@ -141,13 +148,13 @@ def test_outside_month_auto_excluded_but_september_message_for_october_kept(serv
     with patch('src.services.export_service.create_ai_adapter',return_value=adapter):
         assert service.analyze(sid)['status']=='ready'
     assert service.get_results_for_review(sid)==[]
-    assert [r['event_date'] for r in service.get_results(sid)]==['2026-10-01']
+    assert service.get_results(sid)==[]
     audit=service.get_results(sid,True)
     assert audit[0]['is_excluded'] and audit[0]['ai_raw_output']['event_date']=='2026-09-23'
     path=service.export_to_excel(sid)['file_path']
     w=openpyxl.load_workbook(path)
     try:
-        assert w['2_CHAM_CONG']['E5'].value.month==10
+        assert w['2_CHAM_CONG']['E5'].value is None
         assert w['2_CHAM_CONG']['A6'].value is None
         assert w['1_TIN_NHAN_GOC']['A5'].value=='m1'
         assert w['4_CAN_KIEM_TRA']['F5'].value is None
@@ -155,10 +162,18 @@ def test_outside_month_auto_excluded_but_september_message_for_october_kept(serv
 
 
 @pytest.mark.parametrize('changes',[{'source_message_ids':['fake']},{'ot_minutes':-1},{'event_date':'2026-02-30'},{'start_time':'18:00','end_time':'18:30'},{'confidence':'high'}])
-def test_invalid_ai_is_blocked(service,event,changes):
+def test_invalid_ai_exports_to_review_without_affecting_totals(service,event,changes):
     event.update(changes);sid=analyzed(service,event)
     assert service.get_results(sid)[0]['validation_errors']
-    with pytest.raises(ExportServiceError):service.export_to_excel(sid)
+    path=service.export_to_excel(sid)['file_path']
+    wb=openpyxl.load_workbook(path,data_only=True)
+    try:
+        assert wb['2_CHAM_CONG']['A5'].value is None
+        assert wb['3_TONG_KET']['A5'].value is None
+        assert wb['4_CAN_KIEM_TRA']['F5'].value=='Cần kiểm tra (chưa tính công)'
+        assert wb['4_CAN_KIEM_TRA']['E5'].value
+        assert wb['1_TIN_NHAN_GOC']['A5'].value=='m1'
+    finally:wb.close()
 
 
 def test_bad_quote_repaired_from_source_with_original_ai_preserved(service,event):
@@ -253,7 +268,13 @@ def test_multi_batch_registry_and_inconsistent_identity_blocked(service,event):
     assert len(seen)>=2 and seen[1][0]['person_id']=='P1'
     assert service.get_results_for_review(sid)
     assert any(r['validation_warnings'] or r['validation_errors'] for r in service.get_results(sid))
-    with pytest.raises(ExportServiceError):service.export_to_excel(sid)
+    path=service.export_to_excel(sid)['file_path']
+    wb=openpyxl.load_workbook(path)
+    try:
+        assert wb['4_CAN_KIEM_TRA']['F5'].value=='Cần kiểm tra (chưa tính công)'
+        counted={r[5] for r in wb['2_CHAM_CONG'].iter_rows(min_row=5,values_only=True)}
+        assert 'Tên khác' not in counted
+    finally:wb.close()
 
 
 def test_timeout_splits_batch_without_losing_sources(service,event):

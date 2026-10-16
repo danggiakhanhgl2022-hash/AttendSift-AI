@@ -51,3 +51,13 @@ Thumbs.db
 # Private employee bootstrap; distribute separately from public source.
 NHAN_VIEN_RIENG.json
 NHAN_VIEN_RIENG*.json
+
+# Additional private HR / deployment artifacts and local build environments
+*nhan_vien*.json
+*NHAN_VIEN*.json
+*employees_private*.json
+*chatwork_messages*.json
+*.sql.dump
+*.dump
+*.zip.sha256
+.venv-build/

@@ -28,7 +28,7 @@ The workbook provides five views: original messages, official employee events, o
 | [Architecture](docs/ARCHITECTURE.md) | People, external systems, deployments and module responsibilities |
 | [Six articles](docs/articles/README.md) | User workflow, AI evidence, Excel handoff, Local/Cloud, trade-offs and verification |
 | [Source review](docs/ARCHITECTURE_REVIEW_1.1.0.md) | InfoQ, Stack Overflow Blog, C4, Diátaxis and GitHub Docs; selected ideas and limitations |
-| [Current verification](docs/UPDATE_2026-10-16.md) | 395 Python tests passed on the recorded Windows environment; separate live acceptance still required |
+| [Current verification](docs/UPDATE_2026-10-16.md) | 398 Python tests passed on the recorded Windows environment; separate live acceptance still required |
 
 The architecture keeps a deployable application divided into modules for each environment. Shared policy reduces divergence, but two orchestration/storage paths still require regression checks. Snapshots improve explainability and cost storage; Excel eases handoff and creates copy/version responsibilities. No forum ranking or endorsement is claimed.
 

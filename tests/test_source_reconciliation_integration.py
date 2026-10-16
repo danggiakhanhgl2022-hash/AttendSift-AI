@@ -25,11 +25,12 @@ def test_analysis_persists_source_repairs_and_keeps_original(tmp_path):
         session_id=service.create_session(10,2026,accept_risk=True)['session_id']
         answer=service.analyze(session_id)
     results=service.get_results(session_id)
-    assert answer['status']=='review' and len(results)==1
+    assert answer['status']=='ready' and len(results)==1
     result=results[0]
     assert result['employee_name']=='Phạm Gia Uyên'
     assert result['event_date']=='2026-10-14'
-    assert result['review_state']=='pending'
+    assert result['review_state']=='valid'
+    assert result['paid_break_minutes']==30 and result['minutes_not_compensated']==0
     assert result['ai_raw_output']['employee_name']=='Bùi Ngân Hoa'
     assert not result['validation_errors']
 

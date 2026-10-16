@@ -53,7 +53,8 @@ def test_sender_uyens_wrong_name_and_wrong_date_fixed():
     assert rows[0]['employee_name'] == 'Phạm Gia Uyên'
     assert rows[0]['event_date'] == '2026-10-14'
     assert rows[0]['identity_evidence'] == 'Phạm Gia Uyên'
-    assert rows[0]['needs_review'] and not rows[0]['validation_errors']
+    assert not rows[0]['needs_review'] and not rows[0]['validation_errors']
+    assert rows[0]['paid_break_minutes']==30 and rows[0]['minutes_not_compensated']==0
 
 
 def test_overtime_message_has_two_dates_and_minutes():
@@ -98,11 +99,12 @@ def test_first_person_matching_sender_keeps_current_date():
     assert len(rows) == 1 and not rows[0]['needs_review']
 
 
-def test_a_missing_first_person_claim_is_added_for_review():
+def test_a_missing_first_person_paid_break_is_added_from_source():
     source = msg('hao', 'ハオ (Tran Thi Minh Hao)', 'Em xin phép về sớm 30 phút không làm bù (./.)', '2026-10-14', 202)
     rows = []
     reconcile(rows,[source])
-    assert len(rows)==1 and rows[0]['minutes_not_compensated']==30
+    assert len(rows)==1 and rows[0]['minutes_not_compensated']==0
+    assert rows[0]['paid_break_minutes']==30
     assert not rows[0]['needs_review'] and not rows[0]['validation_errors']
 
 
@@ -155,7 +157,8 @@ def test_first_person_wrong_event_type_is_not_trusted():
     rows = [row('ev','Người Giả Lập','2026-10-14','Nghỉ')]
     reconcile(rows,[source])
     assert rows[0]['needs_review']
-    assert any(r['event_type']=='Về sớm' and r['minutes_not_compensated']==30 for r in rows)
+    assert any(r['event_type']=='Về sớm' and r['paid_break_minutes']==30 and
+               r['minutes_not_compensated']==0 for r in rows)
 
 
 def test_explicit_date_on_overtime_line_overrides_team_header():

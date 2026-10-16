@@ -58,8 +58,11 @@ def finalize(raw_events, snapshot, month, year, sid, employee_aliases=None, empl
         mark_annual_leave_source_only(event, snapshot)
         event['reason'] = reason_from_source(event, snapshot)
         official_name = (employee_aliases or {}).get(event.get('employee_name'))
-        if official_name and not event.get('is_excluded'):
+        if official_name and employee_registry is None and not event.get('is_excluded'):
             event['employee_name'] = official_name
+            # Legacy aliases are supplied by the administrator, not by AI.
+            # Keep the literal source quote while accepting the configured name.
+            event['employee_match_verified'] = True
         try:
             day = date.fromisoformat(event.get('event_date', ''))
             outside = (day.month, day.year) != (month, year)
@@ -516,7 +519,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
         data=body()
         with repo.lease('session:'+sid) as owner:
             value=get_session(sid)
-            if value['status'] not in {'ready','review'}:
+            if value['status'] not in {'ready','review','exported'}:
                 raise ValueError('Phiên chưa hoàn tất phân tích.')
             results=copy.deepcopy(value['results'])
             target=next((e for e in results if e['event_id']==data.get('event_id')),None)
@@ -562,7 +565,10 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
             if latest!=value['snapshot']:
                 raise ValueError('Tin nguồn đã được thêm hoặc sửa sau snapshot. Tạo bảng mới để xuất đúng dữ liệu hiện tại.')
             stream=BytesIO()
-            export_to_excel(value['results'],{**value,'is_draft':True},stream)
+            results=copy.deepcopy(value['results'])
+            validate_set([e for e in results if not e.get('is_excluded')],
+                         value['snapshot'],value['month'],value['year'])
+            export_to_excel(results,{**value,'is_draft':True},stream)
             content=stream.getvalue()
             if len(content)>MAX_FILE:
                 raise ValueError('File vượt giới hạn cloud 4 MB; cần object storage để xuất file lớn.')

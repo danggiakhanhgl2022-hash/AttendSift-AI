@@ -156,7 +156,7 @@ def test_message_one_report_many_distinct_durations_keeps_exact_dates():
         ('Tâm','2026-10-07',30),('Việt','2026-10-07',60)}
 
 
-def test_annual_leave_half_day_is_text_only_but_unpaid_leave_can_be_calculated():
+def test_annual_and_unpaid_leave_preserve_source_without_calculating_days():
     annual, claims = parse('Em xin phép nghỉ sáng ngày 5/10 (thứ 2) (1/2 ngày phép năm)',
                            sent='2026-10-01', author='Tran Thi Minh Hao')
     assert claims == []
@@ -165,5 +165,9 @@ def test_annual_leave_half_day_is_text_only_but_unpaid_leave_can_be_calculated()
     assert rows[0]['is_excluded']
     unpaid, claims = parse('Em xin phép nghỉ chiều thứ 5 ngày 8/10 (không lương)',
                            sent='2026-10-01', author='Tran Thi Minh Hao')
-    assert [(c['event_date'], c['leave_days'], c['event_subtype']) for c in claims] == [
-        ('2026-10-08', 0.5, 'Không lương')]
+    assert claims == []
+    rows = [row('report', 'Tran Thi Minh Hao', '2026-10-08', 'Nghỉ', leave_days=0.5)]
+    reconcile_explicit_records(rows, unpaid, 10, 2026)
+    assert rows[0]['is_excluded'] and rows[0]['source_only']
+    # Original AI values may remain in the excluded audit record; none count.
+    assert rows[0]['review_state']=='excluded'

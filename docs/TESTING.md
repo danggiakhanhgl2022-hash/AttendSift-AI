@@ -1,6 +1,6 @@
-# Kiểm thử và giới hạn bằng chứng — 1.0.2
+# Kiểm thử và giới hạn bằng chứng — 16/10/2026
 
-Kết quả hiện tại ở [báo cáo kiểm chứng](VERIFICATION_1.0.2.md). Báo cáo ngày cũ chỉ mô tả lần chạy tương ứng.
+Kết quả bản sửa hiện tại: **398 kiểm thử Python đạt** trên Windows/Python 3.11.9. Xem [báo cáo mới nhất](UPDATE_2026-10-16.md). Báo cáo phiên bản/ngày cũ chỉ mô tả lần chạy tương ứng; không dùng số kiểm thử như tỷ lệ chính xác hoặc đo tải.
 
 ## Chạy lại
 
@@ -10,6 +10,7 @@ python -m pytest -q
 node tests/test_cloud_message_ui.cjs
 python tools/check_local_install.py
 python tools/release_audit.py .
+python -B tools/privacy_audit.py .
 python tools/check_release_encoding.py .
 ```
 
@@ -26,3 +27,9 @@ Fixture dùng dữ liệu giả. Kiểm thử gồm nhiều người/nhiều ng�
 - Retention: thử SQL trên PostgreSQL staging độc lập.
 
 Không xem skip là đạt hoặc tự chuyển stable khi kiểm thử tự động xanh. Dùng [biên bản bàn giao](HANDOVER_ACCEPTANCE.md).
+
+## Kiểm tra bộ mô tả GitHub
+
+Ảnh UI được chụp bằng Edge với database tạm; ảnh workbook đọc giá trị thật từ fixture và dựng bằng Pillow. Chạy `python -B tools/build_readme_assets.py --screenshots` khi đã cài công cụ tài liệu tùy chọn. Xem [nguồn ảnh](images/story/README.md).
+
+Kiểm tra liên kết/ảnh hiện hành bằng `python -B tools/check_documentation.py`. Ảnh đẹp hoặc điều hướng tab thành công không thay thế nghiệm thu WebView2, PostgreSQL staging hoặc kết nối thật.
