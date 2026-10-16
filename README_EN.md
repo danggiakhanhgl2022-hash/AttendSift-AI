@@ -2,9 +2,35 @@
 
 **Turn Chatwork reports into attendance records that can be reviewed against their source.**
 
+![AttendSift AI overview](docs/images/story/cover.svg)
+
 AI Department | Dang Gia Khanh | Version 1.1.0
 
 [Vietnamese documentation](README.md) · [Windows setup](docs/INSTALL_WINDOWS.md) · [Verification](docs/VERIFICATION_1.1.0.md)
+
+## Product, workflow and engineering story
+
+The repository contains both Windows Local and the Cloud backend. Local uses a web interface inside WebView2 or a loopback browser; it does not share its SQLite data or credentials automatically with the Cloud PostgreSQL deployment.
+
+![Local interface with synthetic data](docs/images/story/ui-sync.png)
+
+This screenshot shows the actual Local application running against a temporary demo database. All people, messages and room information are fictional. It is not evidence of a deployed Cloud instance.
+
+Five tabs organize the work: synchronization, attendance export, history, settings and employees. A session captures the roster and source context. AI suggests events, source reconciliation and validation check them, and unresolved rows remain outside payroll totals until reviewed.
+
+![Synthetic workbook summary](docs/images/story/03-summary.png)
+
+The workbook provides five views: original messages, official employee events, official totals, review items and contractors. These illustrations are rendered from values exported by the application, not screenshots or acceptance results from Microsoft Excel or WPS.
+
+| Read more | Focus |
+|---|---|
+| [Product tour](docs/PRODUCT_TOUR.md) | All five tabs and worksheets, with image provenance |
+| [Architecture](docs/ARCHITECTURE.md) | People, external systems, deployments and module responsibilities |
+| [Six articles](docs/articles/README.md) | User workflow, AI evidence, Excel handoff, Local/Cloud, trade-offs and verification |
+| [Source review](docs/ARCHITECTURE_REVIEW_1.1.0.md) | InfoQ, Stack Overflow Blog, C4, Diátaxis and GitHub Docs; selected ideas and limitations |
+| [Current verification](docs/UPDATE_2026-10-16.md) | 395 Python tests passed on the recorded Windows environment; separate live acceptance still required |
+
+The architecture keeps a deployable application divided into modules for each environment. Shared policy reduces divergence, but two orchestration/storage paths still require regression checks. Snapshots improve explainability and cost storage; Excel eases handoff and creates copy/version responsibilities. No forum ranking or endorsement is claimed.
 
 AttendSift AI stores source messages, uses an AI provider to assist with event extraction, applies business rules, and lets an operator review the results before exporting a five-sheet Excel workbook. It handles messages mentioning multiple people and dates, with separate overtime amounts for each person.
 

@@ -2,6 +2,8 @@
 
 ## Bổ sung ngày 16/10/2026
 
+- Làm lại cấu trúc giới thiệu GitHub: hình mở đầu, ảnh 5 tab và 5 sheet bằng dữ liệu giả lập; thêm sáu bài phân tích cùng bảng nguồn, lựa chọn và đánh đổi.
+- Bổ sung prompt biên tập, mục lục tài liệu và công cụ kiểm tra liên kết/hình minh họa; phân biệt rõ Local/WebView với Website Cloud.
 - Giữ lại phần giới thiệu đầy đủ của phiên bản 1.1.0 và bổ sung hướng dẫn các quy tắc mới.
 - Nghỉ 30 phút có lương: chỉ nhận tin tự báo có ngày, danh tính và nội dung đủ căn cứ; không trừ công, không cộng OT hoặc tự điền ngày trống.
 - Đối chiếu tên với danh sách chính thức; giữ sự kiện thiếu bằng chứng riêng ở sheet kiểm tra.
