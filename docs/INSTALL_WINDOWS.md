@@ -1,4 +1,4 @@
-# Cài đặt AttendSift AI 1.0.2 trên Windows
+# Cài đặt AttendSift AI 1.1.0 trên Windows
 
 ## Chọn đúng gói
 
@@ -16,7 +16,7 @@
 4. Chạy `KIEM_TRA_LOCAL_WINDOWS.bat`, rồi `CHAY_LOCAL_WINDOWS.bat`.
 5. Mở `http://127.0.0.1:8766` nếu trình duyệt chưa tự mở.
 6. Thiết lập token Chatwork, chọn phòng và kiểm tra kết nối AI.
-7. Thử tin giả, tạo bảng và đối chiếu Excel 4 sheet trước khi dùng dữ liệu thật.
+7. Thử tin giả, tạo bảng và đối chiếu Excel 5 sheet trước khi dùng dữ liệu thật.
 
 ## Gói portable trên máy người nhận
 
@@ -46,4 +46,4 @@ Chính sách tự xóa 3 tháng chỉ áp dụng cloud. Người vận hành Loc
 
 ## Build cho người bảo trì
 
-Build trên Windows bằng `TAO_EXE_WINDOWS.bat` hoặc GitHub Actions. EXE tại `release/ChamCong.exe` phải được kiểm tra runtime và thử trên máy nhận. Xem [quy trình phát hành](PUBLISH_1.0.2.md). Không chép thư mục chứa dữ liệu nhân viên cho người khác.
+Build trên Windows bằng `TAO_EXE_WINDOWS.bat` hoặc GitHub Actions. EXE tại `release/ChamCong.exe` phải được kiểm tra runtime và thử trên máy nhận. Xem [quy trình phát hành](PUBLISH_1.1.0.md). Không chép thư mục chứa dữ liệu nhân viên cho người khác.

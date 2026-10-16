@@ -1,4 +1,4 @@
-# ChamCongChatwork 1.0.2 — chạy trên máy Windows khác
+# ChamCongChatwork 1.1.0 — chạy trên máy Windows khác
 
 **Bộ phận AI · Đặng Gia Khánh**
 
@@ -27,7 +27,7 @@ Windows quản lý/chặn ứng dụng theo chính sách của từng máy. Nế
 1. **Thiết lập → Bước 1:** nhập API token Chatwork → **Kiểm tra và lưu kết nối** → chọn nhóm → **Lưu nhóm đã chọn**.
 2. **Bước 2:** chọn Google Gemini, OpenAI hoặc Claude → nhập API key → chọn model được tài khoản hỗ trợ nếu cần → **Kiểm tra và lưu kết nối**.
 3. **Đồng bộ:** bấm **Đồng bộ ngay**, kiểm tra tin nhắn đã lưu. API thường chỉ trả cửa sổ tối đa 100 tin gần nhất; không coi đó là đầy đủ lịch sử.
-4. **Xuất công:** chọn tháng → tạo bảng → kiểm tra/xác nhận các dòng cần rà soát → xuất Excel 4 sheet. File nằm trong Downloads của tài khoản Windows, có thể mở bằng Excel hoặc phần mềm tương thích XLSX.
+4. **Xuất công:** chọn tháng → tạo bảng → kiểm tra/xác nhận các dòng cần rà soát → xuất Excel 5 sheet. File nằm trong Downloads của tài khoản Windows, có thể mở bằng Excel hoặc phần mềm tương thích XLSX.
 5. Nếu cần tin cũ, vào **Thiết lập → Nhập tin nhắn lịch sử đã lưu**. Chỉ nhập dữ liệu được phép sử dụng; không nhập workflow n8n.
 
 Internet cần cho Chatwork và dịch vụ AI. Giao diện và dữ liệu đã lưu nằm trên máy; gói EXE không bao gồm tài khoản hoặc quota API.

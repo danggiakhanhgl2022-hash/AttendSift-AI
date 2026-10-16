@@ -1,47 +1,91 @@
-# Kiến trúc và luồng dữ liệu
+# Kiến trúc AttendSift AI 1.1.0
 
-## Thành phần đã xác nhận từ mã nguồn
+## Nhìn từ công việc của con người
+
+Một báo cáo tốt cần trả lời được: ai, ngày nào, thời lượng bao nhiêu, thuộc nhóm nào và có tin nào làm căn cứ. Vì vậy ranh giới quan trọng nhất trong thiết kế là giữa tin nguồn, kết quả suy ra và quyết định đã xác nhận.
+
+Sơ đồ ngữ cảnh dưới đây mượn cách tiếp cận của [C4 System Context](https://c4model.com/diagrams/system-context): bắt đầu bằng người dùng và hệ thống liên quan, chưa đưa chi tiết mã nguồn vào cùng một hình.
+
+```mermaid
+flowchart LR
+    N[Người phụ trách] -->|Quản lý danh sách và kiểm tra| A[AttendSift AI]
+    C[Chatwork] -->|Tin nhắn được cấp quyền| A
+    A -->|Nội dung cần phân tích| I[Dịch vụ AI]
+    I -->|Sự kiện gợi ý| A
+    A -->|Báo cáo có nguồn đối chiếu| E[Excel chính thức và CTV]
+```
+
+Chatwork và nhà cung cấp AI là phụ thuộc bên ngoài. Ứng dụng không kiểm soát hạn mức, thời gian phản hồi hay độ đầy đủ lịch sử do các dịch vụ này cung cấp.
+
+## Từ một tin nhắn đến một dòng báo cáo
 
 ```mermaid
 flowchart TD
- A[Chatwork API] --> B[SyncService]
- B --> C[(SQLite: messages)]
- C --> D[Snapshot theo kỳ]
- D --> E[AI adapter / phân tích sự kiện]
- E --> F[Source reconciliation & business rules]
- F --> G{Bằng chứng hợp lệ?}
- G -->|Có| H[(SQLite: event / session)]
- G -->|Chưa rõ| I[Hàng chờ người kiểm tra]
- G -->|Phép năm / CTV| J[Chỉ lưu tin gốc]
- H --> K[Excel ExportService]
- I --> K
- J --> K
- K --> L[4-sheet workbook trong Downloads]
+    S[Tin nguồn nguyên văn] --> P[Chụp dữ liệu và danh sách theo phiên]
+    P --> AI[AI hỗ trợ trích sự kiện]
+    AI --> R[Đối chiếu lại bằng nguồn và quy tắc]
+    R --> D{Nhận diện người}
+    D -->|Khớp duy nhất| O[Chính thức]
+    D -->|Danh tính rõ và ngoài danh sách| C[CTV]
+    D -->|Mơ hồ hoặc xung đột| H[Người dùng kiểm tra]
+    H --> O
+    H --> C
+    O --> X[Workbook năm sheet]
+    C --> X
+    S --> X
 ```
 
-**Các thành phần chính:** `src/app/server.py` tạo Flask API loopback và kiểm tra CSRF; `src/services/sync_service.py` đồng bộ; `src/models/database.py` quản lý SQLite; `src/adapters/` giao tiếp Chatwork/AI; `src/services/source_reconciliation.py` và `event_policy.py` đối chiếu nguồn; `src/services/export_service.py` xuất theo phiên; `src/utils/excel_export.py` tạo workbook.
+Nghỉ nguyên ngày/nửa ngày được xác định theo từng ngày nêu trong câu. Không dùng ngày gửi để thay ngày sự kiện. Không suy ra loại phép hoặc tiền lương chỉ từ thời lượng.
 
-## Quyết định kỹ thuật
+## Hai cách triển khai
 
-| Quyết định | Lợi ích | Giới hạn/trade-off |
+| Thành phần | Local Windows | Cloud |
 |---|---|---|
-| SQLite trên máy Local | Không cần Postgres hay mạng nội bộ để xem lịch sử | Mỗi máy lưu dữ liệu riêng, không đồng bộ thời gian thực |
-| Chỉ bind `127.0.0.1` | Không tự mở API ra LAN/Internet | Chỉ dùng ở chính máy đang chạy |
-| Lưu `Source ID` | Truy xuất bằng chứng, đối chiếu kết quả AI | Cần quản lý các tin đã sửa/xóa và chất lượng nguồn |
-| Snapshot theo phiên | Tạo bản ghi nhất quán cho kỳ xuất | Phân tích lại có thể tạo phiên mới và cần kiểm tra kết quả |
-| Xuất Excel 4 sheet | Phù hợp quy trình kiểm tra bằng bảng tính | Phải kiểm chứng trên Microsoft Excel/WPS thật |
-| Chính sách nghiệp vụ riêng | CTV, phép năm và OT nhóm dễ kiểm thử | Không phải quy tắc pháp lý hay chính sách của mọi doanh nghiệp |
+| Giao diện | WebView2 hoặc trình duyệt loopback | Trình duyệt, xác thực quản trị |
+| Điều phối | src/app/server.py | cloud/app.py |
+| Lưu trữ | SQLite cạnh ứng dụng | PostgreSQL qua cloud/repository.py |
+| Danh sách | Khóa employee_registry_v1 trong settings | Cùng định dạng trong cc_settings |
+| Phiên | ai_settings lưu bản chụp danh sách | ai_settings JSONB lưu bản chụp danh sách |
+| Tự động | Windows Task Scheduler | Vercel Cron |
 
-## Đảm bảo/chưa đảm bảo
+Không có đồng bộ danh sách hoặc dữ liệu ngầm giữa hai bản. Nhập danh sách cho từng nơi giúp rõ quyền và nguồn dữ liệu, đổi lại cần quy trình quản trị để tránh chênh lệch.
 
-- **Có trong mã:** kiểm tra Host/Origin, CSRF cho mutation, giới hạn file upload, log xoay vòng, bộ kiểm thử chính sách.
-- **Chưa chứng nhận:** an toàn tuyệt đối khi lộ cổng, độ chính xác AI, tái nhập dữ liệu mọi tình huống, phân quyền nhiều người, năng lực tải lớn, chạy Windows với API thật.
-- `cloud/` là một chế độ khác; muốn dùng chung dữ liệu đa máy phải triển khai cơ sở dữ liệu tập trung và kiểm tra bảo mật độc lập.
+## Ranh giới mô-đun
 
-## Cloud trong bản 1.0.2
+| Mô-đun | Trách nhiệm | Không tự quyết định |
+|---|---|---|
+| employee_registry.py | CRUD, tên thường dùng, phiên bản danh sách, khởi tạo riêng | Không phán đoán quan hệ lao động |
+| personnel_policy.py | Phân loại và thời lượng nghỉ có căn cứ | Không tự tính lương |
+| source_reconciliation.py | Đối chiếu sự kiện với nội dung nguồn | Không thay tin nhắn gốc |
+| validation.py | Chặn dữ liệu chưa hợp lệ | Không dùng confidence để bỏ qua lỗi |
+| export_service.py / cloud/app.py | Điều phối theo phiên, rà soát, trạng thái | Không tự sửa báo cáo lịch sử khi đổi danh sách |
+| personnel_excel.py | Bảng CTV và tổng nghỉ chung | Không cộng OT CTV vào chính thức |
 
-`cloud/app.py` phục vụ HTTP có xác thực; `cloud/repository.py` lưu PostgreSQL trên Neon. Cron hợp lệ dọn dữ liệu trước khi đồng bộ. `cloud/retention.py` tính cutoff theo tháng lịch và GMT+7. File Excel lưu trong cc_files, snapshot và kết quả trong cc_sessions; dọn file trước phiên để giữ quan hệ khóa ngoại.
+Đây là ứng dụng triển khai theo mô-đun trong một khối cho mỗi chế độ. Các phần cũ còn gọi trực tiếp repository và lớp xác thực; chưa phải hệ thống có ranh giới mô-đun được cưỡng chế hoàn toàn bằng công cụ.
 
-Giao dịch dọn khóa các bảng liên quan trong thời gian ngắn, đặt lock timeout 5 giây và hoãn phiên đang có lease. Lỗi sẽ rollback bước dọn. Đồng bộ bỏ qua tin gửi trước cutoff để không nhập lại dữ liệu hết hạn. Cấu hình và khóa trong cc_settings không bị dọn.
+## Quyết định và đánh đổi
 
-Hai bản cloud/static/cloud.js và public/static/cloud.js cần cùng nội dung. Formatter chỉ đổi hiển thị, không sửa timestamp trong database. Xem [vận hành cloud](CLOUD_OPERATIONS.md).
+| Lựa chọn giữ lại | Có lợi gì | Đổi lại điều gì | Cách giảm nhược điểm |
+|---|---|---|---|
+| Quy tắc dùng chung | Giảm lệch Local/Cloud | Hai bộ điều phối vẫn có thể khác nhau | Kiểm thử cùng tình huống trên hai luồng |
+| Danh sách trong settings có phiên bản | Nâng cấp không phải thay cấu trúc bảng cũ | Cập nhật cả danh sách; chưa tối ưu quy mô lớn | Khóa thao tác, giới hạn dữ liệu; chuyển bảng riêng khi cần |
+| Bản chụp theo phiên | Báo cáo cũ có thể giải thích lại | Tăng dữ liệu lưu | Retention cloud, hướng dẫn lưu báo cáo |
+| Người ngoài danh sách là CTV | Thuận quy trình người dùng yêu cầu | Thiếu danh sách có thể phân loại sai | Cảnh báo danh sách trống, tên mơ hồ cần kiểm tra |
+| Ngừng hoạt động thay xóa vật lý | Giữ liên kết lịch sử | Còn lưu hồ sơ cũ | Hiển thị trạng thái và quản trị quyền truy cập |
+| Workbook năm sheet | Kiểm tra cùng một file | Người dùng cần hiểu sự khác nhau giữa các sheet | Nhãn rõ, hướng dẫn, ví dụ tổng tách biệt |
+
+## Điểm kiểm soát dữ liệu
+
+- Khóa và quyền HTTP áp dụng cả API nhân viên.
+- Tên chính thức, tên trong nguồn và căn cứ phân loại được lưu riêng.
+- Nhập lại danh sách không ghi đè chỉnh sửa hoặc kích hoạt lại người đã ngừng.
+- Danh sách thật không đi vào Git công khai. File khởi tạo nội bộ được tách khỏi nguồn.
+- Cron 3 tháng không xóa khóa danh sách nhân viên.
+- Phiên cũ vẫn đọc theo chính sách cũ; muốn kết quả mới phải tạo phiên mới.
+- Nội dung nguồn ghi dạng text trong Excel để tránh bị hiểu thành công thức.
+
+## Khi nào nên thay đổi thiết kế?
+
+Tách danh sách thành bảng quan hệ khi cần tìm kiếm/phân quyền hoặc cập nhật đồng thời ở quy mô lớn. Tách tác vụ phân tích thành hàng đợi khi có đo lường cho thấy request dài gây gián đoạn. Chỉ cân nhắc dịch vụ độc lập khi có nhu cầu vận hành hoặc mở rộng riêng được chứng minh.
+
+Đây là hướng phát triển, không phải tính năng đã được triển khai. Xem [đánh giá nguồn và lựa chọn](ARCHITECTURE_REVIEW_1.1.0.md) và [bằng chứng kiểm thử](VERIFICATION_1.1.0.md).

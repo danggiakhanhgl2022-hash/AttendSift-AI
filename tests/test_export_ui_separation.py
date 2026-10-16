@@ -1,4 +1,4 @@
-"""Prevent users mistaking a raw Chatwork dump for the 4-sheet attendance export."""
+"""Prevent users mistaking a raw Chatwork dump for the 5-sheet attendance export."""
 from pathlib import Path
 from html.parser import HTMLParser
 
@@ -28,13 +28,13 @@ class RawButtonNesting(HTMLParser):
             self.in_details -= 1
 
 
-def test_four_sheet_flow_is_primary_and_raw_dump_is_advanced_only():
+def test_five_sheet_flow_is_primary_and_raw_dump_is_advanced_only():
     html = (ROOT / 'templates/index.html').read_text(encoding='utf-8')
     parser = RawButtonNesting()
     parser.feed(html)
     assert parser.raw_in_advanced
     assert set(parser.labels) == {'createButton', 'exportButton'}
-    assert 'Xuất bảng chấm công 4 sheet vào Downloads' in html
+    assert 'Xuất bảng chấm công 5 sheet (có CTV) vào Downloads' in html
     assert 'Tải file tin nhắn THÔ (1 sheet, không tính OT)' in html
     assert 'Cham_cong_MM_YYYY.xlsx' in html
 

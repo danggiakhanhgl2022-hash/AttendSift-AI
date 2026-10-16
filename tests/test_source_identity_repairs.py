@@ -14,7 +14,7 @@ def test_ctv_and_short_name_need_no_registered_roster():
 
 def test_no_invented_full_name_and_no_clearing_real_uncertainty():
     snapshot=[{'message_id':'m','name':'Người báo hộ','body':'Tâm OT 30 phút'}]
-    event={'employee_name':'Nguyễn Tâm','source_message_ids':['m'],'identity_evidence':'fabricated','needs_review':True,
+    event={'employee_name':'Người giả lập Tâm','source_message_ids':['m'],'identity_evidence':'fabricated','needs_review':True,
            'review_reason':'not registered in registry'}
     repair_identity_evidence(event,snapshot)
     assert event['employee_name']=='Tâm' and event['identity_evidence']=='Tâm'

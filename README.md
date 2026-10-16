@@ -1,126 +1,89 @@
 # AttendSift AI
 
-**Chuyển báo cáo Chatwork thành bảng chấm công có thể kiểm tra và đối chiếu.**
+**Từ tin nhắn Chatwork đến bảng chấm công có thể giải thích và đối chiếu.**
 
-Bộ phận AI · Đặng Gia Khánh · Phiên bản 1.0.2
+Bộ phận AI · Đặng Gia Khánh · Phiên bản 1.1.0 · Bản ứng viên phát hành
 
-[Hướng dẫn Windows](docs/INSTALL_WINDOWS.md) · [Vận hành website](docs/CLOUD_OPERATIONS.md) · [Bàn giao máy mới](docs/CHUYEN_MAY_WINDOWS.md) · [Kiểm chứng](docs/VERIFICATION_1.0.2.md) · [English](README_EN.md)
+[Chạy trên Windows](docs/INSTALL_WINDOWS.md) · [Nhân viên và CTV](docs/PERSONNEL_1.1.0.md) · [Kiến trúc](docs/ARCHITECTURE.md) · [Đánh giá lựa chọn](docs/ARCHITECTURE_REVIEW_1.1.0.md) · [Kiểm chứng](docs/VERIFICATION_1.1.0.md)
 
-AttendSift AI hỗ trợ người phụ trách tổng hợp tin báo tăng ca, nghỉ, đi muộn và nghỉ bù trong Chatwork. Ứng dụng lưu tin nguồn, dùng AI hỗ trợ phân tích, áp dụng quy tắc nghiệp vụ và cho phép kiểm tra, chỉnh sửa trước khi xuất Excel. Mỗi kết quả có tham chiếu về tin gốc để đối chiếu.
+## Bắt đầu từ công việc của người sử dụng
 
-**Trạng thái:** bản ứng viên phát hành để nghiệm thu nội bộ. Có kiểm thử tự động và quy trình đóng gói Windows; xem [bằng chứng kiểm chứng](docs/VERIFICATION_1.0.2.md). Việc chạy được trên máy build chưa thay thế nghiệm thu trên máy người nhận hoặc xác nhận độ chính xác với toàn bộ dữ liệu thực tế.
+Người phụ trách cần biết ai đã báo công, báo cho ngày nào, thuộc nhóm nào và vì sao hệ thống tính như vậy. AttendSift AI tập trung vào chuỗi công việc đó: giữ tin gốc, hỗ trợ phân tích, đối chiếu danh sách nhân viên, để người dùng xác nhận trường hợp chưa rõ và xuất Excel.
 
-## Chọn cách sử dụng
+AI hỗ trợ đọc nội dung. Danh sách nhân viên và các quy tắc nghiệp vụ quyết định cách phân loại. Người phụ trách giữ quyền sửa và xác nhận trước khi dùng kết quả chính thức.
 
-| Nội dung | Windows Local | Website Cloud |
-|---|---|---|
-| Mở ứng dụng | EXE portable hoặc chạy từ mã nguồn | Trình duyệt, đăng nhập website |
-| Lưu dữ liệu | SQLite trong thư mục ứng dụng | PostgreSQL trên Neon |
-| Lịch đồng bộ | Windows Task Scheduler; máy cần bật, tài khoản đã đăng nhập | Vercel Cron, không cần máy cá nhân bật |
-| Kết nối AI/Chatwork | Thiết lập riêng trên máy | Thiết lập riêng trên website |
-| Tự xóa sau 3 tháng | Chưa áp dụng chính sách cloud | Có, khi cron hợp lệ chạy |
-| Python trên máy người dùng | Không cần với gói EXE; cần nếu chạy mã nguồn | Không cần |
+## Ba điểm đáng chú ý
 
-**Local và cloud không tự đồng bộ database hoặc khóa API với nhau.** Local lưu dữ liệu tại máy nhưng vẫn gửi nội dung cần phân tích tới nhà cung cấp AI được cấu hình. Internet và hạn mức API cần cho thao tác kết nối; gói phần mềm không bao gồm chi phí API.
+**Truy được nguồn.** Mỗi dòng có Source ID để đối chiếu. Nội dung gốc được giữ riêng với phần diễn giải. Một tin báo nhiều người hoặc nhiều ngày có thể tạo nhiều dòng, nhưng không chia OT của người này cho người khác.
 
-## Quy trình làm việc
+**Giữ được ngữ cảnh của báo cáo cũ.** Mỗi phiên lưu danh sách nhân viên tại thời điểm tạo. Thêm, sửa hoặc ngừng hoạt động sau đó không tự viết lại kết quả cũ. Muốn dùng danh sách mới, tạo phiên mới.
 
-1. **Kết nối:** nhập token Chatwork, kiểm tra quyền và chọn phòng; cấu hình Gemini, OpenAI hoặc Claude với model được tài khoản hỗ trợ.
-2. **Đồng bộ:** nhận tin gần nhất, lưu tin nguồn và kiểm tra phạm vi dữ liệu.
-3. **Phân tích:** tách sự kiện theo nhân viên × ngày × loại; đối chiếu nguồn và quy tắc áp dụng.
-4. **Rà soát:** kiểm tra trường hợp thiếu thông tin hoặc chưa chắc chắn; xác nhận, chỉnh sửa trước khi xuất.
-5. **Xuất Excel:** lưu báo cáo 4 sheet và đối chiếu trước khi dùng chính thức.
+**Biết khi nào cần hỏi lại.** Người có danh tính rõ nhưng không thuộc danh sách chính thức được xếp CTV. Tên ngắn mơ hồ, thiếu người hoặc mâu thuẫn với nhãn CTV được đưa vào kiểm tra, thay vì đoán cho đủ báo cáo.
 
-| Sheet | Nội dung |
+## Quy trình trong năm tab
+
+| Tab | Bạn thực hiện |
 |---|---|
-| `1_TIN_NHAN_GOC` | Nguồn tin dùng để đối chiếu |
-| `2_CHAM_CONG` | Sự kiện chấm công chi tiết |
-| `3_TONG_KET` | Tổng hợp theo nhân viên |
-| `4_CAN_KIEM_TRA` | Những trường hợp cần rà soát |
+| Đồng bộ | Lấy tin nhắn, kiểm tra kỳ và dữ liệu nguồn |
+| Nhân viên | Thêm, sửa, ngừng hoạt động; nhập danh sách riêng và tên thường dùng |
+| Xuất chấm công | Phân tích, kiểm tra dòng, xác nhận rồi xuất |
+| Lịch sử | Xem phiên cũ, hoạt động và báo cáo đã lưu |
+| Thiết lập | Kết nối Chatwork, AI và lịch đồng bộ |
 
-## Quy tắc nghiệp vụ
+Tên thường dùng cần được người quản trị xác nhận. Với hai người cùng tên, nên dùng thêm tên đệm trong Chatwork. Khi bảng nhân viên trống, ứng dụng yêu cầu xác nhận rõ trước khi tiếp tục phân loại CTV.
 
-- Một tin có thể tạo nhiều dòng cho nhiều người và nhiều ngày. OT của mỗi người được ghi riêng, không chia tổng phút cho số người.
-- Ngày sự kiện được lấy từ nội dung có bằng chứng, có thể khác ngày gửi tin.
-- Không tự suy đoán họ tên đầy đủ từ tên ngắn. Người được gắn rõ `(CTV)` và tin phép năm chỉ giữ nguồn theo chính sách hiện tại; tên ngắn không mặc nhiên bị coi là CTV.
-- Đây là chính sách của phiên bản hiện tại, cần được đơn vị sử dụng xác nhận; không thay thế quy chế nhân sự của đơn vị.
+## Đầu ra: một workbook, năm sheet
 
-Ví dụ **giả lập**: “Ngày 5/10: Lan OT 1h; Minh + Bình OT 2h” tạo ba dòng: Lan 60 phút, Minh 120 phút, Bình 120 phút. Xem [quy tắc nghiệp vụ](docs/BUSINESS_RULES.md).
+| Sheet | Mục đích |
+|---|---|
+| `1_TIN_NHAN_GOC` | Bằng chứng tin nhắn |
+| `2_CHAM_CONG` | Chi tiết nhân viên chính thức |
+| `3_TONG_KET` | Tổng hợp nhân viên chính thức |
+| `4_CAN_KIEM_TRA` | Dấu vết kiểm tra, xác nhận và loại dòng |
+| `5_CTV` | Chi tiết CTV, tin gốc và tổng OT/ngày nghỉ theo người |
 
-## Cập nhật trong bản 1.0.2
+OT CTV không cộng vào tổng chính thức. Các phiên cũ giữ chính sách và định dạng cũ; không tự chuyển báo cáo bốn sheet thành năm sheet.
 
-- Danh sách cloud tự làm mới sau đồng bộ, hiển thị tổng số tin và phản hồi khi bộ lọc không hợp lệ.
-- Thời gian tin nhắn cloud hiển thị `dd/mm/yyyy HH:mm:ss`, múi giờ Việt Nam GMT+7, giữ chuỗi ngày giờ trên một dòng.
-- Cron chấp nhận hostname deployment thay đổi khi đúng endpoint và Bearer secret hợp lệ; các yêu cầu khác vẫn kiểm tra host.
-- Cron dọn dữ liệu cloud cũ hơn 3 tháng và ngăn nhập lại tin nhắn quá hạn.
-- Gộp hướng dẫn cài đặt, chuyển máy, vận hành cloud và thông tin kiểm chứng cho cùng một phiên bản.
+Ví dụ giả lập: “Lan Demo OT 1h; An Demo (CTV) OT 2h” tạo OT chính thức 60 phút nếu Lan Demo thuộc danh sách và OT CTV 120 phút cho An Demo.
 
-## Bắt đầu trên Windows
+Nghỉ nguyên ngày được ghi 1 ngày; nghỉ sáng hoặc chiều là 0,5 ngày. “Nghỉ ngày 05/10 và sáng ngày 06/10” tạo hai dòng, tổng 1,5 ngày. Đây là thời lượng nghỉ, không tự xác nhận loại phép, đơn giá hay tiền lương. Chính sách phép năm đã có vẫn được giữ.
 
-### Người nhận gói EXE
+## Chọn nơi sử dụng
 
-1. Nhận `AttendSift-AI_Windows_1.0.2.zip` và checksum từ người bàn giao hoặc mục Releases khi đã được xuất bản.
-2. Giải nén toàn bộ vào thư mục có quyền ghi, ví dụ `D:\AttendSift-AI`; không chạy bên trong ZIP.
-3. Đọc `DOC_TRUOC_KHI_CHAY.html`, chạy `KIEM_TRA.bat`, rồi `BAT_DAU.bat`.
-4. Nhập khóa của người sử dụng, thử dữ liệu giả và đối chiếu một file Excel trước khi nghiệm thu.
-
-EXE portable dành cho Windows 10/11 x64, chưa ký số. Nếu bị chính sách máy chặn, gửi checksum cho IT kiểm tra. Xem [hướng dẫn bàn giao](docs/CHUYEN_MAY_WINDOWS.md).
-
-### Người chạy mã nguồn
-
-Cài Python 3.11 x64, giải nén mã nguồn rồi lần lượt chạy:
-
-```text
-CAI_DAT_WINDOWS.bat
-KIEM_TRA_LOCAL_WINDOWS.bat
-CHAY_LOCAL_WINDOWS.bat
-```
-
-Địa chỉ mặc định: `http://127.0.0.1:8766`. ZIP mã nguồn không chứa sẵn EXE. Xem [hướng dẫn cài đặt](docs/INSTALL_WINDOWS.md).
-
-## Dữ liệu cloud và thời hạn lưu
-
-Cron được cấu hình mỗi ngày lúc **13:00 giờ Việt Nam** (`0 6 * * *` UTC); thời điểm thực thi thực tế phụ thuộc dịch vụ hosting. Chỉ yêu cầu có `CRON_SECRET` hợp lệ được thực hiện tác vụ dọn.
-
-- Tin nhắn: quá 3 tháng tính từ thời điểm gửi.
-- Phiên phân tích, kết quả và Excel liên quan: quá 3 tháng tính từ thời điểm tạo phiên. Bản chụp nguồn trong phiên đi theo thời hạn của phiên.
-- Lịch sử thao tác và bản sửa tin nhắn được dọn theo [chính sách chi tiết](docs/RETENTION_3_MONTHS.md).
-- Cấu hình và khóa kết nối được giữ lại. File đã tải về máy không bị tác động.
-
-**Tải báo cáo cần lưu lâu dài trước hạn.** Dữ liệu quá hạn có thể bị xóa ngay ở lần cron hợp lệ đầu tiên sau triển khai. Thời hạn lưu giúp kiểm soát tích lũy, không bảo đảm dữ liệu 3 tháng luôn vừa hạn mức miễn phí. Xem [vận hành cloud](docs/CLOUD_OPERATIONS.md).
-
-## Giới hạn cần biết
-
-Chatwork có thể chỉ trả cửa sổ tối đa 100 tin gần nhất trong một lần lấy dữ liệu. Đồng bộ thành công không chứng minh đã có đầy đủ lịch sử tháng; cần đối chiếu nguồn trước khi xuất. Local hỗ trợ nhập lịch sử được lưu hợp lệ.
-
-AI có thể nhầm người, ngày hoặc thời lượng. Người phụ trách cần kiểm tra trước khi dùng chính thức. Kiểm thử tự động không thay thế nghiệm thu trên máy người nhận, kiểm tra Microsoft Excel, API thật hoặc PostgreSQL staging.
-
-## Giao diện
-
-![Giao diện Local đã che dữ liệu riêng tư](docs/images/01-local-interface-redacted.png)
-
-| Nguồn tin | Chi tiết chấm công | Tổng kết |
+| | Windows Local | Website Cloud |
 |---|---|---|
-| ![Nguồn đã ẩn dữ liệu](docs/images/02-source-sheet-redacted.png) | ![Chi tiết đã ẩn dữ liệu](docs/images/03-attendance-sheet-redacted.png) | ![Tổng kết đã ẩn dữ liệu](docs/images/04-summary-sheet-redacted.png) |
+| Mở | ChamCong.exe hoặc mã nguồn Python | Trình duyệt có đăng nhập |
+| Dữ liệu | SQLite tại máy | PostgreSQL trên Neon |
+| Lịch | Task Scheduler, máy bật và tài khoản đăng nhập | Vercel Cron |
+| Danh sách | Nhập riêng; gói bàn giao nội bộ có thể kèm file khởi tạo | Người quản trị nhập JSON tại tab Nhân viên |
+| Thời hạn lưu | Người vận hành quản lý | Dữ liệu nghiệp vụ theo chính sách 3 tháng; giữ danh sách nhân viên |
 
-Ảnh minh họa Local đã che thông tin cá nhân; không xác nhận bố cục cloud mới nhất hoặc độ chính xác trên toàn bộ dữ liệu thực tế.
+Hai bản không tự chia sẻ database hoặc khóa. Bản Local vẫn gửi nội dung cần phân tích tới dịch vụ AI đã chọn. Internet, quyền truy cập và quota API cần được người sử dụng chuẩn bị.
 
-## Dành cho người bảo trì
+## Cài trên máy người nhận
 
-```text
-src/                  Local: SQLite, đồng bộ, phân tích, xuất Excel
-cloud/                Cloud: Flask, PostgreSQL, xác thực, cron, retention
-static/, templates/   Giao diện và mẫu workbook Local
-public/static/        Tài nguyên cloud phục vụ qua hosting
-tests/                Kiểm thử bằng dữ liệu giả lập
-tools/                Chẩn đoán, kiểm tra và đóng gói
-docs/                 Sử dụng, vận hành, kiểm chứng và bàn giao
-```
+Với gói nội bộ dễ dùng: giải nén ZIP vào thư mục có quyền ghi rồi mở `ChamCong.exe` ngay ở ngoài cùng. Không cần Python. Giữ file `NHAN_VIEN_RIENG.json` bên cạnh EXE nếu được bàn giao danh sách ban đầu; file này chỉ khởi tạo khi chưa có danh sách, không ghi đè chỉnh sửa.
 
-Xem [kiểm thử](docs/TESTING.md), [checklist phát hành](docs/RELEASE_CHECKLIST.md), [đăng GitHub](docs/PUBLISH_1.0.2.md), [changelog](CHANGELOG.md), [kiến trúc](docs/ARCHITECTURE.md).
+Vào Thiết lập để nhập khóa của người sử dụng. Kiểm tra bằng dữ liệu thử và nghiệm thu Excel trước khi dùng thực tế. EXE chưa ký số; nếu bị chặn, nhờ IT kiểm tra nguồn và checksum.
 
-## Hỗ trợ và quyền sử dụng
+Chạy từ mã nguồn: Python 3.11 x64 → `CAI_DAT_WINDOWS.bat` → `KIEM_TRA_LOCAL_WINDOWS.bat` → `CHAY_LOCAL_WINDOWS.bat`. Xem [hướng dẫn Windows](docs/INSTALL_WINDOWS.md).
 
-Bảo trì: **Bộ phận AI · Đặng Gia Khánh**. Khi báo lỗi, gửi phiên bản, bước tái hiện và thông báo đã che dữ liệu; không gửi API key, database, tin nhân viên hoặc Excel thật lên GitHub. Xem [CONTRIBUTING](CONTRIBUTING.md) và [SECURITY](SECURITY.md).
+## Kiến trúc vừa đủ để bảo trì
 
-Dự án chưa cấp giấy phép mã nguồn mở; xem [LICENSE_DECISION](LICENSE_DECISION.md). Quyền sử dụng và phân phối cần được chủ sở hữu xác nhận. Giấy phép thư viện bên thứ ba vẫn áp dụng. Ứng dụng không liên kết chính thức với Chatwork hay nhà cung cấp AI.
+Ứng dụng được tổ chức theo các mô-đun trong một gói triển khai cho mỗi chế độ. Quy tắc nhân viên và ngày nghỉ dùng chung; Local và Cloud có lớp lưu trữ riêng. Cách này giảm chi phí vận hành, nhưng các luồng phân tích cũ vẫn cần được kiểm thử đồng thời khi thay đổi.
+
+[Sơ đồ kiến trúc](docs/ARCHITECTURE.md) giải thích từ góc nhìn người dùng đến mô-đun. [Bản đánh giá](docs/ARCHITECTURE_REVIEW_1.1.0.md) trình bày nguồn tham khảo, lựa chọn giữ lại, ưu điểm, giới hạn và thời điểm nên thay đổi. Không coi tên một xu hướng kiến trúc là bằng chứng chất lượng.
+
+## Những điều cần hiểu trước khi dùng
+
+Chatwork có thể chỉ trả cửa sổ 100 tin gần nhất. Đồng bộ thành công không chứng minh đầy đủ lịch sử tháng. AI có thể nhầm, và người không nằm trong danh sách có thể là nhân viên chưa được nhập; hãy cập nhật danh sách và kiểm tra căn cứ phân loại.
+
+Cloud dọn dữ liệu quá hạn theo [chính sách 3 tháng](docs/RETENTION_3_MONTHS.md). Tải báo cáo cần giữ lâu dài trước hạn. Thời hạn lưu không bảo đảm luôn vừa quota miễn phí.
+
+Xem [báo cáo kiểm chứng](docs/VERIFICATION_1.1.0.md) để phân biệt điều đã thử với điều còn cần nghiệm thu trên máy nhận, API thật, Microsoft Excel và PostgreSQL staging.
+
+## Quyền riêng tư và hỗ trợ
+
+Danh sách nhân sự, khóa, database và Excel thật không thuộc bộ mã nguồn công khai. Gói nội bộ có danh sách là dữ liệu riêng, chỉ chuyển cho người được phép. Kiểm thử dùng người giả lập.
+
+Khi báo lỗi, gửi phiên bản, bước tái hiện và thông báo đã che dữ liệu. Xem [SECURITY](SECURITY.md), [CONTRIBUTING](CONTRIBUTING.md) và [quyền sử dụng](LICENSE_DECISION.md). Dự án chưa cấp giấy phép mã nguồn mở và không liên kết chính thức với Chatwork hoặc nhà cung cấp AI.

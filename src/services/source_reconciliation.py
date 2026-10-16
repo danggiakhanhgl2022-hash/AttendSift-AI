@@ -298,7 +298,7 @@ def _active_body(message):
     body = str(message.get('body') or '')
     return re.sub(r'\[qt\][\s\S]*?\[/qt\]', ' ', body, flags=re.IGNORECASE)
 
-def extract_explicit_claims(message, snapshot, month, year):
+def extract_explicit_claims(message, snapshot, month, year, roster_policy=False):
     """Only extract patterns where the day, person and duration are explicit."""
     body = _active_body(message)
     send_day = _vn_message_date(message)
@@ -308,7 +308,16 @@ def extract_explicit_claims(message, snapshot, month, year):
 
     # "Em xin phép nghỉ ... ngày 7-9/10 ... và ngày 12/10" requires FOUR rows.
     first = _single_person_request(body)
-    if first and first['kind'].casefold() == 'nghỉ' and not is_annual_leave_text_only(body):
+    if roster_policy and first and first['kind'].casefold() == 'nghỉ' and not is_annual_leave_text_only(body):
+        from .personnel_policy import leave_claims
+        name, quote = _sender_identity(message)
+        subtype = 'Không lương' if 'không lương' in body.casefold() else None
+        for day, detail in leave_claims(body, send_day).items():
+            claim = _candidate(message, day, name, quote, 'Nghỉ',
+                               subtype=subtype, leave_days=detail['leave_days'])
+            claim.update(leave_period=detail['leave_period'], leave_source_verified=True)
+            claims.append(claim)
+    elif first and first['kind'].casefold() == 'nghỉ' and not is_annual_leave_text_only(body):
         leave_days = _leave_days_in_request(body, first, send_day, month, year)
         if leave_days and ('phép năm' in body.casefold() or 'không lương' in body.casefold()):
             subtype = 'Phép năm' if 'phép năm' in body.casefold() else 'Không lương'
@@ -432,6 +441,7 @@ def _supplement(claim):
         'needs_review': uncertain,
         'review_reason': reason
     }
+    event.update({k: claim[k] for k in ('leave_period', 'leave_source_verified') if k in claim})
     return event
 
 
@@ -462,7 +472,7 @@ def _certify_source_claim(row, claim):
     row['end_time'] = None
 
 
-def reconcile_explicit_records(events, snapshot, month, year):
+def reconcile_explicit_records(events, snapshot, month, year, roster_policy=False):
     """Modify derived AI output; untouched original output must be saved separately."""
     sources = {m['message_id']: m for m in snapshot}
 
@@ -506,12 +516,12 @@ def reconcile_explicit_records(events, snapshot, month, year):
                                review_state='excluded', needs_review=False,
                                review_reason='Phép năm: chỉ xuất nội dung tin nhắn gốc; không tính công.')
             continue
-        claims = extract_explicit_claims(message, snapshot, month, year)
+        claims = extract_explicit_claims(message, snapshot, month, year, roster_policy)
         # The My (CTV) line remains in the original Chatwork message on sheet 1,
         # but does not become an attendance/OT record or require manual registry
         # matching. Keep any AI attempt in the audit trail as an excluded row.
-        my_ctv_claims = [c for c in claims if _is_my_ctv_claim(c)]
-        if MY_CTV_OT.search(_active_body(message)) and not my_ctv_claims:
+        my_ctv_claims = [] if roster_policy else [c for c in claims if _is_my_ctv_claim(c)]
+        if not roster_policy and MY_CTV_OT.search(_active_body(message)) and not my_ctv_claims:
             # No date header or unparseable message? Still do not turn the
             # explicitly marked My (CTV) into an employee/payroll row.
             my_ctv_claims = [{'identity_evidence':m['name'], 'employee_name':m['name']}
@@ -557,7 +567,7 @@ def reconcile_explicit_records(events, snapshot, month, year):
             if related and row.get('event_date') not in {c['event_date'] for c in related}:
                 _mark_review(row, 'Ngày AI ghi không nằm trong các ngày có bằng chứng rõ trong tin nguồn; cần sửa hoặc loại dòng.')
         for claim in claims:
-            if _is_my_ctv_claim(claim):
+            if _is_my_ctv_claim(claim) and not roster_policy:
                 # The snapshot already contains the complete unchanged message.
                 # Do not synthesize a payroll row for this source-only alias.
                 continue
@@ -582,7 +592,10 @@ def reconcile_explicit_records(events, snapshot, month, year):
                     ):
                         row['leave_days'] = claim['leave_days']
                         row['event_subtype'] = claim['event_subtype']
-                        _mark_review(row, 'AI trích sai số ngày hoặc loại phép; đã đối chiếu nguồn.')
+                        if not roster_policy:
+                            _mark_review(row, 'AI trích sai số ngày hoặc loại phép; đã đối chiếu nguồn.')
+                    if claim.get('leave_source_verified'):
+                        row.update(leave_source_verified=True, leave_period=claim['leave_period'])
                     if 'minutes_not_compensated' in claim and row.get('minutes_not_compensated') != claim['minutes_not_compensated']:
                         row['minutes_not_compensated'] = claim['minutes_not_compensated']
                         row['minutes_compensated'] = 0

@@ -28,7 +28,7 @@ def validate(event, snapshot, month, year):
     source_text = '\n'.join(str(sources[i].get('body', '')) + '\n' + str(sources[i].get('name', '')) for i in ids)
     if not isinstance(evidence, str) or not evidence.strip() or evidence not in source_text:
         errors.append('identity_evidence: cần trích dẫn bằng chứng nhận diện từ nguồn')
-    elif isinstance(name, str) and name.casefold().replace(' (ctv)', '') not in source_text.casefold() and not unique_short_name_evidence(name,source_text,snapshot):
+    elif not event.get('employee_match_verified') and isinstance(name, str) and name.casefold().replace(' (ctv)', '') not in source_text.casefold() and not unique_short_name_evidence(name,source_text,snapshot):
         warnings.append('Tên chuẩn hóa chưa xuất hiện đầy đủ trong nguồn; cần đối chiếu nhận diện.')
     try:
         day = date.fromisoformat(event.get('event_date', ''))
@@ -52,8 +52,10 @@ def validate(event, snapshot, month, year):
     if event.get('event_type') == 'Nghỉ':
         if type(event.get('leave_days')) not in (int,float) or event.get('leave_days') not in (0.5, 1):
             errors.append('leave_days: cần xác định nghỉ nửa ngày hoặc cả ngày')
-        if not isinstance(event.get('event_subtype'),str) or event.get('event_subtype') not in {'Phép năm', 'Không lương', 'Nghỉ không lương'}:
+        if not (event.get('leave_source_verified') and event.get('event_subtype') is None) and event.get('event_subtype') not in {'Phép năm', 'Không lương', 'Nghỉ không lương'}:
             errors.append('event_subtype: cần xác nhận loại nghỉ có căn cứ')
+    if event.get('classification') == 'unresolved':
+        errors.append('classification: cần xác nhận người và nhóm nhân sự.')
     if event.get('ot_used_minutes',0) and str(event.get('event_type')) not in {'Tăng ca','OT'}:
         try:date.fromisoformat(event.get('ot_credit_date',''))
         except (TypeError,ValueError):errors.append('ot_credit_date: cần xác định ngày OT nguồn, không tự trừ tháng hiện tại')

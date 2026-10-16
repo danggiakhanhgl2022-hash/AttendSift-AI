@@ -26,7 +26,7 @@ def verify_workbook(path):
     try:
         workbook = openpyxl.load_workbook(path, data_only=False)
         try:
-            if workbook.sheetnames != SHEETS:
+            if workbook.sheetnames not in (SHEETS, SHEETS + ['5_CTV']):
                 raise ValueError('Mẫu Excel phải có đúng bốn sheet chuẩn.')
             for sheet, width in zip(workbook, WIDTHS):
                 if not sheet.cell(4,1).value or not sheet.cell(4,width).value:
@@ -105,6 +105,10 @@ def export_to_excel(results,session_info,output_path,template_path=None):
     if session_info.get('is_draft'):
         for sheet in wb:
             sheet['A2']=str(sheet['A2'].value or '')+' BẢN TẠM: chưa xác nhận đủ dữ liệu kỳ. Phiên '+str(session_info.get('session_id',''))
+    import json
+    settings = session_info.get('ai_settings') or {}
+    if isinstance(settings, str): settings = json.loads(settings)
+    personnel_mode = 'employee_registry' in settings or any('classification' in e for e in results)
     source={m['message_id']:m for m in session_info.get('snapshot',[])}
     information_ids={i for r in results if r.get('source_only') for i in r.get('source_message_ids',[])}
     # When the only OT reported is My (CTV), there is intentionally no payroll
@@ -114,7 +118,12 @@ def export_to_excel(results,session_info,output_path,template_path=None):
     information_ids.update(m['message_id'] for m in source.values()
                            if re.search(r'(?<!\w)my\s*\(\s*ctv\s*\)\s+OT\b',
                                         str(m.get('body') or ''), re.IGNORECASE))
-    kept=[r for r in results if not r.get('is_excluded') and not is_ctv_text_only(r, list(source.values()))]
+    reportable = [e for e in results if not e.get('is_excluded')]
+    if personnel_mode and any(e.get('classification') not in {'official','contractor'} for e in reportable):
+        raise ValueError('Còn dòng chưa xác định nhóm nhân sự.')
+    contractors = [e for e in reportable if e.get('classification') == 'contractor']
+    kept = [e for e in reportable if e.get('classification') == 'official'] if personnel_mode else [
+        e for e in reportable if not is_ctv_text_only(e, list(source.values()))]
     kept=[{**r, 'reason': reason_from_source(r, list(source.values()))} for r in kept]
     identity_names={r.get('person_id',r.get('employee_name')):r.get('employee_name','') for r in kept}
     counts=Counter(identity_names.values())
@@ -122,7 +131,7 @@ def export_to_excel(results,session_info,output_path,template_path=None):
     # Source sheet preserves complete evidence, including context outside the month.
     row=5
     for message in source.values():
-        linked=[r for r in kept if message['message_id'] in r.get('source_message_ids',[])]
+        linked=[r for r in (reportable if personnel_mode else kept) if message['message_id'] in r.get('source_message_ids',[])]
         dt=datetime.fromisoformat(message['send_time'])
         body=deduplicate_copied_sender_header(message['body'],message.get('name'));parts=[body[i:i+32000] for i in range(0,len(body),32000)] or ['']
         for part in parts:
@@ -166,7 +175,7 @@ def export_to_excel(results,session_info,output_path,template_path=None):
         put(SHEETS[2],row,[labels[identity],leave_notes]+['']*11,formulas)
     review_row=5
     for event in results:
-        if is_ctv_text_only(event, list(source.values())):continue
+        if not personnel_mode and is_ctv_text_only(event, list(source.values())):continue
         if event.get('source_only'):continue
         if event.get('review_state')=='confirmed' or event.get('is_excluded'):
             ids=event.get('source_message_ids')
@@ -210,6 +219,9 @@ def export_to_excel(results,session_info,output_path,template_path=None):
                 excel_table.tableStyleInfo.showRowStripes = True
         sheet.sheet_properties.tabColor = color
         sheet.sheet_view.tabSelected = name == '3_TONG_KET'
+    if personnel_mode:
+        from .personnel_excel import append_personnel_sheets
+        append_personnel_sheets(wb, kept, contractors, source, month, year)
     wb.save(output_path)
     from .formula_cache import cache_generated_totals
     cache_generated_totals(wb, output_path)

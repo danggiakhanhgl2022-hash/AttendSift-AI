@@ -1,0 +1,2 @@
+# Optional Edge browser acceptance only; not required by the application.
+playwright==1.64.0

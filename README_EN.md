@@ -2,11 +2,11 @@
 
 **Turn Chatwork reports into attendance records that can be reviewed against their source.**
 
-AI Department | Dang Gia Khanh | Version 1.0.2
+AI Department | Dang Gia Khanh | Version 1.1.0
 
-[Vietnamese documentation](README.md) ? [Windows setup](docs/INSTALL_WINDOWS.md) ? [Verification](docs/VERIFICATION_1.0.2.md)
+[Vietnamese documentation](README.md) ? [Windows setup](docs/INSTALL_WINDOWS.md) ? [Verification](docs/VERIFICATION_1.1.0.md)
 
-AttendSift AI stores source messages, uses an AI provider to assist with event extraction, applies business rules, and lets an operator review the results before exporting a four-sheet Excel workbook. It handles messages mentioning multiple people and dates, with separate overtime amounts for each person.
+AttendSift AI stores source messages, uses an AI provider to assist with event extraction, applies business rules, and lets an operator review the results before exporting a five-sheet Excel workbook. It handles messages mentioning multiple people and dates, with separate overtime amounts for each person.
 
 ## Deployment options
 
@@ -25,7 +25,7 @@ For a verified portable bundle, extract the entire ZIP, read `DOC_TRUOC_KHI_CHAY
 
 For source installation, use Python 3.11 x64 and run `CAI_DAT_WINDOWS.bat`, `KIEM_TRA_LOCAL_WINDOWS.bat`, then `CHAY_LOCAL_WINDOWS.bat`. The default address is `http://127.0.0.1:8766`. Source ZIPs do not contain a prebuilt EXE.
 
-## Version 1.0.2
+## Version 1.1.0
 
 - Refresh cloud messages after synchronization and improve filter feedback.
 - Display cloud message timestamps in Vietnam time with an unbroken date/time string.
@@ -40,3 +40,7 @@ Messages expire three calendar months after sending. Analysis sessions and their
 This is an internal release candidate. See the verification report for measured results and remaining acceptance tasks. Chatwork's recent-message window may omit earlier history. AI results require human review. Clean-machine Windows acceptance, live provider validation and Microsoft Excel checks must be recorded separately.
 
 No open-source license has been granted; see [LICENSE_DECISION.md](LICENSE_DECISION.md). Keep credentials, employee data and runtime databases out of public uploads. Report issues using synthetic examples through the repository's contribution and security guidance.
+
+## Personnel update
+
+Version 1.1.0 adds employee management, immutable roster snapshots per session, separate contractor reporting in a fifth worksheet and source-backed full/half-day leave. Private employee bootstrap data is distributed separately from public source. Short or conflicting names require review. Old sessions retain their original policy.

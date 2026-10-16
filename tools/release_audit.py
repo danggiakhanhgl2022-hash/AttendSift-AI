@@ -21,6 +21,8 @@ def main(path):
         files = [p for p in root.rglob('*') if p.is_file()]
     errors = []
     for file in files:
+        if file.name.startswith('NHAN_VIEN_RIENG'):
+            errors.append(file.relative_to(root))
         parts = file.relative_to(root).parts
         if any(part in BLOCKED_DIRS for part in parts): errors.append(file.relative_to(root))
         if file.suffix.lower() in BLOCKED_SUFFIXES or file.name.startswith('.env.') and file.name != '.env.example' or file.name == '.env':

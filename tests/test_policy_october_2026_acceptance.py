@@ -153,7 +153,7 @@ def test_stable_short_name_id_over_two_team_reports():
 
 def test_short_alias_with_multiple_sender_namesakes_is_not_a_conflict_in_report():
     report=msg('r','Người tổng hợp','Team DemoBeta: ngày 08/10\nTâm OT 30ph','2026-10-09',10)
-    sources=[report,msg('a','Nguyễn Tâm','', '2026-10-01',11),
+    sources=[report,msg('a','Người giả lập Tâm','', '2026-10-01',11),
             msg('b','Trần Tâm','', '2026-10-02',12)]
     rows=_active(_process(sources))
     assert len(rows)==1 and rows[0]['employee_name']=='Tâm'

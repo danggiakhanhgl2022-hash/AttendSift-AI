@@ -11,7 +11,7 @@ VIETNAMESE_FILES = [
     "docs/COMMUNITY_REVIEW.md", "docs/TESTING.md",
     "docs/RELEASE_CHECKLIST.md", "docs/FEATURE_MATRIX.md",
     "docs/GITHUB_ABOUT_AND_CV.md", "docs/VERIFICATION_1.0.2.md",
-    "docs/ARCHITECTURE.md",
+    "docs/ARCHITECTURE.md", "docs/PERSONNEL_1.1.0.md", "docs/ARCHITECTURE_REVIEW_1.1.0.md",
 ]
 
 
@@ -31,7 +31,7 @@ def validate(root):
             errors.append(name + ": possible lossy question-mark replacement")
     if not errors:
         readme = (Path(root) / "README.md").read_text(encoding="utf-8-sig")
-        if "Chuy\u1ec3n b\u00e1o c\u00e1o Chatwork" not in readme:
+        if "b\u1ea3ng ch\u1ea5m c\u00f4ng" not in readme:
             errors.append("README.md: expected Vietnamese introduction missing")
     return errors
 

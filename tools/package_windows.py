@@ -38,6 +38,8 @@ def main():
     # Never copy the workspace wholesale: only reviewed, tracked source is included.
     for name in files:
         path = Path(name)
+        if path.name.startswith('NHAN_VIEN_RIENG'):
+            raise SystemExit('Blocked private employee roster: ' + name)
         if any(part in {'data','logs','outputs','backups','config','.git','.venv','release'} for part in path.parts):
             raise SystemExit('Blocked runtime path: ' + name)
         if path.name == '.env' or path.name.startswith('.env.') and path.name != '.env.example':
@@ -60,7 +62,7 @@ def main():
 <title>Bắt đầu — AttendSift-AI</title><style>body{font:16px/1.7 "Segoe UI",sans-serif;margin:0;background:#07121b;color:#eaf2f8}main{max-width:1040px;margin:auto;padding:48px 24px}h1{font-size:36px;margin:8px 0}h2{color:#b9dfed}p{color:#bed0dc}section{background:#122331;padding:24px;border-radius:18px;margin:20px 0}code{background:#06121c;padding:3px 7px;border-radius:5px}a{color:#b9dfed}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.8 "Segoe UI",sans-serif}.tag{color:#9bc9dd}</style><main>
 <div class="tag">Bộ phận AI · Đặng Gia Khánh</div><h1>AttendSift-AI cho Windows</h1><p>Bản portable: giải nén toàn bộ ZIP rồi chạy, không cần cài Python.</p>
 <section><h2>1. Mở ứng dụng</h2><ol><li>Giải nén vào Documents hoặc ổ D có quyền ghi.</li><li>Mở <code>BAT_DAU.bat</code> hoặc <code>UngDung/ChamCong.exe</code>.</li><li>Đợi cửa sổ ứng dụng hoặc trình duyệt local mở.</li></ol></section>
-<section><h2>2. Kết nối và xuất công</h2><ol><li>Thiết lập → nhập token Chatwork, kiểm tra và chọn nhóm.</li><li>Chọn Google Gemini / OpenAI / Claude, nhập API key và kiểm tra.</li><li>Đồng bộ → Xuất công → chọn tháng → kiểm tra các dòng → xuất Excel 4 sheet vào Downloads.</li></ol><p>Máy mới cần nhập lại API. Gói này không chứa khóa hoặc dữ liệu nhân viên.</p></section>
+<section><h2>2. Kết nối và xuất công</h2><ol><li>Thiết lập → nhập token Chatwork, kiểm tra và chọn nhóm.</li><li>Chọn Google Gemini / OpenAI / Claude, nhập API key và kiểm tra.</li><li>Đồng bộ → Xuất công → chọn tháng → kiểm tra các dòng → xuất Excel 5 sheet vào Downloads.</li></ol><p>Máy mới cần nhập lại API. Gói này không chứa khóa hoặc dữ liệu nhân viên.</p></section>
 <section><h2>3. Bạn muốn dùng dữ liệu cloud?</h2><p>Mở <code>MO_BAN_WEB.url</code> hoặc <a href="https://attend-sift-ai.vercel.app">attend-sift-ai.vercel.app</a>. Dùng mật khẩu quản trị website. Dữ liệu Windows và Neon không tự đồng bộ với nhau.</p></section>
 <section><h2>4. Các tệp trong gói</h2><ul><li><code>KIEM_TRA.bat</code>: kiểm tra thư viện và mẫu Excel của EXE.</li><li><code>CHAY_CONG_KHAC.bat</code>: mở cổng 8767 nếu cần.</li><li><code>HUONG_DAN_CHUYEN_MAY.md</code>: quy trình chuyển dữ liệu và xử lý sự cố.</li><li><code>THONG_TIN_GOI.json</code>: phiên bản, hash EXE và kết quả kiểm tra.</li><li><code>MaNguon/ChamCongChatwork</code>: toàn bộ mã nguồn được theo dõi bằng Git, dành cho kỹ thuật.</li></ul></section>
 <details><summary>Đọc toàn bộ hướng dẫn chuyển máy và vận hành</summary><section><pre>''' + html.escape(guide) + '</pre></section></details></main></html>'

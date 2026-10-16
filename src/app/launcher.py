@@ -65,7 +65,7 @@ def main():
         finished=threading.Event()
         def inspect():
             try:
-                report['native_webview']=bool(window.evaluate_js("document.querySelectorAll('.nav-item').length===4 && document.querySelector('#appVersion').textContent.length>0"))
+                report['native_webview']=bool(window.evaluate_js("document.querySelectorAll('.nav-item').length===5 && document.querySelector('#appVersion').textContent.length>0"))
                 report['settings_ready']=bool(window.evaluate_js("['sync','export','history','settings'].every(name=>!!document.getElementById(name+'-section')) && !!document.querySelector('#chatworkForm') && !!document.querySelector('#aiForm') && !!document.querySelector('#scheduleTime')"))
             except Exception:report['native_webview']=False
             finally:finished.set();window.destroy()

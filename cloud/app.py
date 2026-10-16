@@ -41,10 +41,10 @@ def period(month, year, raw=False):
     return start, end
 
 
-def finalize(raw_events, snapshot, month, year, sid, employee_aliases=None):
+def finalize(raw_events, snapshot, month, year, sid, employee_aliases=None, employee_registry=None):
     events = copy.deepcopy(raw_events)
     from src.services.source_reconciliation import reconcile_explicit_records
-    reconcile_explicit_records(events, snapshot, month, year)
+    reconcile_explicit_records(events, snapshot, month, year, roster_policy=employee_registry is not None)
     for event in events:
         repair_identity_evidence(event, snapshot)
     align_event_identities(events, snapshot)
@@ -52,7 +52,8 @@ def finalize(raw_events, snapshot, month, year, sid, employee_aliases=None):
     for index, event in enumerate(events, 1):
         event['event_id'] = f'EVT{index:05d}'
         mark_information_only(event, snapshot)
-        mark_ctv_source_only(event, snapshot)
+        if employee_registry is None:
+            mark_ctv_source_only(event, snapshot)
         mark_annual_leave_source_only(event, snapshot)
         event['reason'] = reason_from_source(event, snapshot)
         official_name = (employee_aliases or {}).get(event.get('employee_name'))
@@ -70,6 +71,10 @@ def finalize(raw_events, snapshot, month, year, sid, employee_aliases=None):
             event['review_state'] = 'excluded'
             event['validation_errors'] = []
             event['validation_warnings'] = []
+    if employee_registry is not None:
+        from src.services.personnel_policy import classify
+        for event in events:
+            classify(event, employee_registry, snapshot)
     kept = [event for event in events if not event.get('is_excluded')]
     validate_set(kept, snapshot, month, year)
     for event in kept:
@@ -147,6 +152,12 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
         return (len(cron_secret) >= 32 and
                 secrets.compare_digest(request.headers.get('Authorization', ''),
                                        'Bearer ' + cron_secret))
+
+    from src.services.employee_registry import EmployeeRegistry, register_employee_routes
+    registry = EmployeeRegistry(repo.get_setting, lambda key, value: repo.set_setting(key, value), lambda: repo.lease('employee-registry'),
+        lambda action, revision: repo.log('employees', 'success', 'Cập nhật danh sách nhân viên.',
+            details={'action': action, 'revision': revision}))
+    register_employee_routes(app, registry)
 
     @app.before_request
     def protection():
@@ -438,6 +449,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
         if not snapshot:
             raise ValueError('Chưa có tin nguồn trong kỳ; đồng bộ trước.')
         ai,_=settings()
+        ai['employee_registry'] = registry.snapshot(data.get('confirm_empty_roster', False))
         fingerprint=hashlib.sha256(json.dumps({'room':selected,'month':month,'year':year,
             'snapshot':snapshot,'ai':ai,'policy_version':2},sort_keys=True,ensure_ascii=False).encode()).hexdigest()
         value=repo.create_session({'session_id':'CLOUD-'+uuid.uuid4().hex[:16],
@@ -452,6 +464,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
     def session_status(sid):
         value=get_session(sid)
         data={key:value.get(key) for key in ('session_id','month','year','status','snapshot','results','completed')}
+        data['employee_registry'] = value['ai_settings'].get('employee_registry')
         data['error_message']='Phân tích chưa hoàn tất; thử lại hoặc liên hệ quản trị.' if value.get('error_message') else None
         return ok(data)
 
@@ -462,7 +475,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
             if value['status'] in {'ready','review','exported'}:
                 return ok({'status':value['status'],'completed':len(value['completed']),'remaining':0})
             ai,key=settings()
-            if ai!=value['ai_settings']:
+            if ai!={k:v for k,v in value['ai_settings'].items() if k != 'employee_registry'}:
                 raise ValueError('Cấu hình AI đã đổi; tạo phiên mới.')
             pending=[m for m in value['snapshot'] if m['message_id'] not in value['completed']]
             batch=[];size=0
@@ -487,7 +500,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
                 remaining=len(value['snapshot'])-len(completed)
                 # Preserve a completed provider call even if final validation raises.
                 repo.save_analysis(sid,owner,raw_events=events,completed=completed,results=[],status='analyzing')
-                results=finalize(events,value['snapshot'],value['month'],value['year'],sid,employee_aliases) if not remaining else []
+                results=finalize(events,value['snapshot'],value['month'],value['year'],sid,employee_aliases,value['ai_settings'].get('employee_registry')) if not remaining else []
                 status='analyzing' if remaining else ('review' if any(e.get('review_state')=='pending' for e in results) else 'ready')
                 repo.save_analysis(sid,owner,raw_events=events,completed=completed,results=results,status=status)
                 repo.log('analyze','success',f'Đã xử lý {len(completed)}/{len(value["snapshot"])} tin.',sid)
@@ -512,9 +525,15 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
                 target.update(is_excluded=True,review_state='excluded',validation_errors=[],validation_warnings=[])
             else:
                 changes=data.get('changes',{})
-                if not isinstance(changes,dict) or any(k not in PROPERTIES for k in changes):
+                if not isinstance(changes,dict) or any(k not in set(PROPERTIES) | {'classification','employee_id'} for k in changes):
                     raise ValueError('Trường sửa không hợp lệ.')
                 target.update(changes)
+                roster = value['ai_settings'].get('employee_registry')
+                if roster is not None:
+                    from src.services.personnel_policy import classify
+                    selection = {k:target.get(k) for k in ('classification','employee_id')}
+                    classify(target, roster, value['snapshot'], selection)
+                target.update(needs_review=False, identity_uncertain=False)
                 from src.services.validation import validate
                 errors,warnings=validate(target,value['snapshot'],value['month'],value['year'])
                 if errors:

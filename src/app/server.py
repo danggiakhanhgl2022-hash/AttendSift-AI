@@ -39,6 +39,15 @@ def create_app(app_path=APP_PATH):
     history=HistoryService(db,actions,sessions,syncs)
     app.extensions['services']={'db':db,'config':config,'sync':sync,'export':export,'settings':settings,'scheduler':scheduler,'sessions':sessions,'actions':actions}
 
+    from ..services.employee_registry import EmployeeRegistry, register_employee_routes
+    registry = EmployeeRegistry(config.get, config.set, lambda: db.operation_lock,
+        lambda action, revision: actions.log_event('EMP-'+uuid.uuid4().hex, 'employees', 'user', 'success',
+            summary='Cập nhật danh sách nhân viên.', details={'action': action, 'revision': revision}))
+    registry.seed_once(Path(app_path) / 'NHAN_VIEN_RIENG.json')
+    register_employee_routes(app, registry)
+    export.employee_registry = registry
+    app.extensions['services']['employees'] = registry
+
     @app.before_request
     def protect():
         host=request.host.split(':')[0]
@@ -175,7 +184,7 @@ def create_app(app_path=APP_PATH):
 
     @app.post('/api/export/create-session')
     def create_session():
-        data=body();return ok(export.create_session(data.get('month'),data.get('year'),data.get('accept_risk',False),data.get('request_id')))
+        data=body();return ok(export.create_session(data.get('month'),data.get('year'),data.get('accept_risk',False),data.get('request_id'),data.get('confirm_empty_roster',False)))
 
     @app.post('/api/export/<sid>/analyze')
     def analyze(sid):return ok(export.analyze(sid))

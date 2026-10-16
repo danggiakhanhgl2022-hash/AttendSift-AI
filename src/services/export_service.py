@@ -29,6 +29,7 @@ class ExportService:
         self.db, self.config_repo, self.message_repo = db, config_repo, message_repo
         self.session_repo, self.action_repo, self.app_path = session_repo, action_repo, app_path
         self.sync_service = None
+        self.employee_registry = None
 
     def _log(self, sid, kind, status='success', **kwargs):
         self.action_repo.log_event(operation_id=kind.upper()+'-'+uuid.uuid4().hex[:12],
@@ -83,7 +84,7 @@ class ExportService:
         return {'room_id':cfg['room_id'],'room_name':cfg.get('room_name'),**risk,
                 'sync_error':sync_error,'can_continue':bool(messages),'requires_risk_acceptance':True}
 
-    def create_session(self,month,year,accept_risk=False,request_id=None):
+    def create_session(self,month,year,accept_risk=False,request_id=None,confirm_empty_roster=False):
         # Recovery and source freshness checks happen before taking the snapshot.
         preflight=self.preflight(month,year)
         if not preflight['can_continue']:
@@ -99,7 +100,8 @@ class ExportService:
             snapshot=[{k:m.get(k) for k in ['message_id','room_id','account_id','name','body','send_time','content_hash']} for m in snapshot]
             for m in snapshot:
                 m['content_hash']=self.db.compute_hash(m['body'])
-            fingerprint=hashlib.sha256(encoded(snapshot).encode()).hexdigest()
+            roster = self.employee_registry.snapshot(confirm_empty_roster) if self.employee_registry else None
+            fingerprint=hashlib.sha256(encoded({'messages':snapshot,'employee_registry':roster}).encode()).hexdigest()
             request_id=request_id or f'{cfg["room_id"]}:{month}:{year}:{fingerprint}:month-filter-v3:identity-v7-source-verified-annual-text'
             if not isinstance(request_id,str) or len(request_id)>200:
                 raise ExportServiceError('Mã yêu cầu không hợp lệ.')
@@ -108,6 +110,7 @@ class ExportService:
             settings={k:ai.get(k) for k in ['provider','model','base_url']}
             settings['month_filter_version']=2
             settings['identity_context_version']=5
+            if roster is not None: settings['employee_registry'] = roster
             with self.db._get_connection() as conn:
                 conn.execute('BEGIN IMMEDIATE')
                 previous=conn.execute('SELECT session_id,status,month,year,room_id FROM export_sessions WHERE request_id=?',(request_id,)).fetchone()
@@ -124,6 +127,7 @@ class ExportService:
                 settings={k:ai.get(k) for k in ['provider','model','base_url']}
                 settings['month_filter_version']=2
                 settings['identity_context_version']=5
+                if roster is not None: settings['employee_registry'] = roster
                 conn.execute('INSERT INTO export_sessions(session_id,month,year,status,ai_provider,ai_model,created_at,updated_at,room_id,snapshot,request_id,is_draft,risk_message,period_start,period_end,ai_settings) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                     (sid,month,year,'prepared',ai['provider'],ai.get('model'),now,now,cfg['room_id'],encoded(snapshot),request_id,1,preflight['risk_message'],start.isoformat(),end.isoformat(),encoded(settings)))
             self._log(sid,'create_session',summary='Tạo snapshot và chấp nhận bản tạm.',details={'month':month,'year':year,'room_id':cfg['room_id'],'message_count':len(snapshot)})
@@ -152,6 +156,7 @@ class ExportService:
                 settings.pop('directories', None)  # Earlier development sessions remain readable.
                 settings.pop('month_filter_version', None)
                 settings.pop('identity_context_version', None)
+                roster = settings.pop('employee_registry', None)
                 current=self.config_repo.get_ai_provider()
                 if current['provider']!=settings['provider']:
                     raise ExportServiceError('AI mặc định đã đổi. Vui lòng tạo phiên mới.')
@@ -199,7 +204,7 @@ class ExportService:
                     analyze_batch(batch)
                 originals=json.loads(encoded(events))
                 from .source_reconciliation import reconcile_explicit_records
-                reconcile_explicit_records(events,snapshot,session['month'],session['year'])
+                reconcile_explicit_records(events,snapshot,session['month'],session['year'],roster_policy=roster is not None)
                 from .identity_context import repair_identity_evidence,align_event_identities
                 from .event_policy import mark_information_only, mark_annual_leave_source_only, mark_ctv_source_only, reason_from_source
                 for event in events:
@@ -223,13 +228,18 @@ class ExportService:
                     event['is_excluded']=bool(event.get('is_excluded') or outside_month(event))
                     mark_information_only(event,snapshot)
                     mark_annual_leave_source_only(event,snapshot)
-                    mark_ctv_source_only(event,snapshot)
+                    if roster is None:
+                        mark_ctv_source_only(event,snapshot)
                     event['reason'] = reason_from_source(event,snapshot)
                     if outside_month(event) and not event.get('source_only'):
                         event.update(is_excluded=True, source_only=True,
                                      review_state='excluded', needs_review=False,
                                      review_reason='Sự kiện ngoài tháng xuất; chỉ lưu tin nguồn làm ngữ cảnh.',
                                      validation_errors=[], validation_warnings=[])
+                if roster is not None:
+                    from .personnel_policy import classify
+                    for event in events:
+                        classify(event, roster, snapshot)
                 # Context and informational rows cannot cause identity, duplicate
                 # or OT-link errors in the attendance rows kept for this month.
                 validate_set([e for e in events if not e.get('is_excluded')],snapshot,session['month'],session['year'])
@@ -289,12 +299,17 @@ class ExportService:
             if not row:raise ExportServiceError('Kết quả không thuộc phiên.')
             allowed={'employee_name','person_id','identity_evidence','identity_uncertain','event_date','event_type',
                 'event_subtype','reason','hours_compensation','minutes_not_compensated','minutes_compensated',
-                'ot_minutes','ot_used_minutes','ot_credit_date','leave_days','start_time','end_time','source_message_ids'}
+                'ot_minutes','ot_used_minutes','ot_credit_date','leave_days','start_time','end_time','source_message_ids','classification','employee_id'}
             changes=changes or {}
             if not isinstance(changes,dict) or set(changes)-allowed:
                 raise ExportServiceError('Trường chỉnh sửa không hợp lệ.')
             original=dict(row)
             row.update(changes)
+            roster = json.loads(session['ai_settings']).get('employee_registry')
+            if roster is not None:
+                from .personnel_policy import classify
+                classify(row, roster, session['snapshot_data'],
+                         {k:row.get(k) for k in ('classification','employee_id')})
             row['needs_review']=False;row['identity_uncertain']=False
             others=[r for r in rows if r['result_id']!=result_id and not r['is_excluded']]
             validate_set(others+[row],session['snapshot_data'],session['month'],session['year'])
@@ -306,7 +321,7 @@ class ExportService:
                     if before!=value:
                         conn.execute('INSERT INTO corrections(result_id,session_id,field_name,old_value,new_value,corrected_at,correction_type) VALUES(?,?,?,?,?,?,?)',
                             (result_id,sid,field,encoded(before),encoded(value),self.db.now_vn(),'exclude' if exclude else 'review'))
-                payload={k:v for k,v in row.items() if k in allowed or k in {'confidence','needs_review','review_reason','validation_errors','validation_warnings'}}
+                payload={k:v for k,v in row.items() if k in allowed or k in {'confidence','needs_review','review_reason','validation_errors','validation_warnings','classification_reason','employee_match_verified','source_employee_name','source_person_id','classification_confirmed','leave_period','leave_source_verified'}}
                 conn.execute('UPDATE ai_results SET payload=?,employee_name=?,display_name=?,person_id=?,is_excluded=?,needs_review=0,validation_errors=?,review_state=?,updated_at=? WHERE result_id=? AND session_id=?',
                     (encoded(payload),str(row.get('employee_name') or ''),str(row.get('employee_name') or ''),str(row.get('person_id') or ''),int(exclude),encoded(row['validation_errors']),'excluded' if exclude else 'confirmed',self.db.now_vn(),result_id,sid))
             remaining=self.get_results_for_review(sid)

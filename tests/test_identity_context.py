@@ -12,4 +12,4 @@ def test_namesake_or_team_alone_cannot_establish_identity():
               {'message_id':'2','name':'Một người khác Tân','body':''}]
     assert not unique_short_name_evidence('Người giả lập Tân','Tân OT 30 phút',snapshot)
     assert not unique_short_name_evidence('Người giả lập Tân','Team DemoBeta tăng ca',snapshot)
-    assert not unique_short_name_evidence('Nguyễn Tâm','Tâm OT 30 phút',snapshot)
+    assert not unique_short_name_evidence('Người giả lập Tâm','Tâm OT 30 phút',snapshot)
