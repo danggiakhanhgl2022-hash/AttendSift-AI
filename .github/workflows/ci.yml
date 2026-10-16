@@ -40,7 +40,7 @@ jobs:
         run: python -B -m pytest -q -p no:cacheprovider tests
       - name: PyInstaller portable executable
         run: python -m PyInstaller --noconfirm --clean --distpath release --workpath build ChamCong.spec
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ChamCong-Windows-EXE
           path: release/ChamCong.exe
