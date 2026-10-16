@@ -7,7 +7,7 @@ const month=id=>{const [year,month]=$ (id).value.split('-').map(Number);return {
 function article(parent,title,content){const node=document.createElement('article'),strong=document.createElement('strong'),pre=document.createElement('pre');strong.textContent=title;pre.textContent=content;node.append(strong,pre);parent.append(node);return node;}
 function bind(id,action){$(id).addEventListener('click',async()=>{const button=$(id);button.disabled=true;try{await action();}catch(error){status(error.message);}finally{button.disabled=false;}});}
 const headerActions=document.createElement('div');headerActions.className='header-actions';
-const version=$('appVersion');version.textContent='Bộ phận AI · Đặng Gia Khánh';headerActions.append(version);
+const version=$('appVersion');version.textContent='Bộ phận AI · Nhóm phát triển';headerActions.append(version);
 const logout=document.createElement('button');logout.id='logout';logout.textContent='Đăng xuất';headerActions.append(logout);document.querySelector('body > .header').append(headerActions);
 async function loadConfig(){
  const config=await api('/api/config');
@@ -145,8 +145,8 @@ async function loadSession(){
 function renderResults(){
  const active=current.results.filter(event=>!event.is_excluded);
  const pending=active.filter(event=>event.review_state==='pending'||event.validation_errors?.length);
- $('exportButton').disabled=pending.length>0||!['ready','review','exported'].includes(current.status);
- $('reviewSummary').textContent=active.length+' dòng · '+pending.length+' dòng cần kiểm tra';
+ $('exportButton').disabled=!['ready','review','exported'].includes(current.status);
+ $('reviewSummary').textContent=active.length+' dòng · '+pending.length+' dòng sẽ chuyển sang sheet 4 Excel (không tính công)';
  const rows=$('reviewFilter').value==='pending'?pending:active;
  $('results').replaceChildren();
  if(!rows.length){const text=document.createElement('p');text.className='empty';text.textContent=pending.length?'Không có dòng phù hợp.':'Không còn dòng cần kiểm tra. Chọn “Tất cả kết quả” để xem bảng.';$('results').append(text);return;}
@@ -157,8 +157,16 @@ function renderResults(){
  table.append(body);$('results').append(table);
 }
 $('reviewFilter').addEventListener('change',()=>{if(current)renderResults();});
-bind('analyzeButton',async()=>{const value=await api('/api/sessions',{...month('exportMonth'),accept_risk:$('acceptRisk').checked,...await globalThis.personnelUI.confirmRoster()});sid=value.session_id;$('exportButton').disabled=true;let running=true;while(running){status('Đang xử lý từng lô; tiến độ được lưu sau mỗi lô.');const progress=await api(`/api/sessions/${sid}/analyze`,{});$('progress').textContent=`Đã xử lý ${progress.completed}; còn ${progress.remaining} tin`;running=progress.remaining>0;}await loadSession();status('Phân tích xong. Tin ngoài tháng và lịch bên ngoài chỉ giữ trong nguồn.');});
-bind('exportButton',async()=>{if(!sid)throw Error('Tạo hoặc mở phiên trước.');const data=await api(`/api/sessions/${sid}/export`,{});$('step3').classList.add('active');$('exportDone').hidden=false;$('exportFilename').textContent='Cham_cong_'+String(current.month).padStart(2,'0')+'_'+current.year+'.xlsx';$('download').href=data.download_url;location.assign(data.download_url);});
+bind('analyzeButton',async()=>{const value=await api('/api/sessions',{...month('exportMonth'),accept_risk:$('acceptRisk').checked,...await globalThis.personnelUI.confirmRoster()});sid=value.session_id;$('exportButton').disabled=true;let running=true;while(running){status('Đang xử lý từng lô; tiến độ được lưu sau mỗi lô.');const progress=await api(`/api/sessions/${sid}/analyze`,{});$('progress').textContent=`Đã xử lý ${progress.completed}; còn ${progress.remaining} tin`;running=progress.remaining>0;}await loadSession();await downloadAttendanceExcel();status('Đã xuất Excel 5 sheet; các dòng chưa xác minh nằm ở sheet 4 để kiểm tra sau.');});
+async function downloadAttendanceExcel(){
+ if(!sid)throw Error('Tạo hoặc mở phiên trước.');
+ const data=await api(`/api/sessions/${sid}/export`,{});
+ $('step3').classList.add('active');$('exportDone').hidden=false;
+ $('reviewPanel').hidden=true;
+ $('exportFilename').textContent='Cham_cong_'+String(current.month).padStart(2,'0')+'_'+current.year+'.xlsx';
+ $('download').href=data.download_url;location.assign(data.download_url);
+}
+bind('exportButton',downloadAttendanceExcel);
 bind('rawButton',async()=>{const response=await fetch('/api/raw',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(month('exportMonth'))});if(!response.ok){const data=await response.json();throw Error(data.error||'Xuất tin thất bại.');}const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`TinNhan_${$('exportMonth').value}.xlsx`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status('Đã xuất tin nguồn.');});
 function openReview(event){selected=event;$('reviewSources').replaceChildren();for(const message of current.snapshot.filter(m=>event.source_message_ids.includes(m.message_id)))article($('reviewSources'),`${message.name} · ${message.send_time}`,message.body);$('reviewIssues').textContent=[...(event.validation_errors||[]),...(event.validation_warnings||[])].join('\n');const editable={};for(const field of ['person_id','employee_name','identity_evidence','identity_uncertain','event_date','event_type','event_subtype','reason','hours_compensation','minutes_not_compensated','minutes_compensated','ot_minutes','ot_used_minutes','ot_credit_date','leave_days','start_time','end_time','source_message_ids','confidence','needs_review','review_reason'])editable[field]=event[field]??null;$('reviewJson').value=JSON.stringify(editable,null,2);renderReviewFields(editable);globalThis.personnelUI.reviewInputs($('reviewFields'),current.employee_registry,event);$('reviewDialog').showModal();}
 bind('confirmReview',async()=>{await api(`/api/sessions/${sid}/review`,{event_id:selected.event_id,changes:reviewChanges()});$('reviewDialog').close();await loadSession();status('Đã lưu xác nhận.');});

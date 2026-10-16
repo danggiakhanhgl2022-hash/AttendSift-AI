@@ -20,6 +20,7 @@ from src.adapters.ai_adapters import create_ai_adapter, AIHTTPError, AIResponseE
 from src.adapters.chatwork_adapter import ChatworkAdapter, ChatworkAPIError
 from src.services.identity_context import identity_hints, repair_identity_evidence, align_event_identities
 from src.services.validation import validate_set
+from src.services.analysis_revision import ANALYSIS_REVISION
 from src.utils.raw_message_export import export_raw_messages
 from src.utils.excel_export import export_to_excel
 
@@ -47,7 +48,7 @@ def finalize(raw_events, snapshot, month, year, sid, employee_aliases=None, empl
     reconcile_explicit_records(events, snapshot, month, year, roster_policy=employee_registry is not None)
     for event in events:
         repair_identity_evidence(event, snapshot)
-    align_event_identities(events, snapshot)
+    align_event_identities(events, snapshot, roster_policy=employee_registry is not None)
     from src.services.event_policy import mark_information_only, mark_ctv_source_only, mark_annual_leave_source_only, reason_from_source
     for index, event in enumerate(events, 1):
         event['event_id'] = f'EVT{index:05d}'
@@ -451,7 +452,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
         ai,_=settings()
         ai['employee_registry'] = registry.snapshot(data.get('confirm_empty_roster', False))
         fingerprint=hashlib.sha256(json.dumps({'room':selected,'month':month,'year':year,
-            'snapshot':snapshot,'ai':ai,'policy_version':2},sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+            'snapshot':snapshot,'ai':ai,'policy_version':ANALYSIS_REVISION},sort_keys=True,ensure_ascii=False).encode()).hexdigest()
         value=repo.create_session({'session_id':'CLOUD-'+uuid.uuid4().hex[:16],
             'fingerprint':fingerprint,'room_id':selected,'month':month,'year':year,'snapshot':snapshot,'ai_settings':ai})
         return ok({'session_id':value['session_id'],'status':value['status'],'message_count':len(snapshot)})
@@ -555,8 +556,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
             value=get_session(sid)
             if value['status'] not in {'ready','review','exported'}:
                 raise ValueError('Phiên chưa hoàn tất phân tích.')
-            if any(not e.get('is_excluded') and (e.get('validation_errors') or e.get('review_state')=='pending') for e in value['results']):
-                raise ValueError('Còn dòng cần kiểm tra. Có thể xuất tin nguồn ngay.')
+            # Review items are quarantined in Excel sheet 4, not a download blocker.
             start,end=period(value['month'],value['year'])
             latest=repo.messages(value['room_id'],start,end)
             if latest!=value['snapshot']:
