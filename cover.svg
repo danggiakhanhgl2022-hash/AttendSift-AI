@@ -2,21 +2,23 @@
     <defs><linearGradient id="bg"><stop stop-color="#09131f"/><stop offset="1" stop-color="#132f3d"/></linearGradient></defs>
     <rect width="1440" height="590" rx="24" fill="url(#bg)"/>
     <rect x="64" y="62" width="46" height="5" rx="2" fill="#55d9c1"/>
-    <text x="64" y="105" fill="#55d9c1" font-size="17" letter-spacing="3">CHATWORK → ATTENDANCE</text>
-    <text x="60" y="190" class="ink" font-size="76" font-weight="700">AttendSift AI</text>
-    <text x="64" y="248" class="ink" font-size="29">Tin nhắn thành báo cáo.</text>
-    <text x="64" y="290" class="ink" font-size="29">Mỗi kết quả đều có căn cứ.</text>
-    <text x="64" y="352" class="muted" font-size="21">Windows · Cloud · Excel 5 sheet</text>
-    <text x="64" y="520" class="muted" font-size="18">Đặng Gia Khánh / Bộ phận AI / 16.10.2026</text>
+    <text x="64" y="105" fill="#55d9c1" font-size="21" letter-spacing="2">ATTENDSIFT AI / CHATWORK</text>
+    <text x="60" y="190" class="ink" font-size="62" font-weight="700">120 phút tăng ca.</text>
+    <text x="60" y="265" class="ink" font-size="62" font-weight="700">Căn cứ nằm</text>
+    <text x="60" y="340" fill="#55d9c1" font-size="62" font-weight="700">ở đâu?</text>
+    <text x="64" y="402" class="ink" font-size="23">Từ tin nhắn Chatwork đến bảng công</text>
+    <text x="64" y="438" class="ink" font-size="23">có thể kiểm tra và giải thích.</text>
+    <text x="64" y="492" class="muted" font-size="19">Windows · Cloud · Excel 5 sheet</text>
+    <text x="64" y="542" class="muted" font-size="16">Đặng Gia Khánh / Bộ phận AI / 16.10.2026</text>
     <rect x="820" y="76" width="552" height="440" rx="18" fill="#0a1723" stroke="#335364"/>
     <text x="850" y="120" class="muted" font-size="16">MỘT VÍ DỤ GIẢ LẬP</text>
     <rect x="850" y="144" width="492" height="74" rx="10" fill="#193241"/>
-    <text x="873" y="175" class="ink" font-size="20">Minh Quân OT 2h · Đức Quân OT 1h</text>
+    <text x="873" y="175" class="ink" font-size="23">“Minh Quân OT 2h”</text>
     <text x="873" y="202" class="muted" font-size="16">Ngày sự kiện: 14/10 · Source: DEMO-S01</text>
     <path d="M1096 229v30" stroke="#55d9c1" stroke-width="2"/>
-    <text x="850" y="293" fill="#55d9c1" font-size="17">01  GIỮ NGUỒN</text>
-    <text x="850" y="334" fill="#55d9c1" font-size="17">02  ĐỐI CHIẾU DANH SÁCH</text>
-    <text x="850" y="375" fill="#55d9c1" font-size="17">03  KIỂM TRA QUY TẮC</text>
+    <text x="850" y="293" class="ink" font-size="19">NGƯỜI  /  Nguyễn Minh Quân</text>
+    <text x="850" y="334" class="ink" font-size="19">NGÀY  /  14.10.2026</text>
+    <text x="850" y="375" class="ink" font-size="19">NGUỒN  /  DEMO-S01</text>
     <line x1="850" y1="399" x2="1340" y2="399" stroke="#335364"/>
-    <text x="850" y="439" class="ink" font-size="25" font-weight="600">120 phút + 60 phút</text>
-    <text x="850" y="474" class="muted" font-size="17">Tách từng người. Không chia OT của cả nhóm.</text></svg>
+    <text x="850" y="439" fill="#55d9c1" font-size="32" font-weight="700">120 phút OT</text>
+    <text x="850" y="480" class="muted" font-size="17">Ví dụ giả lập · Có tin nguồn để đối chiếu</text></svg>

@@ -43,4 +43,6 @@ Xem [bảng đánh đổi chi tiết](articles/05-LUA_CHON_VA_DANH_DOI.md). Các
 
 ## Điểm nhấn được giữ trong phần giới thiệu
 
+Phần tiêu đề và bìa tiếp tục được đối chiếu với trang giới thiệu sản phẩm chính thức của Notion, Slack và Linear. Xem [cách chọn tiêu đề, bố cục và nguồn tham khảo](BO_CUC_GIOI_THIEU_SAN_PHAM.md). Đây là tham khảo biên tập, không phải bằng chứng hiệu quả chuyển đổi.
+
 **Truy nguồn → đối chiếu theo phiên → tách dòng chưa rõ → bàn giao được.** Đây là chuỗi giá trị có liên kết tới mã và kiểm thử. Số công nghệ, cảnh 3D và số bài viết chỉ hỗ trợ cách giới thiệu; không được dùng thay độ đúng hoặc lợi ích đã đo.
