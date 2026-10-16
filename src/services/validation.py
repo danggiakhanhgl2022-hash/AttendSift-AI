@@ -1,10 +1,14 @@
 """Local validation is authoritative; model confidence cannot bypass it."""
 from datetime import date, time
 import math
+import re
 from .identity_context import unique_short_name_evidence
+from .paid_break_policy import (PAID_BREAK_MINUTES, PAID_BREAK_SUBTYPE,
+                                is_paid_break_event)
 
 EVENT_TYPES = {'Tăng ca', 'OT', 'Nghỉ', 'Đi trễ', 'Về sớm', 'Nghỉ bù OT', 'Làm bù', 'Nghỉ ngắn', 'Nghỉ sớm'}
-NUMBERS = ['minutes_not_compensated', 'minutes_compensated', 'ot_minutes', 'ot_used_minutes']
+NUMBERS = ['minutes_not_compensated', 'minutes_compensated', 'ot_minutes', 'ot_used_minutes',
+           'paid_break_minutes']
 
 
 def validate(event, snapshot, month, year):
@@ -54,6 +58,28 @@ def validate(event, snapshot, month, year):
             errors.append('leave_days: cần xác định nghỉ nửa ngày hoặc cả ngày')
         if not (event.get('leave_source_verified') and event.get('event_subtype') is None) and event.get('event_subtype') not in {'Phép năm', 'Không lương', 'Nghỉ không lương'}:
             errors.append('event_subtype: cần xác nhận loại nghỉ có căn cứ')
+    if event.get('paid_break_minutes') or event.get('event_subtype') == PAID_BREAK_SUBTYPE:
+        if not is_paid_break_event(event) or any(event.get(field, 0) for field in (
+                'minutes_not_compensated', 'minutes_compensated', 'ot_minutes',
+                'ot_used_minutes', 'leave_days')):
+            errors.append('paid_break_minutes: nghỉ có lương chỉ được ghi 30 phút, không cộng phút trừ lương/OT.')
+        else:
+            # The only evidence is an explicit self-reported Chatwork request,
+            # verified by its date, sender and literal company phrase.
+            from .source_reconciliation import extract_explicit_claims
+            paid_verified = False
+            for source_id in ids:
+                source = sources[source_id]
+                claims = extract_explicit_claims(source, [source], month, year, roster_policy=True)
+                if any(c.get('paid_break_minutes') == PAID_BREAK_MINUTES and
+                       c['event_date'] == event.get('event_date') and
+                       c['event_type'] == 'Về sớm' and
+                       c['identity_evidence'] == str(event.get('identity_evidence') or '')
+                       for c in claims):
+                    paid_verified = True
+                    break
+            if not paid_verified:
+                errors.append('paid_break_minutes: thiếu tin báo của chính nhân viên về sớm 30 phút không làm bù.')
     if event.get('classification') == 'unresolved':
         errors.append('classification: cần xác nhận người và nhóm nhân sự.')
     if event.get('ot_used_minutes',0) and str(event.get('event_type')) not in {'Tăng ca','OT'}:
@@ -66,7 +92,9 @@ def validate(event, snapshot, month, year):
             b=time.fromisoformat(end) if end else None
             if a and b:
                 delta = (b.hour*60+b.minute) - (a.hour*60+a.minute)
-                minutes = event.get('ot_minutes', 0) if str(event.get('event_type')) in {'Tăng ca','OT'} else event.get('minutes_compensated', 0)+event.get('minutes_not_compensated', 0)
+                minutes = (event.get('ot_minutes', 0) if str(event.get('event_type')) in {'Tăng ca','OT'}
+                           else event.get('paid_break_minutes', 0) or
+                           (event.get('minutes_compensated', 0)+event.get('minutes_not_compensated', 0)))
                 if delta <= 0 or delta != minutes:
                     errors.append('start_time: khoảng giờ không khớp số phút; ca qua đêm cần tách ngày')
         except (TypeError, ValueError):
@@ -94,9 +122,14 @@ def validate_set(events, snapshot, month, year):
         seen.add(key)
         identity = str(event.get('person_id'))
         name = event.get('employee_name')
-        if identity in identities and identities[identity] != name:
+        # '(CTV)' is a classification annotation, not a different person.
+        # Keep tone marks: Cầm and Cẩm remain distinct identities.
+        identity_name = (re.sub(r'\s*\(\s*CTV\s*\)', '', name, flags=re.I).strip()
+                         if isinstance(name, str) and event.get('classification') == 'contractor'
+                         else name)
+        if identity in identities and identities[identity] != identity_name:
             errors.append('person_id: nhận diện không nhất quán giữa các lô')
-        identities[identity] = name
+        identities[identity] = identity_name
         event['validation_errors'] = errors
         event['validation_warnings'] = warnings
     for event in events:

@@ -12,6 +12,7 @@ import pytz
 from ..adapters.ai_adapters import create_ai_adapter, AIAdapterError, AIResponseError
 from ..app.paths import user_downloads_dir
 from .validation import validate_set, NUMBERS
+from .analysis_revision import ANALYSIS_REVISION
 
 Vietnam_TZ = pytz.timezone('Asia/Ho_Chi_Minh')
 
@@ -102,7 +103,7 @@ class ExportService:
                 m['content_hash']=self.db.compute_hash(m['body'])
             roster = self.employee_registry.snapshot(confirm_empty_roster) if self.employee_registry else None
             fingerprint=hashlib.sha256(encoded({'messages':snapshot,'employee_registry':roster}).encode()).hexdigest()
-            request_id=request_id or f'{cfg["room_id"]}:{month}:{year}:{fingerprint}:month-filter-v3:identity-v7-source-verified-annual-text'
+            request_id=f"{request_id or (str(cfg['room_id'])+':'+str(month)+':'+str(year)+':'+fingerprint)}:{ANALYSIS_REVISION}"
             if not isinstance(request_id,str) or len(request_id)>200:
                 raise ExportServiceError('Mã yêu cầu không hợp lệ.')
             start,end=self._get_date_range(month,year)
@@ -110,6 +111,7 @@ class ExportService:
             settings={k:ai.get(k) for k in ['provider','model','base_url']}
             settings['month_filter_version']=2
             settings['identity_context_version']=5
+            settings['analysis_revision']=ANALYSIS_REVISION
             if roster is not None: settings['employee_registry'] = roster
             with self.db._get_connection() as conn:
                 conn.execute('BEGIN IMMEDIATE')
@@ -127,6 +129,7 @@ class ExportService:
                 settings={k:ai.get(k) for k in ['provider','model','base_url']}
                 settings['month_filter_version']=2
                 settings['identity_context_version']=5
+                settings['analysis_revision']=ANALYSIS_REVISION
                 if roster is not None: settings['employee_registry'] = roster
                 conn.execute('INSERT INTO export_sessions(session_id,month,year,status,ai_provider,ai_model,created_at,updated_at,room_id,snapshot,request_id,is_draft,risk_message,period_start,period_end,ai_settings) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                     (sid,month,year,'prepared',ai['provider'],ai.get('model'),now,now,cfg['room_id'],encoded(snapshot),request_id,1,preflight['risk_message'],start.isoformat(),end.isoformat(),encoded(settings)))
@@ -156,6 +159,7 @@ class ExportService:
                 settings.pop('directories', None)  # Earlier development sessions remain readable.
                 settings.pop('month_filter_version', None)
                 settings.pop('identity_context_version', None)
+                settings.pop('analysis_revision', None)
                 roster = settings.pop('employee_registry', None)
                 current=self.config_repo.get_ai_provider()
                 if current['provider']!=settings['provider']:
@@ -213,7 +217,7 @@ class ExportService:
                 # A model row disproved by a fully parsed group report remains
                 # stored for audit, but must not contaminate identity matching
                 # or duplicate checks for the verified source-derived rows.
-                align_event_identities([e for e in events if not e.get('is_excluded')],snapshot)
+                align_event_identities([e for e in events if not e.get('is_excluded')],snapshot,roster_policy=roster is not None)
                 validate_set(events,snapshot,session['month'],session['year'])
                 def outside_month(event):
                     try:
@@ -366,8 +370,7 @@ class ExportService:
                 raise ExportServiceError('Tin nguồn đã đổi. Vui lòng tạo lại bảng.')
             results=self.get_results(sid)
             validate_set(results,session['snapshot_data'],session['month'],session['year'])
-            if any(r['validation_errors'] or r.get('review_state') not in {'valid','confirmed'} for r in results):
-                raise ExportServiceError('Còn dòng chưa hợp lệ hoặc chưa được kiểm tra. Hãy sửa hoặc loại dòng.')
+            # Unverified results are exported to sheet 4 only, never to payroll.
             from ..utils.excel_export import export_to_excel, verify_workbook
             # Publish the user-facing workbook in the logged-in user's Downloads.
             # Keep a separate immutable session archive in the portable data folder

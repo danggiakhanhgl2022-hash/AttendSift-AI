@@ -58,7 +58,7 @@ def unique_short_name_evidence(name, linked_text, snapshot):
     return False
 
 
-def align_event_identities(events, snapshot):
+def align_event_identities(events, snapshot, roster_policy=False):
     """Align derived IDs using sender accounts, never a model ID or name alone.
 
     The caller retains untouched model output before invoking this function.
@@ -67,6 +67,10 @@ def align_event_identities(events, snapshot):
     A name shared by several accounts needs a matching linked sender account.
     Unresolved names retain their model ID; conflicting unresolved IDs are split
     conservatively without claiming that the people have been identified.
+
+    When a managed employee roster is present, literal OT names from source
+    messages must be matched against the roster *before* any unrelated Chatwork
+    sender can expand a short alias into a different full name.
     """
     sources = {m.get('message_id'): m for m in snapshot}
     accounts = {}
@@ -111,11 +115,40 @@ def align_event_identities(events, snapshot):
                 return account
         return None
 
+    def source_backed_roster_ot(event):
+        """A literal OT claim is NOT an identity claim about some other sender.
+
+        E.g. "Hiền OT 2h" from a team reporter stays "Hiền" even if a
+        different Chatwork account named "Lê Văn Hiền" posted elsewhere.
+        The official roster, not sender heuristics, resolves that suffix.
+        """
+        if not roster_policy or str(event.get('event_type') or '').casefold() not in {'tăng ca', 'ot'}:
+            return False
+        literal = event.get('identity_evidence')
+        name = event.get('employee_name')
+        ids = event.get('source_message_ids')
+        if not isinstance(literal, str) or not literal.strip() or not isinstance(name, str):
+            return False
+        if exact_name_key(name) != exact_name_key(literal):
+            return False
+        if not isinstance(ids, list):
+            return False
+        # Only defend names quoted in the *message body*, not text provided
+        # by the model or a coincidence in Chatwork profile metadata.
+        return any(isinstance(mid, str) and mid in sources and
+                   source_quote(literal, str(sources[mid].get('body') or ''))
+                   for mid in ids)
+
     unresolved = {}
     for event in events:
         # Identity alignment does not repair a malformed model field; leave its
         # type untouched so schema validation can require a source review.
         if not isinstance(event.get('person_id'), str):
+            continue
+        if source_backed_roster_ot(event):
+            # Registry classification later expands this exact literal name,
+            # requiring an ID only when multiple official employees match.
+            # Keep a stable team-scoped ID for an unregistered CTV alias.
             continue
         account = account_for(event)
         if account is not None:

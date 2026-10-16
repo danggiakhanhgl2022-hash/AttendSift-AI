@@ -81,9 +81,13 @@ class EmployeeRegistry:
             if not item['active']:
                 continue
             for alias in {name_key(item['full_name']), *(name_key(a) for a in item['aliases'])}:
-                if alias in identities and identities[alias] != item['id']:
-                    raise ValueError('Họ tên hoặc tên thường dùng trùng với nhân viên khác.')
-                identities[alias] = item['id']
+                prior = identities.get(alias)
+                if prior and prior['id'] != item['id']:
+                    # Names may overlap; stable, distinct employee codes or Chatwork
+                    # accounts are required so a reviewer can distinguish them.
+                    if not (item['employee_code'] or item['chatwork_account_id']) or not (prior['employee_code'] or prior['chatwork_account_id']):
+                        raise ValueError('Tên trùng: mỗi người cần mã nhân viên hoặc Chatwork Account ID riêng để đối chiếu.')
+                identities[alias] = item
 
     def upsert(self, data, employee_id=None):
         with self.lock():
@@ -104,15 +108,18 @@ class EmployeeRegistry:
         with self.lock():
             value = self.read()
             items = list(value['employees'])
-            known = {name_key(e['full_name']) for e in items}
             added = 0
             for entry in entries:
+                supplied_identity = isinstance(entry, dict) and bool(
+                    entry.get('employee_code') or entry.get('chatwork_account_id'))
                 entry = {'full_name': entry} if isinstance(entry, str) else entry
                 item = self._entry(entry)
-                if name_key(item['full_name']) in known:
-                    continue  # Never overwrite edits or reactivate a deleted employee.
+                if any((item['employee_code'] and item['employee_code'] == old['employee_code']) or
+                       (item['chatwork_account_id'] and item['chatwork_account_id'] == old['chatwork_account_id']) or
+                       (not supplied_identity and name_key(item['full_name']) == name_key(old['full_name']))
+                       for old in items):
+                    continue  # Never overwrite/re-enable existing employee records.
                 items.append(item)
-                known.add(name_key(item['full_name']))
                 added += 1
             self._check_unique(items)
             value['employees'] = items

@@ -7,6 +7,7 @@ from pathlib import Path
 import openpyxl
 import re
 from ..services.event_policy import is_annual_leave_text_only, is_ctv_text_only, reason_from_source
+from ..services.paid_break_policy import is_paid_break_event
 from .message_cleaning import deduplicate_copied_sender_header
 from zipfile import BadZipFile
 from xml.etree.ElementTree import ParseError
@@ -15,6 +16,26 @@ from openpyxl.styles import PatternFill, Border, Side
 
 SHEETS = ['1_TIN_NHAN_GOC','2_CHAM_CONG','3_TONG_KET','4_CAN_KIEM_TRA']
 WIDTHS = [8,26,13,7]
+
+
+def needs_excel_review(event):
+    """Unverified facts remain inspectable, but never influence payroll totals.
+
+    The snapshot/source sheet is always preserved. A confirmed row with newly
+    detected validation problems is still held back until checked again.
+    """
+    if event.get('is_excluded') or event.get('source_only'):
+        return False
+    # Fatal validation problems cannot be overridden by an earlier confirmation.
+    if event.get('validation_errors'):
+        return True
+    # A manual confirmation clears non-fatal review flags; it does not excuse
+    # unknown personnel classification or broken source validation.
+    if event.get('review_state') == 'confirmed' and event.get('classification') != 'unresolved':
+        return False
+    return bool(event.get('review_state') == 'pending' or
+                event.get('validation_warnings') or event.get('needs_review') or
+                event.get('identity_uncertain') or event.get('classification') == 'unresolved')
 
 
 def builtin_workbook_path():
@@ -94,7 +115,10 @@ def export_to_excel(results,session_info,output_path,template_path=None):
         elif sheet_name == SHEETS[1]:
             sheet.row_dimensions[row].height = 42
         elif sheet_name == SHEETS[3]:
-            sheet.row_dimensions[row].height = 38
+            # Review issues and evidence must remain readable in the workbook.
+            details = '\n'.join(str(x or '') for x in (values[4], values[6]))
+            lines = sum(max(1, ceil(len(line) / 76)) for line in details.split('\n'))
+            sheet.row_dimensions[row].height = min(165, max(48, lines * 15 + 10))
         else:
             sheet.row_dimensions[row].height = 31
     month,year=session_info['month'],session_info['year']
@@ -118,12 +142,18 @@ def export_to_excel(results,session_info,output_path,template_path=None):
     information_ids.update(m['message_id'] for m in source.values()
                            if re.search(r'(?<!\w)my\s*\(\s*ctv\s*\)\s+OT\b',
                                         str(m.get('body') or ''), re.IGNORECASE))
-    reportable = [e for e in results if not e.get('is_excluded')]
-    if personnel_mode and any(e.get('classification') not in {'official','contractor'} for e in reportable):
-        raise ValueError('Còn dòng chưa xác định nhóm nhân sự.')
-    contractors = [e for e in reportable if e.get('classification') == 'contractor']
-    kept = [e for e in reportable if e.get('classification') == 'official'] if personnel_mode else [
-        e for e in reportable if not is_ctv_text_only(e, list(source.values()))]
+    # One-click export: separate verified payroll rows from unverified AI
+    # suggestions. The latter go exclusively to 4_CAN_KIEM_TRA.
+    reportable = [e for e in results if not e.get('is_excluded') and not e.get('source_only')]
+    pending = [e for e in reportable if needs_excel_review(e) or
+               (personnel_mode and e.get('classification') not in {'official','contractor'})]
+    verified = [e for e in reportable if e not in pending]
+    contractors = [e for e in verified if e.get('classification') == 'contractor']
+    kept = [e for e in verified if e.get('classification') == 'official'] if personnel_mode else [
+        e for e in verified if not is_ctv_text_only(e, list(source.values()))]
+    # Keep the snapshot as-is; it is evidence rather than model output.
+    wb[SHEETS[3]]['A2'] = (str(wb[SHEETS[3]]['A2'].value or '') +
+        f' {len(pending)} dòng chưa xác minh: chưa tính vào chấm công, tổng kết hoặc CTV.')
     kept=[{**r, 'reason': reason_from_source(r, list(source.values()))} for r in kept]
     identity_names={r.get('person_id',r.get('employee_name')):r.get('employee_name','') for r in kept}
     counts=Counter(identity_names.values())
@@ -135,7 +165,7 @@ def export_to_excel(results,session_info,output_path,template_path=None):
         dt=datetime.fromisoformat(message['send_time'])
         body=deduplicate_copied_sender_header(message['body'],message.get('name'));parts=[body[i:i+32000] for i in range(0,len(body),32000)] or ['']
         for part in parts:
-            put(SHEETS[0],row,[message['message_id'],dt.replace(tzinfo=None,hour=0,minute=0,second=0,microsecond=0),dt.strftime('%H:%M'),message.get('name'),part,'Có' if linked else ('Thông tin' if message['message_id'] in information_ids else 'Không'),', '.join(sorted({r['event_date'] for r in linked})),len(linked)])
+            put(SHEETS[0],row,[message['message_id'],dt.replace(tzinfo=None,hour=0,minute=0,second=0,microsecond=0),dt.strftime('%H:%M'),message.get('name'),part,('Có' if any(e in verified for e in linked) else 'Cần kiểm tra') if linked else ('Thông tin' if message['message_id'] in information_ids else 'Không'),', '.join(sorted({str(r.get('event_date') or '') for r in linked})),len(linked)])
             row+=1
     source_last_row=row-1
     person_rows={}
@@ -163,7 +193,7 @@ def export_to_excel(results,session_info,output_path,template_path=None):
         leave_days=event.get('leave_days',0) or 0
         values=[event.get('event_id'),', '.join(ids),dt.replace(tzinfo=None,hour=0,minute=0,second=0,microsecond=0) if dt else '',dt.strftime('%H:%M') if dt else '',datetime.fromisoformat(event['event_date']),labels[identity],kind,leave,event.get('reason'),compensation,
                 'Có' if event.get('minutes_compensated',0) else 'Không',event.get('minutes_not_compensated',0),event.get('minutes_compensated',0),'','',leave_days if kind=='Nghỉ' and leave=='Phép năm' else 0,
-                leave_days if kind=='Nghỉ' and leave in {'Không lương','Nghỉ không lương'} else 0,int(kind in {'Về sớm','Nghỉ sớm'}),int(kind=='Đi trễ'),ot,used,ot-reserved,'',event.get('review_reason') or '', 'Đã xác nhận' if event.get('review_state')=='confirmed' else '',raw]
+                leave_days if kind=='Nghỉ' and leave in {'Không lương','Nghỉ không lương'} else 0,int(kind in {'Về sớm','Nghỉ sớm'} and not is_paid_break_event(event)),int(kind=='Đi trễ'),ot,used,ot-reserved,'',event.get('review_reason') or '', 'Đã xác nhận' if event.get('review_state')=='confirmed' else '',raw]
         put(SHEETS[1],row,values,{14:f'=L{row}/60',15:f'=M{row}/60',23:f'=V{row}/60'})
     end=max(2000,len(kept)+5)
     for row,(identity,detail_rows) in enumerate(sorted(person_rows.items(), key=lambda item: labels[item[0]].casefold()),5):
@@ -177,13 +207,24 @@ def export_to_excel(results,session_info,output_path,template_path=None):
     for event in results:
         if not personnel_mode and is_ctv_text_only(event, list(source.values())):continue
         if event.get('source_only'):continue
-        if event.get('review_state')=='confirmed' or event.get('is_excluded'):
+        if event in pending or event.get('review_state')=='confirmed' or event.get('is_excluded'):
             ids=event.get('source_message_ids')
             ids=[i for i in ids if isinstance(i,str)] if isinstance(ids,list) else []
             messages=[source[i] for i in ids if i in source]
             raw='\n\n'.join(deduplicate_copied_sender_header(m['body'],m.get('name')) for m in messages)
             if len(raw)>32767:raw=raw[:32000]+'\n[Xem toàn bộ tại sheet 1_TIN_NHAN_GOC.]'
-            put(SHEETS[3],review_row,[', '.join(ids),messages[0]['send_time'] if messages else '',str(event.get('event_date') or ''),str(event.get('employee_name') or ''),str(event.get('review_reason') or ''), 'Đã loại' if event.get('is_excluded') else 'Đã xác nhận',raw])
+            issues = [str(item) for item in [event.get('review_reason'),
+                      *(event.get('validation_errors') or []),
+                      *(event.get('validation_warnings') or [])] if item]
+            if event.get('classification') == 'unresolved':
+                issues.append('Chưa xác định đúng nhân sự/ID')
+            if not issues and event in pending:
+                issues.append('Thiếu bằng chứng hoặc cần xác nhận thủ công')
+            state = ('Đã loại' if event.get('is_excluded') else
+                     'Cần kiểm tra (chưa tính công)' if event in pending else 'Đã xác nhận')
+            put(SHEETS[3],review_row,[', '.join(ids),messages[0]['send_time'] if messages else '',
+                str(event.get('event_date') or ''),str(event.get('employee_name') or ''),
+                ' | '.join(dict.fromkeys(issues)),state,raw])
             review_row+=1
     from openpyxl.workbook.properties import CalcProperties
     from openpyxl.workbook.views import BookView

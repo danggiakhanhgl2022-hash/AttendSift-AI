@@ -151,30 +151,64 @@ def mark_information_only(event, snapshot):
     return True
 
 
-# Business policy: annual leave is documented verbatim, not calculated.
-# A direct request to take annual leave belongs only to the raw message sheet;
-# an unrelated OT report elsewhere must not be swallowed by this policy.
-ANNUAL_LEAVE = re.compile(r"\bphép\s*năm\b", re.IGNORECASE)
-LEAVE_REQUEST = re.compile(r"\b(?:xin\s+phép\s+)?(?:nghỉ|off)\b", re.IGNORECASE)
+# Business rule: ordinary leave / annual leave is documented verbatim, not
+# automatically paid or converted to a number of days. Other actions, including
+# early departure and overtime, remain separately measurable attendance rows.
+ANNUAL_LEAVE = re.compile(r'\b(?:phép\s*năm|nghỉ\s+phép)\b', re.I)
+LEAVE_REQUEST = re.compile(r'\b(?:nghỉ|off)\b', re.I)
+ACTIONABLE_ATTENDANCE = re.compile(
+    r'(?<!\w)OT(?=\W|\d|$)|tăng\s*ca|làm\s+thêm\s+giờ'
+    r'|(?:đi|đến|tới|vào)\s+(?:trễ|muộn)|(?:về|ra)\s+sớm'
+    r'|nghỉ\s+bù|làm\s+bù|bù\s+(?:giờ|công)', re.I,
+)
+
+
+def _source_body(body):
+    return re.sub(r'\[qt\][\s\S]*?\[/qt\]', ' ', str(body or ''), flags=re.I)
+
+
+def is_plain_leave_text_only(body):
+    """Only a standalone leave request, never a group report containing OT.
+
+    Does not require 'phép năm': 'nghỉ phép', 'off sáng', 'xin nghỉ ngày'
+    are all raw-message-only.  Do not suppress separate payable events.
+    """
+    text = _source_body(body)
+    return bool(LEAVE_REQUEST.search(text) and not ACTIONABLE_ATTENDANCE.search(text))
 
 
 def is_annual_leave_text_only(body):
-    body = re.sub(r"\[qt\][\s\S]*?\[/qt\]", " ", str(body or ""), flags=re.IGNORECASE)
-    return bool(ANNUAL_LEAVE.search(body) and LEAVE_REQUEST.search(body) and
-                not re.search(r"(?<!\w)(?:OT|tăng\s+ca)\s*\d", body, re.IGNORECASE))
+    text = _source_body(body)
+    return bool(ANNUAL_LEAVE.search(text) and LEAVE_REQUEST.search(text) and
+                not ACTIONABLE_ATTENDANCE.search(text))
 
 
-def mark_annual_leave_source_only(event, snapshot):
+def mark_plain_leave_source_only(event, snapshot):
+    """Keep leave evidence but do not calculate leave days from an AI guess.
+
+    A mixed leave/OT message can still produce OT rows; only its leave row is
+    excluded. Never exclude unsupported records when source IDs are invalid.
+    """
+    if str(event.get('event_type') or '') != 'Nghỉ':
+        return False
     ids = event.get('source_message_ids')
     sources = {m['message_id']: m for m in snapshot}
-    if not isinstance(ids, list) or not ids or any(i not in sources for i in ids if isinstance(i,str)):
+    if not isinstance(ids, list) or not ids or any(
+        not isinstance(i, str) or i not in sources for i in ids
+    ):
         return False
-    if any(not isinstance(i, str) or i not in sources for i in ids):
+    if not any(LEAVE_REQUEST.search(_source_body(sources[i].get('body'))) for i in ids):
         return False
-    if not all(is_annual_leave_text_only(sources[i].get('body')) for i in ids):
+    if any(re.search(r'\bnghỉ\s+bù\b', _source_body(sources[i].get('body')), re.I)
+           for i in ids):
         return False
     event.update(is_excluded=True, source_only=True, needs_review=False,
                  identity_uncertain=False, review_state='excluded',
-                 review_reason='Phép năm: chỉ xuất nguyên văn tin Chatwork, không tính ngày/phút công.',
-                 validation_errors=[], validation_warnings=[])
+                 review_reason='Tin xin nghỉ: chỉ giữ nguyên văn tin nguồn, không tính ngày nghỉ.',
+                 leave_days=None, validation_errors=[], validation_warnings=[])
     return True
+
+
+def mark_annual_leave_source_only(event, snapshot):
+    # Backward-compatible entry point for both local and cloud pathways.
+    return mark_plain_leave_source_only(event, snapshot)

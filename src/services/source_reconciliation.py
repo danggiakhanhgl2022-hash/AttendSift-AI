@@ -9,17 +9,82 @@ import hashlib
 import re
 
 from .identity_context import exact_name_key, identity_hints, name_key, sender_name, source_quote
-from .event_policy import is_annual_leave_text_only, configured_ctv_aliases
+from .event_policy import is_annual_leave_text_only, is_plain_leave_text_only, configured_ctv_aliases
+from .paid_break_policy import (PAID_BREAK_MINUTES, PAID_BREAK_SUBTYPE,
+                                is_paid_break_request_line)
 
 
-DURATION = re.compile(
-    r'(?P<number>\d+(?:[.,]\d+)?)\s*(?P<unit>h|giờ|phút|ph|p)(?P<extra>\d{1,2})?(?!\w)',
-    flags=re.IGNORECASE,
+# Chatwork reports use all of 4h30, 4h30p, 4h30ph, and 4h30phút.
+# Keep the optional minute suffix *inside* the OT token: previously 4h30p
+# failed the word-boundary check, suppressing every person in that group.
+# Accept minute apostrophes (30', 30’, 30′) used in informal Chatwork OT.
+# Keep the suffix anchored so e.g. '30' in a date cannot be read as OT.
+DURATION_VALUE = (
+    r'\d+(?:[.,]\d+)?\s*(?:giờ|phút|ph|h|p)(?:\d{1,2}(?:phút|ph|p)?)?'
+    r'|\d+(?:[.,]\d+)?\s*[\x27’′]'
 )
-OT_LINE = re.compile(r'^(?P<people>.+?)\s+(?:OT|tăng\s+ca)\s*:?[ ]*(?P<duration>\d+(?:[.,]\d+)?\s*(?:h|giờ|phút|ph|p)(?:\d{1,2})?)(?=\W|$)', re.IGNORECASE)
+OT_VERB = r'(?:OT|tăng\s+ca|làm\s+thêm)'
+DURATION = re.compile(
+    r'(?P<number>\d+(?:[.,]\d+)?)\s*'
+    r'(?P<unit>giờ|phút|ph|h|p|[\x27’′])(?P<extra>\d{1,2})?'
+    r'(?P<minute_suffix>phút|ph|p)?(?!\w)', re.IGNORECASE,
+)
+OT_LINE = re.compile(
+    rf'^(?P<people>.+?)\s+{OT_VERB}\s*:?[ ]*'
+    rf'(?P<duration>{DURATION_VALUE})(?!\w)', re.IGNORECASE,
+)
+# Reports sometimes place the measured duration *before* the employee list:
+# "OT 2h: Hào, Hiền" / "OT cho Hào, Hiền: 2h".
+# Names must be extracted from the message first; the HR registry is consulted
+# only after each literal name has become a separate attendance claim.
+OT_DURATION_FIRST = re.compile(
+    rf'^{OT_VERB}\s*:?[ ]*(?P<duration>{DURATION_VALUE})(?!\w)\s*[:：–\-]\s*(?P<people>.+)$',
+    re.IGNORECASE,
+)
+OT_PEOPLE_FIRST = re.compile(
+    rf'^{OT_VERB}\s+cho\s+(?P<people>.+?)\s*[:：]\s*(?P<duration>{DURATION_VALUE})(?!\w)',
+    re.IGNORECASE,
+)
+# Split only the person-list portion of an explicitly measured OT clause.
+# Do not split a surname into separate workers or use the sender as every name.
+PERSON_SEPARATOR = re.compile(r'\s*[,;、&+／/]\s*|\s+(?:và|cùng|với)\s+', re.IGNORECASE)
+MAX_PEOPLE_IN_CLAUSE = 100
+
+
+def _ot_clause(clause):
+    return (OT_LINE.match(clause) or OT_DURATION_FIRST.match(clause) or
+            OT_PEOPLE_FIRST.match(clause))
+
+
+def _listed_people(text, source_text=''):
+    names = PERSON_SEPARATOR.split(text.strip())
+    if not 1 <= len(names) <= MAX_PEOPLE_IN_CLAUSE:
+        return []
+    # A leading capitalized 'Anh' may be the person's GIVEN NAME (Anh Thư),
+    # not the honorific 'anh'. Never drop it while collecting literal names.
+    # Only lower-case honorifics are unambiguous in report-style lines.
+    cleaned = []
+    for candidate in names:
+        candidate = re.sub(r'^(?:anh|chị|bạn)\s+', '', candidate.strip()).strip()
+        # "Anh Tâm" can be a capitalized honorific at the beginning of a
+        # sentence; "Anh Thư" can be a literal two-word personal name.
+        # When the SAME message also explicitly writes "anh Tâm" in lower
+        # case, follow that source spelling instead of inventing two people.
+        titled = re.match(r'^Anh\s+(.+)$', candidate)
+        if titled and re.search(r'(?<!\w)anh\s+' + re.escape(titled.group(1)) + r'(?!\w)',
+                                source_text):
+            candidate = titled.group(1)
+        cleaned.append(candidate)
+    if any(not re.fullmatch(r'[\wÀ-ỹ]+(?:\s+[\wÀ-ỹ]+){0,7}(?:\s*\(CTV\))?', n, re.UNICODE)
+           or re.search(r'\b(?:team|ngày|tháng|tổng|mọi|người)\b', n, re.IGNORECASE)
+           for n in cleaned):
+        return []
+    return cleaned
+
+
 CONTEXT_OT_LINE = re.compile(
-    r'^(?P<people>.+?)\s+(?P<duration>\d+(?:[.,]\d+)?\s*'
-    r'(?:h|giờ|phút|ph|p)(?:\d{1,2})?)(?=\W|$)', re.IGNORECASE,
+    rf'^(?P<people>.+?)\s+(?P<duration>{DURATION_VALUE})(?!\w)',
+    re.IGNORECASE,
 )
 DATE_AT_START = re.compile(r'^\s*(?P<day>\d{1,2})/(?P<month>\d{1,2})(?:/(?P<year>20\d{2}))?\s*')
 DATE_HEADER = re.compile(r'\bngày\s+(?P<day>\d{1,2})/(?P<month>\d{1,2})(?:/(?P<year>20\d{2}))?\b', re.IGNORECASE)
@@ -61,16 +126,41 @@ def _date_for(day, month, year):
         return None
 
 
+def _report_work_date(day, month, year, report_month, report_year, sent):
+    """Understand DD/MM and MM/DD OT lines for a requested reporting month.
+
+    Prefer standard Vietnamese DD/MM whenever it belongs to the requested
+    month. Only when that is outside the report month, allow MM/DD if the
+    message was sent in the SAME reporting month: e.g. a report sent in
+    October may use 10/03 to mean October 3. Never reinterpret an unrelated
+    old-month date as work in the requested month.
+    """
+    year = int(year or sent.year)
+    standard = _date_for(day, month, year)
+    if standard and int(standard[5:7]) == report_month and year == report_year:
+        return standard
+    if (year == report_year and sent.year == report_year and
+            sent.month == report_month and int(day) == report_month):
+        reversed_value = _date_for(month, day, year)
+        if reversed_value and int(reversed_value[5:7]) == report_month:
+            return reversed_value
+    return standard
+
+
 def _minutes(text):
     match = DURATION.search(text)
     if not match:
         return None
     number = float(match['number'].replace(',', '.'))
     if match['unit'].casefold() in {'h', 'giờ'}:
-        result = number * 60
-        if match['extra']:
-            result += int(match['extra'])
+        extra = int(match['extra'] or 0)
+        if extra >= 60:  # "4h90p" is not a valid hour/minute duration.
+            return None
+        result = number * 60 + extra
     else:
+        # Minute suffixes and HHMM fragments only belong to hour units.
+        if match['extra'] or match['minute_suffix']:
+            return None
         result = number
     return int(result) if 0 < result <= 1440 and result.is_integer() else None
 
@@ -104,7 +194,7 @@ def _mentioned_date(body, sent):
 
 def _single_person_request(body):
     first = FIRST_PERSON.search(body)
-    if not first or re.search(r'\b(?:OT|tăng\s+ca)\b', body, re.IGNORECASE):
+    if not first or re.search(rf'\b{OT_VERB}\b', body, re.IGNORECASE):
         return None
     # One claimed attendance action by the first-person speaker, not a report
     # containing additional named people with their own attendance events.
@@ -157,8 +247,12 @@ def _identity_scope(message):
 
 
 def _source_alias_id(claim):
+    # '(CTV)' is a personnel label, not part of someone's identity. A
+    # literal Ny and Ny (CTV) in the same team must share a stable alias ID.
+    # Keep Vietnamese tone marks so Cẩm and Cầm stay distinct people.
+    name = re.sub(r'\s*\(\s*CTV\s*\)', '', claim['employee_name'], flags=re.I).strip()
     token = '|'.join((str(claim.get('identity_scope') or claim['source_id']),
-                      exact_name_key(claim['employee_name'])))
+                      exact_name_key(name)))
     return 'SRC-N-' + hashlib.sha256(token.encode('utf-8')).hexdigest()[:16]
 
 def _candidate(message, day, name, quote, kind, minutes=0, subtype=None, uncertain=False, leave_days=None):
@@ -201,12 +295,12 @@ def _split_inline_ot_clauses(text):
     remainder = text.strip()
     clauses = []
     while remainder:
-        first = OT_LINE.match(remainder)
+        first = _ot_clause(remainder)
         if first is None:
             return [text]  # Unknown syntax: leave it to manual review.
         tail = remainder[first.end():]
         next_clause = re.match(r'^\s*[,;]\s*(.+)$', tail, re.DOTALL)
-        if next_clause and OT_LINE.match(next_clause.group(1)):
+        if next_clause and _ot_clause(next_clause.group(1)):
             clauses.append(remainder[:first.end()].strip())
             remainder = next_clause.group(1).strip()
             continue
@@ -243,7 +337,7 @@ def _fully_explicit_overtime_report(message, claims):
     if not any(c['event_type'] == 'Tăng ca' for c in claims):
         return False
     statements = [line for line in _active_body(message).splitlines()
-                  if re.search(r'\b(?:OT|tăng\s+ca)\s*:?[ ]*\d', line, re.IGNORECASE)]
+                  if re.search(rf'\b{OT_VERB}\s*:?[ ]*\d', line, re.IGNORECASE)]
     # An incomplete statement may describe a further person; treating a
     # partially parsed report as complete could suppress that person's row.
     if any(re.search(r'\bOT\b', line, re.IGNORECASE) and
@@ -264,25 +358,29 @@ def _fully_explicit_overtime_report(message, claims):
         if not line:
             continue
         header = DATE_HEADER.search(line)
-        if header and not re.search(r'\b(?:OT|tăng\s+ca)\s*\d', line, re.IGNORECASE):
-            header_day = _date_for(header['day'], header['month'], header['year'] or sent.year)
-        if not re.search(r'\b(?:OT|tăng\s+ca)\s*:?[ ]*\d', line, re.IGNORECASE):
+        if header and not re.search(rf'\b{OT_VERB}\s*\d', line, re.IGNORECASE):
+            header_day = _report_work_date(header['day'], header['month'], header['year'],
+                                           sent.month, sent.year, sent)
+        if not re.search(rf'\b{OT_VERB}\s*:?[ ]*\d', line, re.IGNORECASE):
             continue
         stripped, dated = _report_ot_line(line)
-        day = (_date_for(dated['day'], dated['month'], dated['year'] or sent.year) if dated else
-               (_date_for(header['day'], header['month'], header['year'] or sent.year) if header else header_day))
+        day = (_report_work_date(dated['day'], dated['month'], dated['year'],
+                                 sent.month, sent.year, sent) if dated else
+               (_report_work_date(header['day'], header['month'], header['year'],
+                                  sent.month, sent.year, sent) if header else header_day))
         if not day:
             return False
         clauses = _split_inline_ot_clauses(stripped)
-        if len(clauses) != len(re.findall(r'\b(?:OT|tăng\s+ca)\s*:?[ ]*\d', line, re.IGNORECASE)):
+        if len(clauses) != len(re.findall(rf'\b{OT_VERB}\s*:?[ ]*\d', line, re.IGNORECASE)):
             return False
         for clause in clauses:
-            record = OT_LINE.match(clause)
+            record = _ot_clause(clause)
             if not record or not _minutes(record['duration']):
                 return False
-            names = re.split(r'\s*,\s*|\s+và\s+|\s*\+\s*', record['people'])
-            for name in names:
-                alias = re.sub(r'^(?:anh|chị|bạn)\s+', '', name, flags=re.IGNORECASE).strip()
+            names = _listed_people(record['people'], _active_body(message))
+            if not names:
+                return False
+            for alias in names:
                 if not any(c['event_type'] == 'Tăng ca' and c['event_date'] == day and
                            c['ot_minutes'] == _minutes(record['duration']) and
                            exact_name_key(str(c['identity_evidence'])) == exact_name_key(alias)
@@ -308,7 +406,7 @@ def extract_explicit_claims(message, snapshot, month, year, roster_policy=False)
 
     # "Em xin phép nghỉ ... ngày 7-9/10 ... và ngày 12/10" requires FOUR rows.
     first = _single_person_request(body)
-    if roster_policy and first and first['kind'].casefold() == 'nghỉ' and not is_annual_leave_text_only(body):
+    if roster_policy and first and first['kind'].casefold() == 'nghỉ' and not is_plain_leave_text_only(body):
         from .personnel_policy import leave_claims
         name, quote = _sender_identity(message)
         subtype = 'Không lương' if 'không lương' in body.casefold() else None
@@ -317,7 +415,7 @@ def extract_explicit_claims(message, snapshot, month, year, roster_policy=False)
                                subtype=subtype, leave_days=detail['leave_days'])
             claim.update(leave_period=detail['leave_period'], leave_source_verified=True)
             claims.append(claim)
-    elif first and first['kind'].casefold() == 'nghỉ' and not is_annual_leave_text_only(body):
+    elif first and first['kind'].casefold() == 'nghỉ' and not is_plain_leave_text_only(body):
         leave_days = _leave_days_in_request(body, first, send_day, month, year)
         if leave_days and ('phép năm' in body.casefold() or 'không lương' in body.casefold()):
             subtype = 'Phép năm' if 'phép năm' in body.casefold() else 'Không lương'
@@ -339,11 +437,24 @@ def extract_explicit_claims(message, snapshot, month, year, roster_policy=False)
         minutes = _minutes(duration_match.group(1)) if duration_match else None
         if minutes and inferred_date and (int(inferred_date[5:7]), int(inferred_date[:4])) == (month, year):
             # An explicit compensation decision is necessary to populate its category.
-            if re.search(r'không\s+(?:làm\s+)?bù', body, re.IGNORECASE):
+            request_line = body[first.start():].splitlines()[0]
+            # Preserve the pre-existing generic non-compensation parser.
+            # Only the new PAID category requires the phrase in this request line.
+            no_compensation = bool(re.search(r'không\s+(?:làm\s+)?bù\b', body, re.IGNORECASE))
+            if no_compensation:
                 name, quote = _sender_identity(message)
-                claim = _candidate(message, inferred_date, name, quote,
-                                   'Về sớm' if first['kind'].casefold() == 'về sớm' else 'Đi trễ')
-                claim['minutes_not_compensated'] = minutes
+                kind = 'Về sớm' if first['kind'].casefold() == 'về sớm' else 'Đi trễ'
+                paid_break = (kind == 'Về sớm' and minutes == PAID_BREAK_MINUTES
+                              and is_paid_break_request_line(request_line))
+                claim = _candidate(message, inferred_date, name, quote, kind,
+                                   subtype=PAID_BREAK_SUBTYPE if paid_break else None)
+                if paid_break:
+                    # Paid time must not be counted in the usual unpaid
+                    # "phút không bù" bucket or salary-deduction formulas.
+                    claim['paid_break_minutes'] = PAID_BREAK_MINUTES
+                    claim['minutes_not_compensated'] = 0
+                else:
+                    claim['minutes_not_compensated'] = minutes
                 claims.append(claim)
 
     # Report-style overtime: explicit date on line or a "Team ... ngày DD/MM" header.
@@ -356,15 +467,24 @@ def extract_explicit_claims(message, snapshot, month, year, roster_policy=False)
         if not line:
             continue
         header = DATE_HEADER.search(line)
-        if header and not re.search(r'\b(?:OT|tăng\s+ca)\s*\d', line, re.IGNORECASE):
-            header_day = _date_for(header['day'], header['month'], header['year'] or send_day.year)
+        if header and not re.search(rf'\b{OT_VERB}\s*\d', line, re.IGNORECASE):
+            header_day = _report_work_date(header['day'], header['month'], header['year'],
+                                           month, year, send_day)
         people_line, dated = _report_ot_line(line)
-        value = (_date_for(dated['day'], dated['month'], dated['year'] or send_day.year)
-                 if dated else (_date_for(header['day'], header['month'], header['year'] or send_day.year) if header else header_day))
+        value = (_report_work_date(dated['day'], dated['month'], dated['year'], month, year, send_day)
+                 if dated else (_report_work_date(header['day'], header['month'],
+                                                 header['year'], month, year, send_day)
+                                if header else header_day))
+        # Do not lose the named workers just because the OT report omitted its
+        # work date. Keep a provisional SEND date only as a review-only event;
+        # it must never be counted as confirmed payroll/OT.
+        missing_work_date = value is None
+        if missing_work_date and any(_ot_clause(c) for c in _split_inline_ot_clauses(people_line)):
+            value = send_day.isoformat()
         if not value or (int(value[5:7]), int(value[:4])) != (month, year):
             continue
         for clause in _split_inline_ot_clauses(people_line):
-            record = OT_LINE.match(clause)
+            record = _ot_clause(clause)
             if not record and value in explicit_ot_days and not re.search(
                 r'\b(?:nghỉ|đi\s+trễ|về\s+sớm|làm\s+bù|tổng|dự\s+kiến)\b',
                 clause, re.IGNORECASE,
@@ -372,25 +492,33 @@ def extract_explicit_claims(message, snapshot, month, year, roster_policy=False)
                 record = CONTEXT_OT_LINE.match(clause)
             if not record:
                 continue
+            # A planned/conditional OT sentence is not evidence of worked time.
+            # Do not turn 'Dự kiến Huyền OT 2h' into a fictitious CTV named
+            # 'Dự kiến Huyền'. Confirm such plans only from a later actual report.
+            if re.search(r'\b(?:dự\s+kiến|kế\s+hoạch|sẽ)\b', record['people'], re.I):
+                continue
             minutes = _minutes(record['duration'])
             if not minutes:
                 continue
-            names = re.split(r'\s*,\s*|\s+và\s+|\s*\+\s*', record['people'])
-            if not 1 <= len(names) <= 10:
+            cleaned = _listed_people(record['people'], body)
+            if not cleaned:
                 continue
-            cleaned = [re.sub(r'^(?:anh|chị|bạn)\s+', '', n, flags=re.IGNORECASE).strip() for n in names]
-            if any(not re.fullmatch(r'[\wÀ-ỹ]+(?:\s+[\wÀ-ỹ]+){0,4}(?:\s*\(CTV\))?', n, re.UNICODE)
-                   or re.search(r'\b(?:team|ngày|tháng|tổng|mọi|người)\b', n, re.IGNORECASE)
-                   for n in cleaned):
-                continue
-            if OT_LINE.match(clause):
+            if _ot_clause(clause):
                 explicit_ot_days.add(value)
             for alias in cleaned:
-                full_name, uncertain = _resolve_alias(alias, snapshot)
+                # With a managed employee registry the literal reported alias
+                # must be resolved against that registry, not guessed from a
+                # similarly named Chatwork sender elsewhere in the snapshot.
+                full_name, uncertain = ((alias, False) if roster_policy
+                                        else _resolve_alias(alias, snapshot))
                 quote = alias if alias in line else source_quote(alias, line)
                 if not quote:
                     continue
-                claims.append(_candidate(message, value, full_name, quote, 'Tăng ca', minutes, uncertain=uncertain))
+                claim = _candidate(message, value, full_name, quote, 'Tăng ca', minutes,
+                                   uncertain=uncertain or missing_work_date)
+                if missing_work_date:
+                    claim['missing_work_date'] = True
+                claims.append(claim)
 
     # Repeated identical statements should not create duplicate payroll rows.
     unique = {}
@@ -408,12 +536,23 @@ def _same_person(row, claim):
     a = exact_name_key(str(row.get('employee_name') or ''))
     b = exact_name_key(claim['employee_name'])
     q = exact_name_key(claim['identity_evidence'])
+    # Once a row is certified from a *literal* Chatwork claim, do not merge it
+    # with a separate shorter name in the same report.  In particular, the
+    # bare given name 'Quan' is not a second report for either 'Minh Quan'
+    # or 'Duc Quan'.  Name collision resolution belongs to the roster/ID step.
+    literal = exact_name_key(row.get('_literal_claim_name'))
+    if literal:
+        return literal == b
     # A one-word quoted alias is not enough to merge different full names.
     return bool(a and b and (
         a == b or
         (not claim['identity_uncertain'] and a == q) or
-        (len(a.split()) >= 2 and b.endswith(' ' + a)) or
-        (len(b.split()) >= 2 and a.endswith(' ' + b))
+        # AI may supply a full name while a group report quotes only its
+        # short alias. Verify against the literal short claim, then replace
+        # the AI's identity with the source claim for roster classification.
+        # Do NOT match a short AI name to a *longer* source name: a model's
+        # "An" is not an additional person beside source "Gia An".
+        (len(a.split()) >= 2 and a.endswith(' ' + b))
     ))
 
 
@@ -424,15 +563,19 @@ def _supplement(claim):
     uncertain = bool(claim['identity_uncertain'] or claim.get('conflicting_duration'))
     reason = ('Cùng tên và ngày có hai thời lượng OT khác nhau trong tin gốc; cần kiểm tra.'
               if claim.get('conflicting_duration') else
+              'Tin có OT và tên người nhưng không ghi rõ ngày làm việc; ngày gửi chỉ là tạm tính, cần kiểm tra.'
+              if claim.get('missing_work_date') else
               'Nội dung nguồn không xác định được người được báo cáo.'
               if claim['identity_uncertain'] else None)
     event = {
         'person_id': _source_alias_id(claim),
+        '_literal_claim_name': name,
         'employee_name': name, 'identity_evidence': claim['identity_evidence'],
         'identity_uncertain': bool(claim['identity_uncertain']),
         'event_date': claim['event_date'], 'event_type': claim['event_type'],
         'event_subtype': claim['event_subtype'], 'reason': 'Trích từ thông báo Chatwork',
         'hours_compensation': '', 'minutes_not_compensated': claim.get('minutes_not_compensated', 0),
+        'paid_break_minutes': claim.get('paid_break_minutes', 0),
         'minutes_compensated': 0, 'ot_minutes': claim['ot_minutes'],
         'ot_used_minutes': 0, 'ot_credit_date': None,
         'leave_days': claim.get('leave_days', 1) if claim['event_type'] == 'Nghỉ' else None,
@@ -441,7 +584,8 @@ def _supplement(claim):
         'needs_review': uncertain,
         'review_reason': reason
     }
-    event.update({k: claim[k] for k in ('leave_period', 'leave_source_verified') if k in claim})
+    event.update({k: claim[k] for k in ('leave_period', 'leave_source_verified',
+                                       'missing_work_date') if k in claim})
     return event
 
 
@@ -452,6 +596,7 @@ def _certify_source_claim(row, claim):
     person/day. Truly ambiguous competing sender accounts remain pending.
     """
     row.update(employee_name=claim['employee_name'], identity_evidence=claim['identity_evidence'],
+               _literal_claim_name=claim['employee_name'],
                ot_minutes=claim['ot_minutes'], person_id=_source_alias_id(claim),
                identity_uncertain=bool(claim['identity_uncertain']),
                needs_review=bool(claim['identity_uncertain'] or claim.get('conflicting_duration')),
@@ -470,6 +615,58 @@ def _certify_source_claim(row, claim):
     row['leave_days'] = None
     row['start_time'] = None
     row['end_time'] = None
+
+
+def _certify_first_person_no_compensation(row, claim, message):
+    """Certify a fully specified personal early-leave / late-arrival request.
+
+    Sender name, event type, date, duration, and non-compensation decision are
+    checked directly against the linked message.  A corrected AI identity is
+    NOT by itself a reason for perpetual manual review.  Registry/Account-ID
+    conflicts are still checked separately in personnel_policy.classify().
+    """
+    body = _active_body(message)
+    first = _single_person_request(body)
+    if not first or first['kind'].casefold() not in {'về sớm', 'đi trễ'}:
+        return False
+    expected_type = 'Về sớm' if first['kind'].casefold() == 'về sớm' else 'Đi trễ'
+    if claim['event_type'] != expected_type or row.get('event_type') != expected_type:
+        return False
+    sent = _vn_message_date(message)
+    actual_day = _mentioned_date(body, sent) if sent else None
+    # Duration and the non-compensation statement must belong to THIS
+    # first-person request, not to another person on a later line.
+    request_line = body[first.start():].splitlines()[0]
+    duration_match = re.search(
+        r'\b(?:về\s+sớm|đi\s+trễ)\s+(\d+(?:[.,]\d+)?\s*(?:phút|h|giờ))',
+        request_line, re.IGNORECASE,
+    )
+    minutes = _minutes(duration_match.group(1)) if duration_match else None
+    paid_break = (expected_type == 'Về sớm' and minutes == PAID_BREAK_MINUTES
+                  and is_paid_break_request_line(request_line))
+    expected_unpaid_minutes = 0 if paid_break else minutes
+    if (not minutes or not actual_day or actual_day != claim['event_date'] or
+            claim.get('minutes_not_compensated') != expected_unpaid_minutes or
+            (claim.get('paid_break_minutes') or 0) != (PAID_BREAK_MINUTES if paid_break else 0) or
+            not re.search(r'không\s+(?:làm\s+)?bù\b', request_line, re.IGNORECASE) or
+            re.search(r'\b(?:sẽ|dự\s+kiến|có\s+thể)\s+(?:làm\s+)?bù\b', request_line, re.IGNORECASE)):
+        return False
+    sender, quoted = _sender_identity(message)
+    if not sender or sender != claim['employee_name'] or quoted not in str(message.get('name') or ''):
+        return False
+    # The quoted source is authoritative, not any invented AI account or name.
+    row.update(employee_name=sender, identity_evidence=quoted,
+               event_date=actual_day, event_type=expected_type,
+               event_subtype=PAID_BREAK_SUBTYPE if paid_break else None,
+               person_id=_source_alias_id(claim),
+               minutes_not_compensated=expected_unpaid_minutes,
+               paid_break_minutes=PAID_BREAK_MINUTES if paid_break else 0,
+               minutes_compensated=0,
+               ot_minutes=0, ot_used_minutes=0, ot_credit_date=None,
+               start_time=None, end_time=None, leave_days=None,
+               identity_uncertain=False, needs_review=False,
+               review_reason=None, confidence=0.96)
+    return True
 
 
 def reconcile_explicit_records(events, snapshot, month, year, roster_policy=False):
@@ -506,7 +703,7 @@ def reconcile_explicit_records(events, snapshot, month, year, roster_policy=Fals
 
     # Compare each explicit person/date claim; never silently fabricate completed payroll.
     for message in snapshot:
-        if is_annual_leave_text_only(_active_body(message)):
+        if is_plain_leave_text_only(_active_body(message)):
             # Never count annual leave; keep the entire message in snapshot.
             # Even a hallucinated AI row (OT/late/leave) cannot create payroll
             # from an annual-leave-only request.
@@ -514,7 +711,7 @@ def reconcile_explicit_records(events, snapshot, month, year, roster_policy=Fals
                 if row.get('source_message_ids') == [message['message_id']]:
                     row.update(is_excluded=True, source_only=True,
                                review_state='excluded', needs_review=False,
-                               review_reason='Phép năm: chỉ xuất nội dung tin nhắn gốc; không tính công.')
+                               review_reason='Tin xin nghỉ thuần túy: chỉ xuất nội dung nguồn, không tính ngày nghỉ.')
             continue
         claims = extract_explicit_claims(message, snapshot, month, year, roster_policy)
         # The My (CTV) line remains in the original Chatwork message on sheet 1,
@@ -594,12 +791,21 @@ def reconcile_explicit_records(events, snapshot, month, year, roster_policy=Fals
                         row['event_subtype'] = claim['event_subtype']
                         if not roster_policy:
                             _mark_review(row, 'AI trích sai số ngày hoặc loại phép; đã đối chiếu nguồn.')
+                    # Unlike ambiguous group OT, an explicit first-person
+                    # request identifies the sender and states the minutes
+                    # unambiguously. Clear the obsolete AI correction warning
+                    # only when every component is verified from this source.
+                    if claim['event_type'] in {'Về sớm', 'Đi trễ'} and len(matches) == 1:
+                        _certify_first_person_no_compensation(row, claim, message)
                     if claim.get('leave_source_verified'):
                         row.update(leave_source_verified=True, leave_period=claim['leave_period'])
                     if 'minutes_not_compensated' in claim and row.get('minutes_not_compensated') != claim['minutes_not_compensated']:
                         row['minutes_not_compensated'] = claim['minutes_not_compensated']
                         row['minutes_compensated'] = 0
                         _mark_review(row, 'AI trích sai phút không bù; đã sửa theo thông báo.')
+                    if claim.get('missing_work_date'):
+                        row['missing_work_date'] = True
+                        _mark_review(row, 'Tin có OT nhưng không ghi rõ ngày làm việc; phải xác nhận trước khi tính công.')
                 continue
             events.append(_supplement(claim))
     return events
