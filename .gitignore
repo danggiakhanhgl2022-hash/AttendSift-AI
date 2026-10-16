@@ -47,3 +47,7 @@ release/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Private employee bootstrap; distribute separately from public source.
+NHAN_VIEN_RIENG.json
+NHAN_VIEN_RIENG*.json
