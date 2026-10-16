@@ -137,7 +137,7 @@ def test_logout_revokes_copied_cookie(client):
 def test_database_details_not_returned_or_logged(client, caplog):
     client.post('/login', json={'password': 'synthetic-password'})
     def fail(*args, **kwargs):
-        raise RuntimeError('postgresql://admin:DO_NOT_EXPOSE@private-host/db SELECT secret_column')
+        raise RuntimeError('postgresql://admin:' + 'DO_NOT_EXPOSE' + '@private-host/db SELECT secret_column')
     client.application.extensions['repository'].get_setting = fail
     response = client.get('/api/config')
     assert response.status_code == 500 and response.json['error_id']

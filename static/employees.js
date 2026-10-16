@@ -25,7 +25,7 @@
   const table=node('table'),head=node('tr');['Mã','Họ tên','Tên thường dùng','Trạng thái','Thao tác'].forEach(t=>head.append(node('th',t)));table.append(head);
   for(const p of rows){
    const row=node('tr');
-   [p.employee_code,p.full_name,p.aliases.join(', '),p.active?'Đang hoạt động':'Đã ngừng'].forEach(v=>row.append(node('td',v)));
+   [p.employee_code,p.full_name,p.aliases.join(', ')+' · Chatwork ID: '+(p.chatwork_account_id||'chưa có'),p.active?'Đang hoạt động':'Đã ngừng'].forEach(v=>row.append(node('td',v)));
    const actions=node('td'),edit=node('button','Sửa'),remove=node('button',p.active?'Xóa khỏi danh sách':'Kích hoạt lại');
    edit.type=remove.type='button';
    edit.onclick=()=>{$('employeeEditId').value=p.id;$('employeeName').value=p.full_name;$('employeeCode').value=p.employee_code;$('employeeAccount').value=p.chatwork_account_id;$('employeeAliases').value=p.aliases.join('\n');$('employeeName').focus();};
@@ -52,9 +52,9 @@
   const groupLabel=node('label','Nhóm nhân sự'),group=node('select');group.id='reviewPersonnelGroup';
   for(const [value,text] of [['unresolved','Cần kiểm tra'],['official','Nhân viên chính thức'],['contractor','CTV']]){const o=node('option',text);o.value=value;group.append(o);}
   group.value=event.classification||'unresolved';groupLabel.append(group);
-  const personLabel=node('label','Nhân viên trong danh sách của phiên'),person=node('select');person.id='reviewPersonnelEmployee';
+  const personLabel=node('label','Đối chiếu nhân viên bằng mã hoặc Chatwork ID trong danh sách của phiên'),person=node('select');person.id='reviewPersonnelEmployee';
   const empty=node('option','Chọn nhân viên');empty.value='';person.append(empty);
-  for(const p of roster.employees.filter(p=>p.active)){const o=node('option',p.full_name);o.value=p.id;person.append(o);}
+  for(const p of roster.employees.filter(p=>p.active)){const label=p.full_name+' — Mã: '+(p.employee_code||'chưa có')+' — Chatwork ID: '+(p.chatwork_account_id||'chưa có')+' — ID: '+p.id;const o=node('option',label);o.value=p.id;person.append(o);}
   person.value=event.employee_id||'';person.onchange=()=>{if(person.value)group.value='official';};personLabel.append(person);
   const reason=node('p',event.classification_reason||'');reason.className='hint';
   const alias=node('button','Lưu tên trong nguồn làm tên thường dùng');alias.type='button';

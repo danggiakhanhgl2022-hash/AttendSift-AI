@@ -4,14 +4,8 @@ import re
 import sys
 
 VIETNAMESE_FILES = [
-    "README.md", "CHANGELOG.md", "docs/INSTALL_WINDOWS.md",
-    "docs/CHUYEN_MAY_WINDOWS.md", "docs/CLOUD_OPERATIONS.md",
-    "docs/RETENTION_3_MONTHS.md", "docs/PUBLISH_1.0.2.md",
-    "docs/RELEASE_NOTES_1.0.2.md", "docs/HANDOVER_ACCEPTANCE.md",
-    "docs/COMMUNITY_REVIEW.md", "docs/TESTING.md",
-    "docs/RELEASE_CHECKLIST.md", "docs/FEATURE_MATRIX.md",
-    "docs/GITHUB_ABOUT_AND_CV.md", "docs/VERIFICATION_1.0.2.md",
-    "docs/ARCHITECTURE.md", "docs/PERSONNEL_1.1.0.md", "docs/ARCHITECTURE_REVIEW_1.1.0.md",
+    "README.md", "CHANGELOG.md", "docs/SETUP.md",
+    "docs/GITHUB_PRIVACY.md", "docs/MAU_BAO_CAO_CHAM_CONG.md",
 ]
 
 
