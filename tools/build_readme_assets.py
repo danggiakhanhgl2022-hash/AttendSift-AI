@@ -47,29 +47,32 @@ def svg(name, width, height, content):
 
 def diagrams():
     svg('cover.svg', 1440, 590, '''
-    <defs><linearGradient id="bg"><stop stop-color="#09131f"/><stop offset="1" stop-color="#132f3d"/></linearGradient></defs>
-    <rect width="1440" height="590" rx="24" fill="url(#bg)"/>
-    <rect x="64" y="62" width="46" height="5" rx="2" fill="#55d9c1"/>
-    <text x="64" y="105" fill="#55d9c1" font-size="21" letter-spacing="2">ATTENDSIFT AI / CHATWORK</text>
-    <text x="60" y="190" class="ink" font-size="62" font-weight="700">120 phút tăng ca.</text>
-    <text x="60" y="265" class="ink" font-size="62" font-weight="700">Căn cứ nằm</text>
-    <text x="60" y="340" fill="#55d9c1" font-size="62" font-weight="700">ở đâu?</text>
-    <text x="64" y="402" class="ink" font-size="23">Từ tin nhắn Chatwork đến bảng công</text>
-    <text x="64" y="438" class="ink" font-size="23">có thể kiểm tra và giải thích.</text>
-    <text x="64" y="492" class="muted" font-size="19">Windows · Cloud · Excel 5 sheet</text>
-    <text x="64" y="542" class="muted" font-size="16">Đặng Gia Khánh / Bộ phận AI / 16.10.2026</text>
-    <rect x="820" y="76" width="552" height="440" rx="18" fill="#0a1723" stroke="#335364"/>
-    <text x="850" y="120" class="muted" font-size="16">MỘT VÍ DỤ GIẢ LẬP</text>
-    <rect x="850" y="144" width="492" height="74" rx="10" fill="#193241"/>
-    <text x="873" y="175" class="ink" font-size="23">“Minh Quân OT 2h”</text>
-    <text x="873" y="202" class="muted" font-size="16">Ngày sự kiện: 14/10 · Source: DEMO-S01</text>
-    <path d="M1096 229v30" stroke="#55d9c1" stroke-width="2"/>
-    <text x="850" y="293" class="ink" font-size="19">NGƯỜI  /  Nguyễn Minh Quân</text>
-    <text x="850" y="334" class="ink" font-size="19">NGÀY  /  14.10.2026</text>
-    <text x="850" y="375" class="ink" font-size="19">NGUỒN  /  DEMO-S01</text>
-    <line x1="850" y1="399" x2="1340" y2="399" stroke="#335364"/>
-    <text x="850" y="439" fill="#55d9c1" font-size="32" font-weight="700">120 phút OT</text>
-    <text x="850" y="480" class="muted" font-size="17">Ví dụ giả lập · Có tin nguồn để đối chiếu</text>''')
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#08151f"/><stop offset="1" stop-color="#123336"/></linearGradient><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#8dbdbb" stroke-opacity=".06"/></pattern></defs>
+<rect width="1440" height="590" rx="24" fill="url(#bg)"/><rect width="1440" height="590" rx="24" fill="url(#grid)"/>
+<rect x="48" y="44" width="8" height="25" rx="3" fill="#63ebc4"/><text x="70" y="64" font-size="21" fill="#e7f5f3" letter-spacing="3">ATTENDSIFT AI</text>
+<text x="48" y="110" font-size="15" fill="#9db8bb" letter-spacing="2">CHATWORK → ATTENDANCE WORKFLOW</text>
+<text x="44" y="191" font-size="54" font-weight="700" fill="#f3f8f9">Tin nhắn rời rạc.</text>
+<text x="44" y="258" font-size="54" font-weight="700" fill="#63ebc4">Bảng công có căn cứ.</text>
+<text x="48" y="310" font-size="22" fill="#c5d8dc">AI đọc nội dung. Quy tắc kiểm tra.</text>
+<text x="48" y="344" font-size="22" fill="#c5d8dc">Con người xác nhận điều chưa rõ.</text>
+<rect x="48" y="387" width="562" height="70" rx="12" fill="#112b33" stroke="#2b4f56"/>
+<text x="67" y="416" font-size="18" fill="#eff8f6">Giữ tin nguồn · Tách tên trùng · Xuất Excel 5 sheet</text>
+<text x="67" y="442" font-size="16" fill="#9db8bb">Windows Local / Cloud · Dữ liệu trong hình là giả lập</text>
+<text x="48" y="535" font-size="17" fill="#9db8bb">Đặng Gia Khánh / Bộ phận AI</text>
+<rect x="666" y="44" width="726" height="502" rx="18" fill="#0c1b25" stroke="#32505b"/>
+<circle cx="689" cy="67" r="4" fill="#63ebc4"/><text x="704" y="73" font-size="15" fill="#a9c2c8">MỘT TIN NHẮN. HAI HƯỚNG XỬ LÝ.</text>
+<rect x="690" y="94" width="678" height="122" rx="10" fill="#18323e"/>
+<text x="708" y="120" font-size="15" fill="#9db8bb">01 / CHATWORK · DEMO-S01 · Ngày sự kiện: 14/10</text>
+<text x="708" y="156" font-size="22" fill="#edf5fa">Minh Quân OT 2h</text><text x="708" y="189" font-size="22" fill="#edf5fa">Quân OT 30p</text>
+<path d="M1028 217v22m-235 0h471m-471 0v18m471-18v18" stroke="#497681" fill="none" stroke-width="2"/>
+<rect x="690" y="257" width="330" height="144" rx="10" fill="#11362f" stroke="#286252"/>
+<text x="708" y="286" font-size="15" fill="#63ebc4">02 / KHỚP DUY NHẤT</text><text x="708" y="320" font-size="20" fill="#edf5fa">Nguyễn Minh Quân</text><text x="708" y="356" font-size="30" font-weight="700" fill="#63ebc4">120 phút OT</text><text x="708" y="382" font-size="16" fill="#b4d4c9">Giữ Source ID để đối chiếu</text>
+<rect x="1036" y="257" width="332" height="144" rx="10" fill="#352c1d" stroke="#76603d"/>
+<text x="1054" y="286" font-size="15" fill="#f4cc80">02 / CÓ HAI NGƯỜI TÊN QUÂN</text><text x="1054" y="320" font-size="20" fill="#edf5fa">Cần xác nhận nhân viên</text><text x="1054" y="356" font-size="27" font-weight="700" fill="#f4cc80">Chưa tính công</text><text x="1054" y="382" font-size="16" fill="#d3c5aa">Giữ riêng tại sheet kiểm tra</text>
+<path d="M855 402v21m346-21v21M855 423h346m-173 0v15" stroke="#497681" fill="none" stroke-width="2"/>
+<rect x="690" y="439" width="678" height="83" rx="10" fill="#142a36"/>
+<text x="708" y="469" font-size="16" fill="#a9c2c8">03 / EXCEL · 5 SHEET</text><text x="708" y="500" font-size="20" fill="#edf5fa">Tin gốc → Chi tiết → Tổng kết / Kiểm tra / CTV</text>
+''')
     blocks = [('01', 'Tin nguồn', 'Giữ nội dung và Source ID'),
               ('02', 'Đối chiếu', 'Người · ngày · thời lượng'),
               ('03', 'Phân nhóm', 'Chính thức · CTV · cần kiểm tra'),

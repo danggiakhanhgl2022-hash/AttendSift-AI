@@ -1,18 +1,29 @@
-<p align="center"><img src="docs/images/story/cover.png" alt="AttendSift AI — 120 phút tăng ca. Căn cứ nằm ở đâu?" width="100%"></p>
+<p align="center"><img src="docs/images/story/cover.png" alt="AttendSift AI: tin Chatwork được đối chiếu thành bảng công; tên trùng được giữ riêng để xác nhận" width="100%"></p>
 
-# AttendSift AI — 120 phút tăng ca. Căn cứ nằm ở đâu?
+# AttendSift AI
 
-**Một con số chưa kể hết câu chuyện. Lần từ bảng công về đúng người, đúng ngày và tin nhắn làm căn cứ.**
+**Biến báo cáo Chatwork thành bảng chấm công có thể đối chiếu.**
 
-Bộ phận AI · **Đặng Gia Khánh** · Phiên bản nền **1.1.0** · Cập nhật **16/10/2026** · Bản ứng viên phát hành
+Dành cho người phụ trách tổng hợp tăng ca, đi trễ và về sớm từ tin nhắn tự do. AttendSift AI giữ tin nguồn, dùng AI trích xuất sự kiện, đối chiếu danh sách nhân viên và xuất **Excel 5 sheet**. Trường hợp chưa rõ được tách riêng, chưa cộng vào tổng công.
 
-[Bắt đầu trên Windows](docs/INSTALL_WINDOWS.md) · [Vận hành Cloud](docs/CLOUD_OPERATIONS.md) · [Bộ ảnh sản phẩm](docs/PRODUCT_TOUR.md) · [Kiến trúc](docs/ARCHITECTURE.md) · [English](README_EN.md)
+[**Xem giao diện và Excel mẫu →**](docs/PRODUCT_TOUR.md) · [Chạy trên Windows](docs/INSTALL_WINDOWS.md) · [Triển khai Cloud](docs/CLOUD_OPERATIONS.md) · [Đọc kiến trúc](docs/ARCHITECTURE.md)
 
-AttendSift AI giúp người phụ trách tổng hợp tăng ca, đi trễ, về sớm và các sự kiện chấm công từ tin nhắn tự do. Ứng dụng giữ tin nguồn, dùng AI hỗ trợ đọc nội dung, đối chiếu danh sách nhân viên và xuất **bảng chấm công Excel gồm 5 sheet**. Mỗi dòng chưa rõ được giữ riêng để kiểm tra, chưa cộng vào tổng công.
+### Điều khó nằm giữa tin nhắn và bảng tổng kết
 
-[**Khám phá cách một tin nhắn trở thành bảng công →**](#một-tin-báo-bốn-người-hệ-thống-giữ-điều-gì-hỏi-lại-điều-gì)
+Một người có thể báo hộ cả nhóm. Ngày gửi có thể khác ngày làm việc. Một tên gọi có thể khớp nhiều nhân viên. Quy trình phải giữ những khác biệt này khi chuyển nội dung thành số liệu.
 
-**Windows Local và Website Cloud trong cùng repository.** Ảnh trong bài dùng dữ liệu giả lập; giao diện được chụp từ bản Local chạy bằng WebView2/trình duyệt. [Xem nguồn ảnh và đủ 5 tab](docs/PRODUCT_TOUR.md).
+| Tình huống thực tế | Cách hệ thống xử lý | Giá trị khi kiểm tra |
+|---|---|---|
+| Một báo cáo nhắc nhiều người | Tách sự kiện theo từng người, ngày và thời lượng | Không chia đều số phút OT chung |
+| Tin gửi hôm sau, báo công hôm trước | Dùng ngày sự kiện trong nội dung khi đủ căn cứ | Không mặc định lấy ngày gửi để tính công |
+| Tên gọi khớp nhiều nhân viên | Giữ tại sheet kiểm tra, chờ xác nhận danh tính | Không tự chọn một người để cộng công |
+| Cần giải thích một dòng tổng kết | Giữ Source ID và nội dung nguồn | Có đường đối chiếu về báo cáo ban đầu |
+
+**Bằng chứng hiện có:** 398 kiểm thử Python đã đạt ở bản kiểm tra ngày 16/10/2026; cấu trúc repository và liên kết tài liệu đã được kiểm tra. Đây là kết quả kiểm thử phần mềm, chưa chứng minh độ chính xác trên toàn bộ dữ liệu thực tế. [Xem phạm vi và giới hạn](docs/UPDATE_2026-10-16.md).
+
+Windows Local và Cloud cùng mã nguồn · Phiên bản nền **1.1.0**, ứng viên phát hành · **Đặng Gia Khánh / Bộ phận AI** · [English](README_EN.md)
+
+Ảnh và ví dụ công khai dùng dữ liệu giả lập. Không dùng dữ liệu nhân sự thật để minh họa.
 
 ## Một tin báo bốn người: hệ thống giữ điều gì, hỏi lại điều gì?
 
