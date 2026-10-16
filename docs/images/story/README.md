@@ -4,6 +4,7 @@ Các hình trong thư mục này được tạo cho phần mô tả GitHub ngày
 
 | Nhóm | Cách tạo | Ý nghĩa |
 |---|---|---|
+| `poster-technology-v3.png` | Tạo bằng imagegen; prompt lưu tại `poster-technology-v3-prompt.txt` | Bìa README hiện tại: minh họa kiến trúc Chatwork API → AI → đối chiếu → Excel và nhánh xác nhận; không phải ảnh runtime |
 | `cover.svg`, `journey.svg` | SVG viết trực tiếp | Hình mở đầu và luồng thông tin, không phải ảnh runtime |
 | `cover.png` | Edge hiển thị SVG bìa ở mật độ điểm ảnh 2× | Bản PNG 2880×1180 dùng trong README; tiêu đề và sơ đồ ví dụ cùng một bố cục |
 | `ui-*.png` | Playwright + Edge chụp app Flask Local với SQLite tạm | Giao diện thực của 5 tab, dùng người/phòng/tin giả lập; không phải ảnh Cloud đã triển khai |

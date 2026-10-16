@@ -1,4 +1,6 @@
-<p align="center"><img src="docs/images/story/cover.png" alt="AttendSift AI: tin Chatwork được đối chiếu thành bảng công; tên trùng được giữ riêng để xác nhận" width="100%"></p>
+<p align="center"><img src="docs/images/story/poster-technology-v3.png" alt="AI đọc tin nhắn. Dữ liệu có căn cứ. Minh họa Chatwork API, AI trích xuất, quy tắc đối chiếu và Excel 5 sheet; trường hợp chưa rõ cần người phụ trách xác nhận." width="100%"></p>
+
+*Minh họa kiến trúc bằng dữ liệu giả lập; không phải ảnh chụp giao diện ứng dụng.*
 
 # AttendSift AI
 
