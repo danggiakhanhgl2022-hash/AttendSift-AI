@@ -2,11 +2,17 @@
 
 ## GitHub About
 
-> Chấm công từ Chatwork với AI: đối chiếu nhân viên/CTV, theo dõi OT và nghỉ 30 phút có lương, xuất Excel 5 sheet. Windows Local & Cloud.
+> Từ tin Chatwork đến bảng công có căn cứ: AI hỗ trợ phân tích, đối chiếu nhân viên/CTV, theo dõi OT và nghỉ có lương, xuất Excel 5 sheet. Windows & Cloud.
 
 ## Topics
 
 `python`, `flask`, `chatwork`, `attendance`, `excel`, `sqlite`, `postgresql`, `windows`, `vercel`, `ai`
+
+## Cấu trúc giới thiệu trên GitHub
+
+README mở đầu bằng giá trị và hình sản phẩm, tiếp theo là 5 tab, ví dụ đối chiếu và 5 sheet. Kiến trúc cùng ưu/nhược điểm dẫn sang [sáu bài phân tích](articles/README.md); hướng dẫn cài và giới hạn có mục riêng. Không biến phần About ngắn thành danh sách công nghệ.
+
+Ảnh giao diện mới dùng database giả lập và phân biệt Local/WebView với Cloud. [Bộ ảnh](PRODUCT_TOUR.md), [kiến trúc](ARCHITECTURE.md) và [nguồn tham khảo](ARCHITECTURE_REVIEW_1.1.0.md) tạo bằng chứng cho nội dung giới thiệu, không gắn nhãn “top 1/top 2” hoặc chứng nhận từ diễn đàn.
 
 ## Giới thiệu ngắn
 

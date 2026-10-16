@@ -1,0 +1,14 @@
+{
+  "browser": "Microsoft Edge headless",
+  "synthetic_database": true,
+  "tabs_captured": [
+    "sync",
+    "export",
+    "history",
+    "settings",
+    "employees"
+  ],
+  "javascript_errors": [],
+  "live_api_called": false,
+  "note": "Browser screenshots do not certify WebView2 or Cloud deployment."
+}

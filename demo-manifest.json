@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "source_count": 5,
+  "official_ot_minutes": 180,
+  "official_paid_break_minutes": 60,
+  "contractor_ot_minutes": 45,
+  "unresolved_events": 1,
+  "notes": "No live API calls; no production database."
+}
