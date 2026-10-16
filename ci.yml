@@ -21,6 +21,7 @@ jobs:
       - run: python tools/release_audit.py .
       - run: python -B tools/privacy_audit.py .
       - run: python tools/check_release_encoding.py .
+      - run: python -B tools/check_documentation.py
   windows-local:
     runs-on: windows-latest
     steps:
