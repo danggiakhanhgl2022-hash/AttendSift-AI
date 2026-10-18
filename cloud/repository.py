@@ -147,6 +147,28 @@ class PostgresRepository:
         with self.connection() as conn:
             return conn.execute('SELECT session_id,month,year,status,error_message,created_at FROM cc_sessions ORDER BY created_at DESC LIMIT 100').fetchall()
 
+    def dashboard_messages(self, room):
+        with self.connection() as conn:
+            count = conn.execute('SELECT count(*) AS total FROM cc_messages WHERE room_id=%s', (room,)).fetchone()['total']
+            rows = conn.execute('SELECT message_id,send_time FROM cc_messages WHERE room_id=%s ORDER BY send_time DESC,message_id DESC LIMIT 500', (room,)).fetchall()
+        for row in rows:
+            row['send_time'] = row['send_time'].isoformat()
+        return count, rows
+
+    def dashboard_history(self):
+        with self.connection() as conn:
+            counts = conn.execute("""SELECT
+                count(*) FILTER (WHERE status='success') AS success_count,
+                count(*) FILTER (WHERE status='failed') AS failed_count,
+                count(*) FILTER (WHERE kind='sync') AS sync_count
+                FROM cc_actions WHERE created_at >= now()-interval '7 days'""").fetchone()
+            events = conn.execute("""SELECT created_at AS action_time,kind AS action_type,status
+                FROM cc_actions WHERE created_at >= now()-interval '7 days'
+                ORDER BY id DESC LIMIT 20""").fetchall()
+        for event in events:
+            event['action_time'] = event['action_time'].isoformat()
+        return {**counts, 'recent_events': events}
+
     def save_analysis(self, sid, owner, *, raw_events, completed, results, status, error=None):
         with self.connection() as conn:
             self._assert_lease(conn, 'session:'+sid, owner)

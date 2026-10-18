@@ -8,6 +8,12 @@ Dùng `.env.example` và phần kiểm tra cấu hình trong `cloud/app.py` làm
 
 ## Sau mỗi lần cập nhật
 
+Cloud sử dụng giao diện Neural Terminal chung với Local. Sau khi chỉnh các tài nguyên giao diện dùng chung trong `static/`, chạy `python tools/sync_cloud_ui.py` để đồng bộ sang `cloud/static/` và `public/static/`. Giữ `cloud.js` cho các thao tác Cloud; `neural-cloud.js` chuyển dữ liệu Cloud sang định dạng dashboard chung. Không thay bằng `app.js` của Local.
+
+Dashboard đọc số tin của phòng đang chọn, tối đa 500 mốc tin gần nhất, tối đa 100 phiên và thống kê hoạt động 7 ngày. Bảng tổng theo người đọc trực tiếp file Excel đã xuất trong Neon (có kiểm tra hash), hoặc file người dùng chọn; file tải lên chỉ được đọc trong bộ nhớ. Phiên đang phân tích không dùng kết quả phiên cũ thay thế.
+
+Kiểm tra giao diện bằng `python tools/verify_cloud_neural_ui.py` sau khi cài requirements dev và UI test, trên máy có Microsoft Edge. Công cụ dùng dữ liệu giả lập, kiểm tra desktop/mobile, các tab cũ, hiệu ứng 3D, lỗi JavaScript/CSP và các yêu cầu mạng lỗi; ảnh và báo cáo nằm trong `artifacts/cloud-neural/` (không đưa lên Git).
+
 1. Kiểm tra deployment đúng commit và trạng thái Ready.
 2. Đăng nhập website, kiểm tra phòng và nhà cung cấp AI.
 3. Đồng bộ, đối chiếu số tin và bộ lọc. Thời gian hiển thị GMT+7.

@@ -6,7 +6,7 @@
     const motifs=[
         '<path class="fx-packet" d="M2 16H76"/><path d="M2 22h20l8-15 12 24 10-15h24"/>',
         '<circle cx="39" cy="18" r="13"/><g class="fx-orbit"><circle cx="39" cy="18" r="17" stroke-dasharray="12 9"/><circle cx="39" cy="1" r="3" fill="currentColor"/></g>',
-        '<g class="fx-equalizer">'+[0,1,2,3,4,5,6,7].map(i=>`<rect x="${6+i*9}" y="${7+i%3*4}" width="4" height="${28-i%3*4}" style="animation-delay:-${i*.19}s"/>`).join('')+'</g>',
+        '<g class="fx-equalizer">'+[0,1,2,3,4,5,6,7].map(i=>`<rect x="${6+i*9}" y="${7+i%3*4}" width="4" height="${28-i%3*4}" data-visual-style="animation-delay:-${i*.19}s"/>`).join('')+'</g>',
         '<g class="fx-beacon"><path d="M39 2 58 18 39 34 20 18Z"/><circle cx="39" cy="18" r="5" fill="currentColor"/></g><path class="fx-packet" d="M0 18H18M60 18H78"/>'
     ];
     document.querySelectorAll('.dash-metrics > .dash-panel').forEach((panel,i)=>{
@@ -21,6 +21,7 @@
         const glyph=document.createElement('div');glyph.className='workspace-signature';glyph.setAttribute('aria-hidden','true');
         glyph.innerHTML=`<svg viewBox="0 0 78 36">${motifs[i%4]}</svg>`;panel.prepend(glyph);
     });
+    applyNeuralStyles(document);
     const indicator=document.createElement('span');indicator.className='motion-indicator';indicator.id='motion-indicator';
     document.querySelector('.dash-toolbar')?.append(indicator);
     function update(level) {

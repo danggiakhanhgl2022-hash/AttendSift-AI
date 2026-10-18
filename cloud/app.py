@@ -595,4 +595,33 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
     def operations():
         return ok(repo.error_summary())
 
+    @app.get('/api/dashboard/state')
+    def dashboard_state():
+        selected = repo.get_setting('room', {'room_id': env.get('CHATWORK_ROOM_ID', ''), 'room_name': ''})
+        room = selected.get('room_id', '')
+        count, messages = repo.dashboard_messages(room) if room else (0, [])
+        return ok({'sync': {'room_id': room, 'room_name': selected.get('room_name', ''),
+                           'message_count': count, 'last_successful_sync': repo.get_setting('last_sync:' + room)},
+                   'messages': messages, 'history': repo.dashboard_history()})
+
+    @app.get('/api/sessions/<sid>/workbook-summary')
+    def workbook_summary(sid):
+        from src.app.workbook_view import read_workbook_summary
+        get_session(sid)
+        value = repo.file(sid)
+        if not value:
+            return ok({'available': False})
+        content = bytes(value['content'])
+        if hashlib.sha256(content).hexdigest() != value['sha256']:
+            raise ValueError('File lịch sử không khớp hash; không đọc dữ liệu đã đổi.')
+        return ok(read_workbook_summary(content, value['filename']))
+
+    @app.post('/api/dashboard/workbook-summary')
+    def uploaded_workbook_summary():
+        from src.app.workbook_view import read_workbook_summary
+        file = request.files.get('file')
+        if file is None:
+            raise ValueError('Chọn file Excel để hiển thị.')
+        return ok(read_workbook_summary(file.read(), file.filename))
+
     return app

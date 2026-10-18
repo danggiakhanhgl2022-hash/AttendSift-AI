@@ -51,7 +51,8 @@
         $('people-leave').textContent=complete?sumField(visible,'leave'):'—';
         $('people-held').textContent=complete?number.format(held):'—';
         const maximum=Math.max(1,...visible.map(p=>p.ot));
-        $('people-rows').innerHTML=visible.length?visible.map((p,i)=>`<tr style="--person-delay:-${i%8*.65}s"><td><code>${escape(p.id)}</code></td><th scope="row">${escape(p.name)}</th><td><span class="people-group ${p.classification}">${p.classification==='official'?'Chính thức':'CTV'}</span></td><td class="people-ot-cell"><strong>${p.ot===null?'—':number.format(p.ot)}</strong><span class="people-ot-track" aria-hidden="true"><i style="width:${Math.max(0,p.ot||0)/maximum*100}%"></i></span></td><td class="people-number">${p.leave===null?'—':number.format(p.leave)}</td><td class="people-number">${p.count}</td></tr>`).join(''):`<tr><td colspan="6" class="people-empty">${complete?'Không có người phù hợp với bộ lọc.':'Xuất Excel từ phiên này hoặc chọn file chấm công để hiển thị đúng các sheet.'}</td></tr>`;
+        $('people-rows').innerHTML=visible.length?visible.map((p,i)=>`<tr data-visual-style="--person-delay:-${i%8*.65}s"><td><code>${escape(p.id)}</code></td><th scope="row">${escape(p.name)}</th><td><span class="people-group ${p.classification}">${p.classification==='official'?'Chính thức':'CTV'}</span></td><td class="people-ot-cell"><strong>${p.ot===null?'—':number.format(p.ot)}</strong><span class="people-ot-track" aria-hidden="true"><i data-visual-style="width:${Math.max(0,p.ot||0)/maximum*100}%"></i></span></td><td class="people-number">${p.leave===null?'—':number.format(p.leave)}</td><td class="people-number">${p.count}</td></tr>`).join(''):`<tr><td colspan="6" class="people-empty">${complete?'Không có người phù hợp với bộ lọc.':'Xuất Excel từ phiên này hoặc chọn file chấm công để hiển thị đúng các sheet.'}</td></tr>`;
+        applyNeuralStyles(panel);
         panel.querySelectorAll('[data-people-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.peopleFilter===filter)));
         $('people-evidence').disabled=uploaded||!current?.session||current?.mode!=='live';
     }
@@ -69,7 +70,7 @@
         if(current?.mode==='demo'){people=project(current.rows);draw();return;}
         if(!current?.session)return;
         try{
-            const response=await fetch('/api/export/'+encodeURIComponent(current.session.session_id)+'/workbook-summary');
+            const response=await fetch((window.NeuralCloud ? '/api/sessions/' : '/api/export/')+encodeURIComponent(current.session.session_id)+'/workbook-summary');
             const payload=await response.json();if(request!==workbookRequest||uploaded)return;
             if(!response.ok||payload.success!==true)throw Error(payload.error||'Không đọc được file Excel.');
             if(payload.data.available)showWorkbook(payload.data);

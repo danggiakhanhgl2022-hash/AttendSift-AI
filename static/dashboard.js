@@ -1,5 +1,13 @@
 /* Read-only dashboard. Existing forms, mutation endpoints and payroll logic are untouched. */
 'use strict';
+// Apply generated visual properties through CSSOM, preserving Cloud's strict CSP.
+function applyNeuralStyles(root) {
+    root.querySelectorAll('[data-visual-style]').forEach(node => {
+        node.style.cssText = node.getAttribute('data-visual-style');
+        node.removeAttribute('data-visual-style');
+    });
+}
+
 (() => {
     const nav = document.querySelector('body > .nav');
     const workspace = document.querySelector('.container');
@@ -126,6 +134,7 @@
     const sessionIsComplete = s => ['review','ready','exported'].includes(s?.status);
     function isPending(r) { return r.review_state === 'pending' || !!r.needs_review || !!r.validation_errors?.length; }
     async function loadLive(signal) {
+        if (window.NeuralCloud) return window.NeuralCloud.load(get, signal, sessionChoice);
         const [sync, employeeRegistry, history, sessions] = await Promise.all([
             get('/api/sync/status',signal),get('/api/employees',signal),get('/api/history/dashboard',signal),get('/api/export?limit=100',signal)
         ]);
@@ -200,7 +209,7 @@
         const shapes=bars ? coords.map((p,i)=>`<rect x="${p[0]-Math.min(16,240/items.length)}" y="${p[1]}" width="${Math.min(32,480/items.length)}" height="${height-pad-p[1]}" rx="2" fill="${color}"><title>${escaped(items[i][0])}: ${items[i][1]}</title></rect>`).join('') : `<path class="chart-area" d="${d} L${width-pad},${height-pad} L${pad},${height-pad}Z" fill="${color}" fill-opacity=".09"/><path class="chart-data-line" d="${d}" fill="none" stroke="${color}" stroke-width="2.5" vector-effect="non-scaling-stroke"/>${coords.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${color}"><title>${escaped(items[i][0])}: ${items[i][1]}</title></circle>`).join('')}`;
         return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${[.25,.5,.75,1].map(n=>`<path d="M0,${Math.round(n*(height-pad))} H600" stroke="#203343" stroke-width="1"/>`).join('')}${shapes}${!bars&&items.length>1?`<path class="chart-tracer" d="${d}" fill="none" stroke="${color}" stroke-width="4" pathLength="100" vector-effect="non-scaling-stroke"/>`:""}<path class="chart-scan" d="M0,0 V138" stroke="${color}" stroke-opacity=".45"/></svg><div class="chart-axis"><span>${escaped(items[0][0])}</span><span>Đỉnh ${nf.format(max)} bản ghi</span><span>${escaped(items.at(-1)[0])}</span></div>`;
     }
-    function flowCard(title, value, caption, index) { return `<div class="flow-channel" style="--flow-delay:${index*.4}s"><span class="flow-port"></span><div><span>${escaped(title)}</span><strong>${escaped(value)}</strong><small>${escaped(caption)}</small></div><svg viewBox="0 0 80 20" aria-hidden="true"><path d="M0 10H28L40 2L52 10H80"/><circle class="flow-dot" r="3" cx="0" cy="10"/></svg></div>`; }
+    function flowCard(title, value, caption, index) { return `<div class="flow-channel" data-visual-style="--flow-delay:${index*.4}s"><span class="flow-port"></span><div><span>${escaped(title)}</span><strong>${escaped(value)}</strong><small>${escaped(caption)}</small></div><svg viewBox="0 0 80 20" aria-hidden="true"><path d="M0 10H28L40 2L52 10H80"/><circle class="flow-dot" r="3" cx="0" cy="10"/></svg></div>`; }
     function readableDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value || 'Chưa có ngày') : date.toLocaleString('vi-VN'); }
     function renderInterpretation() {
         const previousKey=explanationKey;
@@ -274,15 +283,15 @@
         byId('dash-message-scope').textContent=`${nf.format(data.messages.length)} tin gần nhất, tối đa 500 · phòng đang chọn · không phản ánh độ đầy đủ của lịch sử`;
         const spark=root.querySelector('.metric-spark');
         const samples=messageDays.map(p=>p[1]);spark.innerHTML=samples.length?`<polyline points="${samples.map((v,i)=>`${i*240/Math.max(1,samples.length-1)},${40-v/Math.max(...samples)*34}`).join(' ')}" fill="none" stroke="#72e5b8" stroke-width="2"/>`:'';
-        root.querySelectorAll('.metric-bars').forEach((bar,i)=>{const count=finite(Object.values(values)[i+1]);bar.innerHTML=Array.from({length:16},(_,n)=>`<i style="height:${10+(n*7)%20}px;opacity:${n<Math.min(16,count)?'.8':'.15'}"></i>`).join('');});
+        root.querySelectorAll('.metric-bars').forEach((bar,i)=>{const count=finite(Object.values(values)[i+1]);bar.innerHTML=Array.from({length:16},(_,n)=>`<i data-visual-style="height:${10+(n*7)%20}px;opacity:${n<Math.min(16,count)?'.8':'.15'}"></i>`).join('');});
         const states=group(data.sessions,'status');
-        byId('dash-session-chart').innerHTML=states.length?states.map(([name,count])=>`<div><span>${escaped(stateNames[name]||name)}</span><div class="dash-track"><i style="width:${count/Math.max(1,data.sessions.length)*100}%"></i></div><strong>${count}</strong></div>`).join(''):'<p class="dash-empty">Chưa có phiên chấm công</p>';
+        byId('dash-session-chart').innerHTML=states.length?states.map(([name,count])=>`<div><span>${escaped(stateNames[name]||name)}</span><div class="dash-track"><i data-visual-style="width:${count/Math.max(1,data.sessions.length)*100}%"></i></div><strong>${count}</strong></div>`).join(''):'<p class="dash-empty">Chưa có phiên chấm công</p>';
         for(const [id,key] of [['dash-success','success_count'],['dash-failed','failed_count'],['dash-syncs','sync_count']]) byId(id).textContent=nf.format(finite(data.history[key]));
         const events=data.history.recent_events || [];
         byId('dash-activity-chart').innerHTML=svgLine(group(events,'action_time'),'#83bafa');
         const classes=rows?group(rows,'classification'):[];
         const classNames={official:'Chính thức',contractor:'CTV',unresolved:'Chưa xác định'};
-        byId('dash-class-chart').innerHTML=classes.length?`<div class="class-donut" style="background:conic-gradient(#68e4bc 0 ${classes.filter(x=>x[0]==='official').reduce((a,x)=>a+x[1],0)/rows.length*100}%,#79b6f3 0 ${classes.filter(x=>['official','contractor'].includes(x[0])).reduce((a,x)=>a+x[1],0)/rows.length*100}%,#eebf73 0)"><div><strong>${rows.length}</strong><span>bản ghi</span></div></div><div>${classes.map(([name,count])=>`<p><span>${escaped(classNames[name]||name)}</span><strong>${count}</strong></p>`).join('')}</div>`:'<p class="dash-empty">Chưa có kết quả phân tích</p>';
+        byId('dash-class-chart').innerHTML=classes.length?`<div class="class-donut" data-visual-style="background:conic-gradient(#68e4bc 0 ${classes.filter(x=>x[0]==='official').reduce((a,x)=>a+x[1],0)/rows.length*100}%,#79b6f3 0 ${classes.filter(x=>['official','contractor'].includes(x[0])).reduce((a,x)=>a+x[1],0)/rows.length*100}%,#eebf73 0)"><div><strong>${rows.length}</strong><span>bản ghi</span></div></div><div>${classes.map(([name,count])=>`<p><span>${escaped(classNames[name]||name)}</span><strong>${count}</strong></p>`).join('')}</div>`:'<p class="dash-empty">Chưa có kết quả phân tích</p>';
         byId('dash-event-chart').innerHTML=svgLine(rows?group(rows,'event_type'):[],'#a3b8ff',true);
         byId('dash-log').replaceChildren();
         if(!events.length) {const li=document.createElement('li');li.textContent='Chưa có hoạt động trong 7 ngày gần đây';byId('dash-log').append(li);}
@@ -293,6 +302,7 @@
         root.querySelector('.dash-status-right').textContent=mode==='demo'?'Trình diễn cập nhật mỗi 3 giây · không lưu dữ liệu':'Đọc dữ liệu mỗi 15 giây khi mở tổng quan';
         byId('dash-flow-mode').textContent=mode==='demo'?'TRÌNH DIỄN GIẢ LẬP':'CHUYỂN ĐỘNG MINH HỌA / BỘ ĐẾM TỪ ỨNG DỤNG';
         window.dispatchEvent(new CustomEvent('dashboard:data',{detail:{messages:finite(data.sync.message_count),events:rows?.length||0,pending:pending||0,mode}}));
+        applyNeuralStyles(root);
         renderInterpretation(); renderProcess();
         window.dispatchEvent(new CustomEvent('dashboard:summary',{detail:{rows:data.rows,session:data.latest,mode,rosterActive:data.rosterActive,skippedSession:data.skippedSession,currentRosterActive:data.employees.filter(e=>e.active).length}}));
     }
