@@ -57,7 +57,7 @@ def main():
                 'exe_size_bytes':len(executable), 'verification':verification,
                 'python_required_on_target':False, 'credentials_included':False,
                 'employee_data_included':False, 'code_signed':False}
-    guide = (ROOT / 'docs/CHUYEN_MAY_WINDOWS.md').read_text(encoding='utf-8')
+    guide = (ROOT / 'docs/INSTALL_WINDOWS.md').read_text(encoding='utf-8')
     page = '''<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bắt đầu — AttendSift-AI</title><style>body{font:16px/1.7 "Segoe UI",sans-serif;margin:0;background:#07121b;color:#eaf2f8}main{max-width:1040px;margin:auto;padding:48px 24px}h1{font-size:36px;margin:8px 0}h2{color:#b9dfed}p{color:#bed0dc}section{background:#122331;padding:24px;border-radius:18px;margin:20px 0}code{background:#06121c;padding:3px 7px;border-radius:5px}a{color:#b9dfed}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.8 "Segoe UI",sans-serif}.tag{color:#9bc9dd}</style><main>
 <div class="tag">Bộ phận AI · Nhóm phát triển</div><h1>AttendSift-AI cho Windows</h1><p>Bản portable: giải nén toàn bộ ZIP rồi chạy, không cần cài Python.</p>

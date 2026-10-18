@@ -1,0 +1,32 @@
+.people-summary{margin-bottom:16px;border-color:#2f6471;background:radial-gradient(ellipse at 90% 0,#0e51482e,transparent 55%),linear-gradient(145deg,#0c1d2c,#07131e);--people-aqua:#78f3d6}
+.people-summary>header h2{font-size:18px;margin:6px 0 0;color:#e1f5f4}.summary-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.summary-top p{color:#90b4c5;font:11px Consolas,monospace;overflow-wrap:anywhere;margin:0 0 12px}.summary-top>span{font:9px Consolas,monospace;letter-spacing:.1em;color:var(--people-aqua);margin-bottom:12px}
+.people-summary[data-review='true'] #people-status,.people-summary[data-stale='true'] #people-status{color:#f0bd72}
+.people-roster-warning{padding:10px 12px;border:1px solid #927044;background:#372b1855;color:#f0cf94;font-size:11px;line-height:1.7;margin:8px 0 12px}.people-roster-warning[hidden]{display:none}
+.people-file-tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.people-file-tools button{padding:7px 10px;font-size:10px;background:#102637;color:#a4d5dc;border:1px solid #355769;border-radius:4px}
+.summary-orbit{width:32px;height:32px;flex-shrink:0;border:1px solid #356875;border-top:2px solid #94ffdf;border-radius:50%;position:relative;animation:people-orbit calc(var(--panel-cycle,3s) * 1.4) linear infinite!important;box-shadow:0 0 18px #78f3d622}
+.summary-orbit:after{content:'';position:absolute;inset:7px;border:1px dashed #86d8ff;border-radius:50%;animation:people-orbit var(--panel-cycle,3s) linear infinite reverse}
+.people-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:4px 0 18px}
+.people-kpis article{position:relative;padding:16px;border:1px solid #244557;background:#071520b0;overflow:hidden;border-radius:8px;--people-color:#73f0cf}
+.people-kpis article:nth-child(2){--people-color:#73d8ff}.people-kpis article:nth-child(3){--people-color:#bdabff}.people-kpis article:nth-child(4){--people-color:#edbe78}
+.people-kpis article>span{display:block;color:#96b2c3;font-size:10px}.people-kpis strong{display:block;color:var(--people-color);font:30px/1.3 Consolas,monospace;margin-top:10px}
+.people-kpis article>i{position:absolute;bottom:0;left:0;width:30%;height:3px;background:linear-gradient(90deg,transparent,var(--people-color));box-shadow:0 0 9px var(--people-color);animation:people-signal var(--panel-cycle,3s) linear infinite;pointer-events:none}
+.people-kpis article:nth-child(2)>i{animation-delay:-.8s}.people-kpis article:nth-child(3)>i{animation-delay:-1.6s}.people-kpis article:nth-child(4)>i{animation-delay:-2.4s}
+.people-tools{display:flex;align-items:end;gap:14px;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}.people-filters{display:flex;gap:6px;flex-wrap:wrap}
+.people-tools button{font-size:11px;min-height:33px;padding:7px 12px;border:1px solid #305163;border-radius:6px;background:#0c2131;color:#a9c2d1}
+.people-filters [aria-pressed='true']{background:#18463f;border-color:#63c6ad;color:#abffe4;box-shadow:inset 0 0 16px #72ffce12}
+.people-tools label{display:grid;gap:5px;color:#8cafc1;font-size:10px;flex:1;max-width:260px}.people-tools input{width:100%;min-width:0;background:#081723;border:1px solid #2b4b60;color:#dbefed;border-radius:6px;padding:9px 11px;font-size:12px}
+.people-table-wrap{overflow:auto;max-height:370px;scrollbar-color:#2b5e6a #07131c}.people-summary table{border-collapse:collapse;width:100%;min-width:660px;font-size:12px}
+.people-caption{text-align:left;color:#81a6b7;font-size:10px;padding:0 0 12px;caption-side:top}.people-summary thead th{position:sticky;top:0;z-index:1;background:#10283a;color:#c3e5eb;text-align:left;font-weight:500;font-size:11px;padding:12px}
+.people-summary tbody tr{background-image:linear-gradient(95deg,transparent 30%,#73edce0d 49%,transparent 68%);background-size:250% 100%;animation:people-row calc(var(--panel-cycle,3s) * 2.5) linear infinite;animation-delay:var(--person-delay)}
+.people-summary tbody td,.people-summary tbody th{border-bottom:1px solid #1e3a49;padding:13px 12px;text-align:left;vertical-align:middle;overflow-wrap:anywhere;max-width:260px}
+.people-summary tbody th{color:#d2e8eb;font-weight:500}.people-summary tbody code{font:10px Consolas,monospace;color:#6d99ac}.people-summary tbody tr:hover{background-color:#10332f}
+.people-group{display:inline-block;border:1px solid #2e665c;border-radius:20px;padding:3px 9px;font-size:9px;color:#80e3bf;white-space:nowrap}.people-group.contractor{border-color:#5c5380;color:#c3adff}
+.people-ot-cell{min-width:145px}.people-ot-cell strong{font:19px Consolas,monospace;color:#7ce9d6}.people-number{font:15px Consolas,monospace;color:#b8d8e5}
+.people-ot-track{display:block;height:3px;background:#173343;margin-top:7px;border-radius:3px;overflow:hidden}.people-ot-track i{display:block;height:100%;background:#62d2c7;position:relative;overflow:hidden}.people-ot-track i:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,#d6fff8,transparent);animation:people-track calc(var(--panel-cycle,3s) * .7) linear infinite;animation-delay:var(--person-delay)}
+.people-empty{height:90px;text-align:center!important;color:#7d9cae}.people-summary>footer{display:flex;gap:10px;align-items:center;margin-top:14px}.people-summary>footer p{font-size:10px;color:#7c9faf;line-height:1.7;margin:0}
+.people-signal{width:6px;height:6px;border-radius:50%;background:#79e5c4;flex:0 0 6px;box-shadow:0 0 10px #79e5c4;animation:people-pulse 2s ease-in-out infinite alternate}
+@keyframes people-orbit{to{transform:rotate(360deg)}}@keyframes people-signal{from{transform:translateX(-100%)}to{transform:translateX(440%)}}
+@keyframes people-row{from{background-position:150% 0}to{background-position:-100% 0}}@keyframes people-track{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@keyframes people-pulse{from{opacity:.35;transform:scale(.8)}to{opacity:1;transform:scale(1.2)}}
+@media(max-width:700px){.people-summary>header h2{font-size:16px}.people-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.people-kpis article{padding:12px}.people-tools{gap:10px}.people-tools label{max-width:none;min-width:140px}.people-summary>header>div{min-width:0}.people-summary table{min-width:620px}}

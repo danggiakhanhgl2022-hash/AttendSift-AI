@@ -4,8 +4,8 @@ import re
 import sys
 
 VIETNAMESE_FILES = [
-    "README.md", "CHANGELOG.md", "docs/SETUP.md",
-    "docs/GITHUB_PRIVACY.md", "docs/MAU_BAO_CAO_CHAM_CONG.md",
+    "README.md", "CHANGELOG.md", "docs/INSTALL_WINDOWS.md",
+    "docs/PRIVACY_AND_SECURITY.md", "docs/MAU_BAO_CAO_CHAM_CONG.md",
 ]
 
 

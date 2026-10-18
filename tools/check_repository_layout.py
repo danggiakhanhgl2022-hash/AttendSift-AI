@@ -13,6 +13,13 @@ ROOT_FILES = {
     'requirements.txt', 'requirements-build.txt', 'requirements-desktop.txt',
     'requirements-dev.txt', 'requirements-local.txt',
     'requirements-ui-test.txt', 'requirements-web.txt',
+    'MO_UNG_DUNG_5D.bat', 'MO_DASHBOARD_5D.bat',
+    'HUONG_DAN_5D.md', 'HUONG_DAN_DASHBOARD_5D.md',
+    'KIEM_TRA_GIAO_DIEN_5D.json', 'KIEM_TRA_EXE_5D.json',
+    'KIEM_TRA_DASHBOARD_5D.json', 'KIEM_TRA_EXE_DASHBOARD_5D.json',
+    'GIAO_DIEN_5D_DESKTOP.png', 'GIAO_DIEN_5D_MOBILE.png',
+    'DASHBOARD_5D_DESKTOP.png', 'DASHBOARD_5D_MOBILE.png',
+    'KIEM_TRA_ORB_5D.json', 'ORB_5D_SETTINGS.png', 'ORB_5D_MOBILE.png',
 }
 ROOT_DIRS = {'.github', 'cloud', 'docs', 'public', 'src', 'static',
              'templates', 'tests', 'tools'}
