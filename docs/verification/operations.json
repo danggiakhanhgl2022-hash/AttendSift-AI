@@ -1,0 +1,15 @@
+{
+  "radial_branches_open_all_five_original_tabs": true,
+  "branch_boxes_do_not_overlap": true,
+  "busy_then_success_only_after_success_response": true,
+  "original_response_body_preserved": true,
+  "failed_response_never_shows_success": true,
+  "risk_acceptance_not_automatically_confirmed": true,
+  "network_failure_not_reported_as_success": true,
+  "orb_autoplays_even_when_system_reduces_motion": true,
+  "request_method_and_body_preserved": true,
+  "intentional_mock_post_count": 5,
+  "desktop_mobile_no_overflow": true,
+  "reduced_motion_verified": true,
+  "javascript_errors": []
+}

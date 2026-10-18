@@ -19,4 +19,4 @@
 
 **Chất lượng nguồn:** Chatwork API hiện chỉ tải được một cửa sổ tin nhất định qua từng lần truy vấn; khi lịch sử trước đó chưa được thu thập đầy đủ, xuất Excel phải ghi rõ rủi ro thiếu dữ liệu. Không lấy khoảng trống nguồn làm bằng chứng vắng mặt.
 
-Các quy tắc này mô tả phiên hiện tại có danh sách nhân viên; nhánh tương thích không có registry có thể giữ cách xử lý CTV cũ. Tạo phiên mới để dùng quy tắc mới. Xem [chính sách nghỉ có lương](CHINH_SACH_NGHI_30_PHUT_CO_LUONG.md) và [AI/bằng chứng](articles/02-AI_VA_BANG_CHUNG.md).
+Các quy tắc này mô tả phiên hiện tại có danh sách nhân viên; nhánh tương thích không có registry có thể giữ cách xử lý CTV cũ. Tạo phiên mới để dùng quy tắc mới. Xem [chính sách nghỉ có lương](CHINH_SACH_NGHI_30_PHUT_CO_LUONG.md) và [AI/bằng chứng](ARCHITECTURE.md).

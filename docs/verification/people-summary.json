@@ -1,0 +1,9 @@
+{
+  "contractor_totals_match_actual_excel": true,
+  "pending_and_excluded_never_added": true,
+  "multiple_events_group_by_identity_and_event_type": true,
+  "continuous_summary_animation": true,
+  "filters_search_mobile_verified": true,
+  "javascript_errors": [],
+  "read_only_requests": true
+}

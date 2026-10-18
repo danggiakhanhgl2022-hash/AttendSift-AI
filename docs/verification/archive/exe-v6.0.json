@@ -1,0 +1,16 @@
+{
+  "version": "V6.0",
+  "runtime_passed": true,
+  "bundled_ui_assets_matching_source": 11,
+  "browser_tests_passed": true,
+  "two_video_references_reviewed": true,
+  "design_score_subjective_out_of_10": 8,
+  "two_scene_motion_verified": true,
+  "scene_switch_preserves_totals": true,
+  "people_summary_matches_excel_fixture": true,
+  "installed_exe_updated": true,
+  "business_files_unchanged": 46,
+  "real_chatwork_ai_tested": false,
+  "native_webview_manual_tested": false,
+  "exe_sha256": "687b1351616511b0e53dcc0a2440c5551eedca72ee364a00c8c2387bd7c769c2"
+}

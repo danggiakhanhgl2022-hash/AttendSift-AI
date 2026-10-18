@@ -4,7 +4,7 @@
 
 ## Đã làm trong gói portfolio
 
-- Không đóng gói SQLite, khóa DPAPI, `.env` thật, Excel kết quả, log hay backup.
+- **Chỉ gói mã nguồn công khai được rà soát** mới loại trừ SQLite, khóa DPAPI, `.env` thật, Excel kết quả, log và backup. Bộ ZIP bàn giao cho máy chạy phải được kiểm tra riêng trước khi chia sẻ; không coi ZIP có sẵn là bản sạch.
 - Ảnh chụp thật được **che opaque** toàn bộ vùng chứa dòng nhân sự/mã tin, không chỉ làm mờ. Video gốc **không** được đưa vào bản công khai.
 - File `.env.example` chỉ có tên biến hoặc placeholder. `.gitignore` hạn chế các file runtime nhạy cảm.
 - Local HTTP bind loopback `127.0.0.1`; mã API kiểm tra Host, Origin và CSRF cho request sửa đổi.
