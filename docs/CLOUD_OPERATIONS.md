@@ -18,7 +18,17 @@ Dùng `.env.example` và phần kiểm tra cấu hình trong `cloud/app.py` làm
 
 Lịch `0 6 * * *` trong vercel.json tương ứng mốc dự kiến 13:00 giờ Việt Nam mỗi ngày. Cấu hình lịch không cam kết thời điểm thực thi chính xác của hosting.
 
-Endpoint yêu cầu Bearer CRON_SECRET tối thiểu 32 ký tự. Chỉ cron đã xác thực được ngoại lệ host khi deployment URL thay đổi. Không đưa token vào URL hoặc ảnh hỗ trợ.
+Endpoint yêu cầu Bearer CRON_SECRET tối thiểu 32 ký tự. Cron đã xác thực được ngoại lệ host khi deployment URL thay đổi. Không đưa token vào URL hoặc ảnh hỗ trợ.
+
+## Sửa lỗi “Host không hợp lệ” trên Vercel
+
+Khi `VERCEL=1`, ứng dụng tự thêm chính xác các hostname từ `VERCEL_URL`, `VERCEL_BRANCH_URL` và `VERCEL_PROJECT_PRODUCTION_URL` vào danh sách cho phép. Không tin `X-Forwarded-Host`, không mở toàn bộ `*.vercel.app`. Các biến này phải là hostname thuần, không có `https://`, cổng hoặc đường dẫn.
+
+Với tên miền riêng, đặt `CHAMCONG_ALLOWED_HOSTS` thành danh sách hostname cách nhau bằng dấu phẩy, ví dụ `attend-sift-ai.vercel.app,attendance.example.com`. Khi chạy ngoài Vercel, biến này vẫn bắt buộc. Nếu Vercel chưa cung cấp biến hệ thống, bật **Automatically expose System Environment Variables** trong Project Settings rồi redeploy. Sau khi sửa biến môi trường phải tạo deployment mới.
+
+Kiểm tra `/login` trên URL production và deployment mới: trả 200; `/` khi chưa đăng nhập chuyển tới `/login`; `/api/config` khi chưa đăng nhập trả 401. Host ngoài danh sách phải tiếp tục trả 403. Không cần thay session secret hoặc mật khẩu để sửa lỗi host.
+
+Tham chiếu: [biến hệ thống Vercel](https://vercel.com/docs/environment-variables/system-environment-variables), [an toàn Host header trong Flask](https://flask.palletsprojects.com/en/stable/web-security/#host-header-validation).
 
 Mỗi lần cron hợp lệ: dọn dữ liệu quá hạn trong một giao dịch PostgreSQL, ghi số lượng dọn, rồi đồng bộ Chatwork. Nếu đồng bộ sau đó lỗi, bước dọn đã hoàn tất. Nếu dọn lỗi, rollback giao dịch dọn và cron trả lỗi. Phiên đang có lease được hoãn tới lần sau.
 

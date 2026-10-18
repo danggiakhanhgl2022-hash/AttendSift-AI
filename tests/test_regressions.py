@@ -79,7 +79,8 @@ def test_excel_summary_includes_first_row(tmp_path):
 
 def test_webview_uses_supported_window_arguments():
     import inspect
-    import webview
+    import pytest
+    webview = pytest.importorskip('webview', reason='Optional desktop dependency; exercised by windows-local CI')
     from src.app.launcher import open_webview
     signature = inspect.signature(webview.create_window)
     with patch.object(webview, 'create_window', autospec=True) as create:

@@ -41,6 +41,14 @@ venv/
 build/
 dist/
 release/
+BO_CHAY_5D/
+BO_DASHBOARD_5D/
+BO_DASHBOARD_ORB_5D/
+BO_CAP_NHAT_5D/
+build-5d/
+build-dashboard/
+build-orb/
+build-panels/
 *.egg-info/
 .vercel/
 .vscode/
@@ -61,3 +69,8 @@ NHAN_VIEN_RIENG*.json
 *.dump
 *.zip.sha256
 .venv-build/
+
+artifacts/
+*.mp4
+*.webm
+build-*/

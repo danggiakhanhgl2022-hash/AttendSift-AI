@@ -16,6 +16,7 @@ from flask import Flask, jsonify, render_template, request, send_file, session, 
 from werkzeug.exceptions import HTTPException
 from .security import validate_admin_hash, verify_admin_password, token_digest
 from .repository import LeaseBusy, PostgresRepository
+from .hosts import allowed_hosts
 from src.adapters.ai_adapters import create_ai_adapter, AIHTTPError, AIResponseError, PROPERTIES
 from src.adapters.chatwork_adapter import ChatworkAdapter, ChatworkAPIError
 from src.services.identity_context import identity_hints, repair_identity_evidence, align_event_identities
@@ -146,9 +147,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
     app.logger.setLevel(logging.WARNING)
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
     app.extensions['repository'] = repo
-    hosts = {host.strip().lower() for host in env.get('CHAMCONG_ALLOWED_HOSTS', '').split(',') if host.strip()}
-    if not hosts:
-        raise RuntimeError('Cần CHAMCONG_ALLOWED_HOSTS; không mặc định mở dữ liệu nhân viên ra Internet.')
+    hosts = allowed_hosts(env)
 
     def cron_authorized():
         """Trust a Cron request only after verifying Vercel's secret, not its rotating host."""
