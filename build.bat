@@ -6,7 +6,7 @@ if errorlevel 1 exit /b 1
 if errorlevel 1 exit /b 1
 .venv\Scripts\python.exe -B -m pytest -q -p no:cacheprovider tests
 if errorlevel 1 exit /b 1
-.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean --distpath release --workpath build ChamCong.spec
+.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean --distpath BO_CAP_NHAT_5D --workpath build-panels ChamCong.spec
 if errorlevel 1 exit /b 1
-if exist HUONG_DAN_SU_DUNG.pdf copy /y HUONG_DAN_SU_DUNG.pdf release\HUONG_DAN_SU_DUNG.pdf >nul
-echo Build complete: release\ChamCong.exe
+if exist HUONG_DAN_SU_DUNG.pdf copy /y HUONG_DAN_SU_DUNG.pdf BO_CAP_NHAT_5D\HUONG_DAN_SU_DUNG.pdf >nul
+echo Build complete: BO_CAP_NHAT_5D\ChamCong.exe

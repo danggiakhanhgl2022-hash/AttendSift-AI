@@ -1,84 +1,123 @@
+<div align="center">
+
 # AttendSift AI
 
-**Turn Chatwork reports into attendance records that can be reviewed against their source.**
+### From Chatwork messages to auditable attendance reports.
 
-![AttendSift AI overview](docs/images/story/cover.svg)
+**AI-assisted extraction · Rule-based validation · Human review · Five-sheet Excel exports**
 
-AI Department | Dang Gia Khanh | Version 1.1.0
+[**Windows setup**](docs/INSTALL_WINDOWS.md) · [**Business rules**](docs/BUSINESS_RULES.md) · [**Architecture**](docs/ARCHITECTURE.md) · [**Tiếng Việt**](README.md)
 
-[Vietnamese documentation](README.md) · [Windows setup](docs/INSTALL_WINDOWS.md) · [Verification](docs/VERIFICATION_1.1.0.md)
+<img src="docs/images/neural-terminal.png" alt="AttendSift AI Neural Terminal Windows dashboard using synthetic demonstration data" width="100%">
 
-## Product, workflow and engineering story
+<sub>Neural Terminal V6.2 for Windows Local. Screenshots use synthetic demonstration data, not real employee records.</sub>
 
-The repository contains both Windows Local and the Cloud backend. Local uses a web interface inside WebView2 or a loopback browser; it does not share its SQLite data or credentials automatically with the Cloud PostgreSQL deployment.
+</div>
 
-![Local interface with synthetic data](docs/images/story/ui-sync.png)
+## The problem
 
-This screenshot shows the actual Local application running against a temporary demo database. All people, messages and room information are fictional. It is not evidence of a deployed Cloud instance.
+Chatwork attendance messages are not structured timesheets. A single message can report overtime for several employees; the event date may differ from the message date; names may be ambiguous. Automatically including uncertain AI extractions in payroll can lead to mistakes.
 
-Five tabs organize the work: synchronization, attendance export, history, settings and employees. A session captures the roster and source context. AI suggests events, source reconciliation and validation check them, and unresolved rows remain outside payroll totals until reviewed.
+**AttendSift AI** collects and preserves source messages, extracts candidate events with AI, validates identity/date/duration against business rules, keeps ambiguous rows for human review, and exports an **auditable Excel workbook**. AI assists the operator; it does **not** make final attendance decisions on its own.
 
-![Synthetic workbook summary](docs/images/story/03-summary.png)
+| Situation | How AttendSift AI responds |
+| --- | --- |
+| One person reports overtime for a team | Extracts individual events; does not split a shared duration equally |
+| Message date differs from work date | Uses the documented event date when supported by the source |
+| Multiple employees match a nickname | Sends the row for review, rather than arbitrarily assigning an employee |
+| Employees and contractors | Keeps official employee and contractor (CTV) results separate |
+| An overtime total needs explanation | Links the event back to its Source ID and session snapshot |
 
-The workbook provides five views: original messages, official employee events, official totals, review items and contractors. These illustrations are rendered from values exported by the application, not screenshots or acceptance results from Microsoft Excel or WPS.
+## Product preview
 
-| Read more | Focus |
-|---|---|
-| [Product tour](docs/PRODUCT_TOUR.md) | All five tabs and worksheets, with image provenance |
-| [Architecture](docs/ARCHITECTURE.md) | People, external systems, deployments and module responsibilities |
-| [Six articles](docs/articles/README.md) | User workflow, AI evidence, Excel handoff, Local/Cloud, trade-offs and verification |
-| [Source review](docs/ARCHITECTURE_REVIEW_1.1.0.md) | InfoQ, Stack Overflow Blog, C4, Diátaxis and GitHub Docs; selected ideas and limitations |
-| [Current verification](docs/UPDATE_2026-10-16.md) | 398 Python tests passed on the recorded Windows environment; separate live acceptance still required |
+The **Windows Local V6.2 Neural Terminal** displays synchronization, analysis sessions, review status, and read-only attendance totals, with motion effects that do not modify stored values or trigger extra AI requests. The former secondary Operations Room mode has been removed.
 
-The architecture keeps a deployable application divided into modules for each environment. Shared policy reduces divergence, but two orchestration/storage paths still require regression checks. Snapshots improve explainability and cost storage; Excel eases handoff and creates copy/version responsibilities. No forum ranking or endorsement is claimed.
+<div align="center"><img src="docs/images/people-summary.png" alt="Excel-backed employee overview using synthetic records" width="92%"></div>
 
-AttendSift AI stores source messages, uses an AI provider to assist with event extraction, applies business rules, and lets an operator review the results before exporting a five-sheet Excel workbook. It handles messages mentioning multiple people and dates, with separate overtime amounts for each person.
+The five application areas are **Sync, Export, History, Settings, and Employees**. You can also view [the animated dashboard](docs/images/neural-motion.gif), [sync screen](docs/images/ui-sync.png), [export screen](docs/images/ui-export.png), and [employee management screen](docs/images/ui-employees.png).
 
-## Update: 16 October 2026
+## Five-sheet Excel report
 
-The existing Local/Cloud features remain available. This update adds a source-verified 30-minute paid early departure, improves roster matching, and allows Excel export while unresolved rows remain in the review worksheet.
+| Sheet | Purpose |
+| --- | --- |
+| `1_TIN_NHAN_GOC` | Original messages, timestamps, Source IDs, linked events |
+| `2_CHAM_CONG` | Official employee attendance details |
+| `3_TONG_KET` | Official employee summary |
+| `4_CAN_KIEM_TRA` | Pending or unsupported events, not yet counted |
+| `5_CTV` | Contractor details and totals |
 
-- Only an explicit request by the person concerned for 30 minutes of early departure without make-up work qualifies. Count reported dates only; do not fill missing dates.
-- Paid minutes do not increase unpaid minutes, OT, or leave days. The workbook adds column AB in attendance, O in the summary, and L in contractor reporting.
-- Resolve full names, unique given names, middle-name suffixes and registered aliases against the active roster. Ambiguous identities and conflicting evidence stay out of totals.
-- Export first, inspect worksheet 4, then reopen the session to correct and confirm records before exporting again.
-- Ordinary leave and annual-leave requests remain in source messages; do not automatically calculate leave days from AI guesses.
+The Local overview reads the official totals from sheets 2 and 3, and contractor totals from sheet 5. You can inspect a different workbook and return to the session's workbook. Reading the Excel file **does not write to it, reclassify personnel or recalculate formulas**. Missing cached formula results are not silently treated as zero.
 
-See the [paid-break policy](docs/CHINH_SACH_NGHI_30_PHUT_CO_LUONG.md) and [current verification](docs/UPDATE_2026-10-16.md). New analysis sessions use the updated rules; Windows executables must be rebuilt separately.
+## Getting started
 
-## Deployment options
+### Option A: Windows executable
 
-| | Windows Local | Cloud website |
-|---|---|---|
-| Storage | Per-installation SQLite | Neon PostgreSQL |
-| Launch | Portable EXE or Python source | Browser with authentication |
-| Scheduling | Windows Task Scheduler | Vercel Cron |
-| Automatic retention | Cloud policy does not apply | Three calendar months |
+1. Obtain a **clean, approved Windows distribution** separately from the repository and unzip it.
+2. Run `1_CHAY_UNG_DUNG/ChamCong.exe` on a compatible Windows 10/11 x64 machine. Python is not required; WebView2/browser prerequisites may apply.
+3. Configure the employee roster, Chatwork room, and chosen AI provider in the application.
+4. Sync messages, select a reporting period, review pending items, and export Excel.
 
-These deployments do not automatically share data or API credentials. Local processing still sends relevant content to the configured AI service. Internet access and API quota are required for remote operations.
+**Do not upload the runtime folder or handoff ZIP to GitHub.** They may contain local databases, credentials, logs, or attendance output. [Windows guide](docs/INSTALL_WINDOWS.md)
 
-## Windows quick start
+### Option B: Run from source on Windows (Python 3.11)
 
-For a verified portable bundle, extract the entire ZIP, read `DOC_TRUOC_KHI_CHAY.html`, run `KIEM_TRA.bat`, then `BAT_DAU.bat`. The target machine does not need Python. Enter the recipient's Chatwork and AI credentials; do not transfer Windows-encrypted credentials from another account.
+```powershell
+git clone https://github.com/danggiakhanhgl2022-hash/AttendSift-AI.git
+cd AttendSift-AI
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements-local.txt
+.venv\Scripts\python.exe tools/run_local.py
+```
 
-For source installation, use Python 3.11 x64 and run `CAI_DAT_WINDOWS.bat`, `KIEM_TRA_LOCAL_WINDOWS.bat`, then `CHAY_LOCAL_WINDOWS.bat`. The default address is `http://127.0.0.1:8766`. Source ZIPs do not contain a prebuilt EXE.
+The Local app runs at **http://127.0.0.1:8766**, with SQLite storage on the machine. Chatwork and AI requests require appropriately configured network access. Windows BAT launchers and an EXE build script are also available.
 
-## Version 1.1.0
+### Option C: Cloud deployment
 
-- Refresh cloud messages after synchronization and improve filter feedback.
-- Display cloud message timestamps in Vietnam time with an unbroken date/time string.
-- Authenticate cron independently of a rotating deployment hostname, only on its exact endpoint.
-- Remove expired cloud messages, analysis sessions, reports and activity history during authorized daily cron runs; keep connection settings.
-- Consolidate setup, handoff, release and operations documentation.
+Cloud uses a separate Flask/PostgreSQL stack, hosting configuration, and secrets. **Cloud and Local do not automatically synchronize** databases, employee directories, or credentials. The Neural Terminal V6.2 dashboard described here belongs to **Windows Local** and should not be assumed available on Cloud. See the [Cloud operations guide](docs/CLOUD_OPERATIONS.md) and [environment variable template](.env.example).
 
-Messages expire three calendar months after sending. Analysis sessions and their source snapshots/results/Excel expire three months after session creation. Download reports needed for long-term storage before expiry. Retention does not guarantee that three months of usage will fit a free hosting plan.
+## How it works
 
-## Validation and limitations
+```mermaid
+flowchart LR
+    A[Chatwork] --> B[Session source snapshot]
+    B --> C[AI event extraction]
+    C --> D[Source, date, identity validation]
+    D --> E{Supported?}
+    E -->|Yes| F[Employee / contractor]
+    E -->|Needs review| G[Review queue]
+    F --> H[Five-sheet Excel]
+    G --> H
+    H --> I[Read-only dashboard]
+```
 
-This is an internal release candidate. See the verification report for measured results and remaining acceptance tasks. Chatwork's recent-message window may omit earlier history. AI results require human review. Clean-machine Windows acceptance, live provider validation and Microsoft Excel checks must be recorded separately.
+The codebase separates Local services (`src/`), Cloud (`cloud/`), web assets (`static/`, `public/`, `templates/`), test suites (`tests/`), tools (`tools/`), and documentation (`docs/`). Some identical static assets are intentionally placed in different delivery paths.
 
-No open-source license has been granted; see [LICENSE_DECISION.md](LICENSE_DECISION.md). Keep credentials, employee data and runtime databases out of public uploads. Report issues using synthetic examples through the repository's contribution and security guidance.
+## Verification and limitations
 
-## Personnel update
+The maintainer's **17 October 2026** Local test report records **405 passing Python tests**. This is a recorded test result, **not** a measured AI accuracy rate, service-level commitment, or independent production certification.
 
-Version 1.1.0 adds employee management, immutable roster snapshots per session and separate contractor reporting in a fifth worksheet. The October update keeps ordinary leave source-only and adds paid-break reporting. Private employee bootstrap data is distributed separately from public source. Ambiguous or conflicting identities require review. Existing session snapshots remain available in history.
+```powershell
+.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests
+.venv\Scripts\python.exe tools/check_documentation.py
+.venv\Scripts\python.exe tools/privacy_audit.py .
+```
+
+Synthetic-data tests do not establish the completeness of the Chatwork history, behavior of live AI/API accounts, desktop WebView compatibility on every machine, or suitability of unreviewed events for payroll. [Testing scope](docs/TESTING.md) · [Changelog](CHANGELOG.md)
+
+## Privacy, license and support
+
+Never commit API tokens, `.env`, databases, `*.credentials`, real staff rosters, logs, or actual attendance workbooks. Content sent for AI extraction may leave the local environment for the operator-selected AI service.
+
+For support, open a [GitHub issue](https://github.com/danggiakhanhgl2022-hash/AttendSift-AI/issues) with reproducible steps and **sanitized** diagnostic information. Review [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md) before contributing.
+
+**Licensing:** The project does not currently publish an open-source license. Public source visibility does not imply permission to copy or redistribute; see [LICENSE_DECISION.md](LICENSE_DECISION.md).
+
+<div align="center">
+
+**AttendSift AI · Đặng Gia Khánh · AI Department**
+
+[Documentation](docs/README.md) · [Privacy and security](docs/PRIVACY_AND_SECURITY.md) · [Tiếng Việt](README.md)
+
+<sub>Independent project; not endorsed by Chatwork or any AI provider.</sub>
+
+</div>

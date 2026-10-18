@@ -1,201 +1,159 @@
-<p align="center"><img src="docs/images/story/poster-technology-v3.png" alt="AI đọc tin nhắn. Dữ liệu có căn cứ. Minh họa Chatwork API, AI trích xuất, quy tắc đối chiếu và Excel 5 sheet; trường hợp chưa rõ cần người phụ trách xác nhận." width="100%"></p>
-
-*Minh họa kiến trúc bằng dữ liệu giả lập; không phải ảnh chụp giao diện ứng dụng.*
+<div align="center">
 
 # AttendSift AI
 
-**Biến báo cáo Chatwork thành bảng chấm công có thể đối chiếu.**
+### Từ tin nhắn Chatwork đến bảng chấm công có thể đối chiếu.
 
-Dành cho người phụ trách tổng hợp tăng ca, đi trễ và về sớm từ tin nhắn tự do. AttendSift AI giữ tin nguồn, dùng AI trích xuất sự kiện, đối chiếu danh sách nhân viên và xuất **Excel 5 sheet**. Trường hợp chưa rõ được tách riêng, chưa cộng vào tổng công.
+**Trích xuất bằng AI · Kiểm tra theo quy tắc · Xác nhận bởi con người · Xuất Excel 5 sheet**
 
-[**Xem giao diện và Excel mẫu →**](docs/PRODUCT_TOUR.md) · [Chạy trên Windows](docs/INSTALL_WINDOWS.md) · [Triển khai Cloud](docs/CLOUD_OPERATIONS.md) · [Đọc kiến trúc](docs/ARCHITECTURE.md)
+[**Bắt đầu trên Windows**](docs/INSTALL_WINDOWS.md) · [**Xem cách xử lý**](docs/BUSINESS_RULES.md) · [**Kiến trúc**](docs/ARCHITECTURE.md) · [**English**](README_EN.md)
 
-### Điều khó nằm giữa tin nhắn và bảng tổng kết
+<img src="docs/images/neural-terminal.png" alt="Giao diện AttendSift AI Neural Terminal trên Windows Local, minh họa bằng dữ liệu giả lập" width="100%">
 
-Một người có thể báo hộ cả nhóm. Ngày gửi có thể khác ngày làm việc. Một tên gọi có thể khớp nhiều nhân viên. Quy trình phải giữ những khác biệt này khi chuyển nội dung thành số liệu.
+<sub>Giao diện Neural Terminal V6.2 của bản Windows Local. Hình minh họa dùng dữ liệu giả lập; không phải kết quả chạy trên dữ liệu doanh nghiệp thật.</sub>
 
-| Tình huống thực tế | Cách hệ thống xử lý | Giá trị khi kiểm tra |
-|---|---|---|
-| Một báo cáo nhắc nhiều người | Tách sự kiện theo từng người, ngày và thời lượng | Không chia đều số phút OT chung |
-| Tin gửi hôm sau, báo công hôm trước | Dùng ngày sự kiện trong nội dung khi đủ căn cứ | Không mặc định lấy ngày gửi để tính công |
-| Tên gọi khớp nhiều nhân viên | Giữ tại sheet kiểm tra, chờ xác nhận danh tính | Không tự chọn một người để cộng công |
-| Cần giải thích một dòng tổng kết | Giữ Source ID và nội dung nguồn | Có đường đối chiếu về báo cáo ban đầu |
+</div>
 
-**Bằng chứng hiện có:** 398 kiểm thử Python đã đạt ở bản kiểm tra ngày 16/10/2026; cấu trúc repository và liên kết tài liệu đã được kiểm tra. Đây là kết quả kiểm thử phần mềm, chưa chứng minh độ chính xác trên toàn bộ dữ liệu thực tế. [Xem phạm vi và giới hạn](docs/UPDATE_2026-10-16.md).
+## Vì sao cần AttendSift AI?
 
-Windows Local và Cloud cùng mã nguồn · Phiên bản nền **1.1.0**, ứng viên phát hành · **Đặng Gia Khánh / Bộ phận AI** · [English](README_EN.md)
+Báo công trong Chatwork không phải lúc nào cũng là một dòng dữ liệu chuẩn: **một người báo hộ cả nhóm, ngày nhắn khác ngày làm, tên thường gọi trùng nhau hoặc số phút tăng ca chưa rõ**. Nếu đưa thẳng kết quả AI vào bảng công, những trường hợp này rất dễ bị tính nhầm.
 
-Ảnh và ví dụ công khai dùng dữ liệu giả lập. Không dùng dữ liệu nhân sự thật để minh họa.
+AttendSift AI giúp người phụ trách **thu thập tin nguồn → trích xuất sự kiện → kiểm tra danh tính và quy tắc → rà soát các dòng chưa rõ → xuất Excel**. Mỗi kết quả cần có căn cứ; **AI hỗ trợ đọc tin, không tự thay thế quyết định chấm công**.
 
-## Một tin báo bốn người: hệ thống giữ điều gì, hỏi lại điều gì?
+| Tình huống thực tế | Cách hệ thống xử lý |
+| --- | --- |
+| Một tin báo tăng ca cho nhiều người | Tách sự kiện theo người/ngày/thời lượng; không chia đều số phút chung |
+| Tin nhắn gửi hôm sau | Dùng ngày làm việc được nêu khi có đủ căn cứ |
+| Tên thường gọi khớp nhiều người | Chuyển sang **Cần kiểm tra**; không tự chọn nhân viên để cộng công |
+| Nhân viên chính thức và cộng tác viên (CTV) | Đối chiếu và xuất số liệu riêng theo trạng thái đã lưu của phiên |
+| Cần giải thích một dòng tổng kết | Tìm ngược về **Source ID** và tin trong snapshot của phiên |
 
-Danh sách chính thức có **Nguyễn Minh Quân**, **Trần Đức Quân**, **Lê Thu Bình**. Một báo cáo giả lập ghi:
+## Xem sản phẩm
 
-```text
-Team Demo: ngày 14/10
-Minh Quân OT 2h
-Đức Quân OT 1h
-Quân OT 30p
-Lan Demo (CTV) OT 45p
+**Neural Terminal** là bảng điều khiển của bản **Windows Local V6.2**: hiển thị trạng thái đồng bộ, phiên phân tích, kết quả đối chiếu và các biểu đồ chuyển động. Hiệu ứng chỉ phục vụ quan sát, **không thay đổi số liệu, không tự xác nhận sự kiện và không gọi thêm AI**. Chế độ giao diện thứ hai (Operations Room) đã được bỏ.
+
+<div align="center">
+  <img src="docs/images/people-summary.png" alt="Bảng tổng theo người đọc từ file Excel, dữ liệu giả lập" width="92%">
+  <br>
+  <sub>Bảng tổng theo người: phân tách nhân viên chính thức và CTV, đọc từ workbook đã chọn.</sub>
+</div>
+
+**Năm khu vực nghiệp vụ:** Đồng bộ · Xuất công · Lịch sử · Thiết lập · Nhân viên.
+
+<details>
+<summary><strong>Xem thêm ảnh giao diện từng bước</strong></summary>
+
+| Đồng bộ tin nguồn | Xuất báo cáo |
+| :---: | :---: |
+| <img src="docs/images/ui-sync.png" alt="Màn hình Đồng bộ" width="430"> | <img src="docs/images/ui-export.png" alt="Màn hình Xuất công" width="430"> |
+
+| Quản lý nhân viên | Lịch sử phiên |
+| :---: | :---: |
+| <img src="docs/images/ui-employees.png" alt="Màn hình Nhân viên" width="430"> | <img src="docs/images/ui-history.png" alt="Màn hình Lịch sử" width="430"> |
+
+[Ảnh động Neural Terminal](docs/images/neural-motion.gif) · [Màn hình Thiết lập](docs/images/ui-settings.png)
+
+</details>
+
+## Excel 5 sheet: kiểm tra được đến tin nguồn
+
+| Sheet | Bạn nhận được gì? |
+| --- | --- |
+| `1_TIN_NHAN_GOC` | Tin nguồn, thời gian gửi, Source ID và liên kết sự kiện |
+| `2_CHAM_CONG` | Chi tiết chấm công của nhân viên chính thức |
+| `3_TONG_KET` | Tổng hợp nhân viên chính thức |
+| `4_CAN_KIEM_TRA` | Sự kiện thiếu căn cứ / chưa xác nhận, **chưa đưa vào tổng công** |
+| `5_CTV` | Chi tiết và tổng kết riêng cho CTV |
+
+Bảng tổng quan **đọc dữ liệu đã có trong Excel**: chính thức từ `2_CHAM_CONG` và `3_TONG_KET`, CTV từ `5_CTV`. Có thể chọn workbook khác để xem rồi quay lại workbook của phiên. Thao tác đọc không sửa file, không phân loại lại nhân sự và không tính lại công thức Excel. Ô công thức chưa có kết quả lưu sẽ hiển thị là chưa có giá trị, **không tự đổi thành 0**.
+
+[Xem quy tắc nghiệp vụ](docs/BUSINESS_RULES.md) · [Mẫu báo công](docs/MAU_BAO_CAO_CHAM_CONG.md) · [Chính sách nghỉ 30 phút có lương](docs/CHINH_SACH_NGHI_30_PHUT_CO_LUONG.md)
+
+## Bắt đầu sử dụng
+
+### Cách 1 — Windows: dùng bản EXE bàn giao
+
+1. Nhận **bộ chạy sạch** từ người phát hành và giải nén toàn bộ trên Windows 10/11 x64.
+2. Mở `1_CHAY_UNG_DUNG/ChamCong.exe` (không cần cài Python; cần môi trường Windows/WebView2 phù hợp).
+3. Ở **Nhân viên**, nhập danh sách nhân viên của đơn vị. Ở **Thiết lập**, cấu hình phòng Chatwork và nhà cung cấp AI.
+4. **Đồng bộ → Xuất công → kiểm tra dòng cần rà soát → xuất Excel**.
+
+> **Lưu ý:** Repository GitHub này chỉ chứa mã nguồn và hình minh họa, **không phát hành EXE cùng database, token, log hay dữ liệu nhân viên**. Khi cập nhật máy đang dùng, hãy sao lưu dữ liệu và giữ thư mục dữ liệu hiện có; không thay toàn bộ thư mục chạy bằng một bộ chứa dữ liệu khác.
+
+[Hướng dẫn Windows đầy đủ](docs/INSTALL_WINDOWS.md)
+
+### Cách 2 — Chạy mã nguồn trên Windows (Python 3.11)
+
+```powershell
+git clone https://github.com/danggiakhanhgl2022-hash/AttendSift-AI.git
+cd AttendSift-AI
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements-local.txt
+.venv\Scripts\python.exe tools/run_local.py
 ```
 
-| Nội dung | Xử lý | Vào tổng nào? |
-|---|---|---|
-| Minh Quân OT 2h | Khớp duy nhất Nguyễn Minh Quân | 120 phút OT chính thức |
-| Đức Quân OT 1h | Khớp duy nhất Trần Đức Quân | 60 phút OT chính thức |
-| Quân OT 30p | Có hai người cùng tên Quân; chưa chọn được ID | Sheet kiểm tra, chưa tính công |
-| Lan Demo (CTV) OT 45p | Danh tính ngoài danh sách chính thức | 45 phút OT CTV, giữ riêng |
+Ứng dụng Local mở tại **http://127.0.0.1:8766** và sử dụng SQLite trên máy; cần Internet khi gọi Chatwork hoặc dịch vụ AI đã cấu hình. Có thể dùng `CAI_DAT_WINDOWS.bat` / `CHAY_LOCAL_WINDOWS.bat` hoặc build EXE với `build.bat` trên Windows.
 
-Nếu Lê Thu Bình tự báo “Em xin phép về sớm 30 phút không làm bù” vào ngày 14 và 16/10, có đủ căn cứ ngày/người/nội dung thì ghi **60 phút nghỉ có lương**. Không tự tạo ngày 15/10; không biến 60 phút này thành thiếu giờ hoặc OT.
+### Cách 3 — Cloud (triển khai riêng)
 
-## Đọc theo điều bạn cần
+Cloud dùng Flask và PostgreSQL, cấu hình hosting và secrets riêng. **Local và Cloud không tự đồng bộ** database, danh sách nhân viên hoặc khóa. Giao diện Neural Terminal V6.2 mô tả ở trang này thuộc **Windows Local**, không phải lời cam kết rằng Cloud có cùng giao diện.
 
-| Bạn đang muốn… | Bắt đầu ở đây |
-|---|---|
-| Hiểu sản phẩm và xem đầu ra | [Giao diện](#năm-tab-một-hành-trình-từ-tin-nhắn-đến-bảng-công) · [Excel](#một-file-excel-năm-góc-nhìn--từ-tổng-kết-về-tận-nguồn) |
-| Chạy thử hoặc bàn giao | [Windows](docs/INSTALL_WINDOWS.md) · [Cloud](docs/CLOUD_OPERATIONS.md) · [Mẫu báo công](docs/MAU_BAO_CAO_CHAM_CONG.md) |
-| Đánh giá cách thiết kế | [Kiến trúc](docs/ARCHITECTURE.md) · [Lựa chọn và đánh đổi](docs/articles/05-LUA_CHON_VA_DANH_DOI.md) |
-| Xem bằng chứng và giới hạn | [Kiểm chứng hiện tại](docs/UPDATE_2026-10-16.md) · [Phạm vi kiểm thử](docs/articles/06-KIEM_CHUNG_VA_GIOI_HAN.md) |
-| Đọc câu chuyện phát triển | [Loạt bài](docs/articles/README.md) · [Portfolio](docs/PORTFOLIO_STORY.md) |
+[Hướng dẫn triển khai Cloud](docs/CLOUD_OPERATIONS.md) · [Mẫu biến môi trường](.env.example)
 
-## Có tổng OT rồi — nhưng bạn có giải thích được từng phút?
-
-Một tin nhắn có thể báo hộ nhiều người, nhắc ngày hôm trước và dùng tên thường gọi. Người tổng hợp cần biết **ai làm, ngày nào, bao nhiêu phút và tin nào là căn cứ**. Một con số tổng hợp chưa đủ nếu không giải thích được vì sao nó xuất hiện.
-
-AttendSift AI tổ chức công việc theo ba điểm:
-
-| Điểm nhấn | Giá trị khi sử dụng | Điều kiện cần giữ |
-|---|---|---|
-| **Truy được nguồn** | Từ một dòng Excel quay lại Source ID và nội dung tin | Tin nguồn phải được thu thập đủ; không lấy khoảng trống làm bằng chứng vắng mặt |
-| **Phân loại có căn cứ** | Tách chính thức/CTV, tên trùng và phút nghỉ có lương | Danh sách nhân viên và tên thường dùng cần được cập nhật đúng |
-| **Kiểm tra được sau khi xuất** | Có file để đọc ngay; dòng chưa xác minh nằm riêng | Người phụ trách phải xử lý dòng chưa rõ trước khi dùng số liệu chính thức |
-
-![Từ tin nguồn đến đối chiếu, phân nhóm và Excel](docs/images/story/journey.svg)
-
-AI trích xuất, quy tắc kiểm tra, người phụ trách xác nhận trường hợp chưa rõ — ba vai trò cùng tạo nên một kết quả có thể xem lại.
-
-## Năm tab, một hành trình: từ tin nhắn đến bảng công
-
-![Giao diện Đồng bộ với dữ liệu giả lập](docs/images/story/ui-sync.png)
-
-*Giao diện hiện có, chụp trong môi trường demo độc lập.*
-
-| Tab | Công việc | Kết quả cần kiểm tra |
-|---|---|---|
-| **Đồng bộ** | Lấy và lọc tin Chatwork theo kỳ, người gửi, nội dung | Phòng đúng, khoảng thời gian đúng, mức đầy đủ của lịch sử |
-| **Xuất công** | Chọn tháng, phân tích và lưu workbook | Dòng có căn cứ được tính; dòng chưa rõ được giữ ở sheet 4 |
-| **Lịch sử** | Mở phiên, xem hoạt động, tải lại báo cáo | Phiên nào đã tạo số liệu, lúc nào đã sửa hoặc xác nhận |
-| **Thiết lập** | Chọn Chatwork, dịch vụ AI, nhóm và lịch đồng bộ | Khóa được nhập riêng; giới hạn API được người vận hành chuẩn bị |
-| **Nhân viên** | Thêm, sửa, ngừng hoạt động và nhập danh sách | Tên chính thức, tên thường dùng, mã hoặc Chatwork ID đủ căn cứ |
-
-![Vùng thao tác Xuất công — chọn kỳ, xem nguồn và tạo bảng Excel](docs/images/story/ui-export-focus.png)
-
-Ảnh cận tập trung vùng thao tác để chữ dễ đọc. [Xem tab Nhân viên và toàn bộ giao diện](docs/PRODUCT_TOUR.md).
-
-## Một file Excel, năm góc nhìn — từ tổng kết về tận nguồn
-
-![Tổng kết từ workbook giả lập](docs/images/story/03-summary.png)
-
-| Sheet | Bạn dùng để làm gì? |
-|---|---|
-| `1_TIN_NHAN_GOC` | Đọc nội dung nguồn, ngày gửi, ngày sự kiện liên quan và Source ID |
-| `2_CHAM_CONG` | Xem chi tiết sự kiện đủ căn cứ của nhân viên chính thức |
-| `3_TONG_KET` | Đọc tổng theo người, tách OT và phút nghỉ có lương |
-| `4_CAN_KIEM_TRA` | Xử lý tên trùng, thiếu bằng chứng, lỗi kiểm tra và dấu vết xác nhận |
-| `5_CTV` | Đối chiếu sự kiện và tổng riêng của CTV; không cộng vào chính thức |
-
-![Dòng tên trùng được giữ riêng để kiểm tra](docs/images/story/04-review.png)
-
-*Hình dựng từ workbook giả lập do ứng dụng xuất, chọn cột để dễ đọc. [Xem đủ 5 sheet và cách tạo hình](docs/PRODUCT_TOUR.md#excel-năm-góc-nhìn-của-cùng-một-báo-cáo).*
-
-File `TinNhan_...xlsx` là bản tin thô để đối chiếu, không thay thế báo cáo chấm công `Cham_cong_MM_YYYY.xlsx`. Bản Local lưu báo cáo vào Downloads và có bản lưu theo phiên; Cloud lưu file theo phiên để tải qua trình duyệt.
-
-## Cập nhật ngày 16/10/2026
-
-- **Nghỉ 30 phút có lương:** nhận đúng tin tự báo có căn cứ; thêm cột AB ở chi tiết, O ở tổng kết và L ở CTV. Giữ vị trí các cột trước đó.
-- **Đối chiếu danh sách:** dùng họ tên, tên đệm + tên hoặc tên thường dùng khớp duy nhất. Tài khoản người báo hộ không chứng minh danh tính cả nhóm.
-- **Xuất trước, kiểm tra sau:** dòng chưa xác minh không được cộng công; mở lại phiên đã xuất để sửa và xuất bản cập nhật.
-- **Sửa luồng xác nhận:** giữ phút nghỉ có lương và kiểm tra lại chính dữ liệu sẽ ghi Excel.
-
-Tin chỉ xin nghỉ/phép năm được giữ ở nguồn theo quy tắc hiện tại, không tự cộng ngày nghỉ từ suy đoán AI. Đi trễ 30 phút hoặc về sớm 45 phút không tự được coi là nghỉ 30 phút có lương. Đây là quy tắc sản phẩm theo yêu cầu đơn vị, không phải mô tả quy định pháp luật.
-
-[Chi tiết chính sách](docs/CHINH_SACH_NGHI_30_PHUT_CO_LUONG.md) · [Quy tắc nghiệp vụ](docs/BUSINESS_RULES.md) · [Changelog](CHANGELOG.md)
-
-## Bên trong một con số đáng tin: AI, quy tắc và người xác nhận
+## Cách hoạt động
 
 ```mermaid
 flowchart LR
-    H[Người phụ trách] --> L[Windows Local]
-    H --> W[Website Cloud]
-    C[Chatwork] --> L
-    C --> W
-    L <--> S[(SQLite trên máy)]
-    W <--> P[(PostgreSQL / Neon)]
-    L --> A[Dịch vụ AI được chọn]
-    W --> A
-    L --> E[Excel có nguồn đối chiếu]
-    W --> E
+    A[Chatwork] --> B[Snapshot tin theo phiên]
+    B --> C[AI trích xuất sự kiện]
+    C --> D[Kiểm tra nguồn, ngày, danh tính]
+    D --> E{Đủ căn cứ?}
+    E -->|Có| F[Chính thức / CTV]
+    E -->|Chưa| G[Cần kiểm tra]
+    F --> H[Excel 5 sheet]
+    G --> H
+    H --> I[Tổng quan chỉ đọc]
 ```
 
-Hai chế độ dùng chung các quy tắc nhân sự, đối chiếu nguồn và xuất workbook. Lớp điều phối, lưu trữ, xác thực và lịch chạy được tổ chức theo môi trường. Local và Cloud **không tự đồng bộ database, danh sách hoặc khóa**.
+| Thành phần | Công nghệ / vai trò |
+| --- | --- |
+| Windows Local | Python, Flask, SQLite, giao diện loopback/WebView2 |
+| Trích xuất AI | Dịch vụ AI do đơn vị cấu hình; đầu ra qua lớp kiểm tra nghiệp vụ |
+| Báo cáo | `openpyxl`, workbook có nguồn và các nhóm kết quả riêng |
+| Cloud | Flask, PostgreSQL, cấu hình hosting và cron riêng |
+| Kiểm thử | `pytest`, bộ kiểm tra tài liệu/bảo mật, kiểm thử giao diện dùng dữ liệu giả lập |
 
-| Quyết định giữ lại | Lợi ích | Nhược điểm và cách giảm |
-|---|---|---|
-| Một ứng dụng chia mô-đun cho mỗi chế độ | Dễ đóng gói, ít thành phần cần vận hành | Ranh giới mô-đun cần kỷ luật; dùng kiểm thử trên cả hai luồng |
-| Bản chụp nguồn và danh sách theo phiên | Giải thích kết quả cũ | Tăng dung lượng; quản lý retention và tải báo cáo cần giữ |
-| AI kết hợp kiểm tra xác định | Đọc tin linh hoạt, có lớp đối chiếu | Còn trường hợp chưa hiểu; giữ nguồn và hàng kiểm tra |
-| Excel 5 sheet | Phù hợp cách bàn giao, đọc được từng lớp dữ liệu | File rộng; chia vai trò từng sheet và hướng dẫn người đọc |
+Mã nguồn nằm ở `src/` (nghiệp vụ Local), `cloud/` (Cloud), `static/` và `templates/` (giao diện), `tests/` (kiểm thử), `tools/` (công cụ), `docs/` (hướng dẫn). Một số tài nguyên có mặt ở nhiều thư mục vì đường phục vụ tài nguyên của Local và Cloud khác nhau; **không xóa file chỉ vì nội dung trùng**.
 
-[Kiến trúc từ con người đến mô-đun](docs/ARCHITECTURE.md) · [Phân tích lựa chọn](docs/articles/05-LUA_CHON_VA_DANH_DOI.md)
+[Đọc kiến trúc chi tiết](docs/ARCHITECTURE.md)
 
-## Trên máy Windows hay trên Cloud: chọn theo cách bạn làm việc
+## Kiểm chứng và giới hạn
 
-| | Windows Local | Website Cloud |
-|---|---|---|
-| Mở | `ChamCong.exe` hoặc mã Python; WebView2/trình duyệt loopback | Trình duyệt có đăng nhập quản trị |
-| Dữ liệu | SQLite tại máy | PostgreSQL trên Neon |
-| Lịch | Task Scheduler; máy bật và đúng tài khoản | Vercel Cron và cấu hình hosting |
-| Danh sách | Nhập riêng tại tab Nhân viên | Người quản trị nhập riêng tại tab Nhân viên |
-| Lưu trữ dài hạn | Người vận hành quản lý và sao lưu | Dữ liệu nghiệp vụ theo chính sách 3 tháng; giữ danh sách nhân viên |
-| Cần chuẩn bị | Windows, quyền ghi, kết nối API khi dùng | Hosting, database, secrets và giới hạn dịch vụ |
+Tài liệu bàn giao ngày **17/10/2026** ghi nhận **405 bài kiểm thử Python đạt** trên môi trường Local của tác giả. Đây là kết quả kiểm thử được báo cáo, **không phải tỷ lệ chính xác AI, SLA hay chứng nhận hoạt động trên dữ liệu thực tế**. Để tự kiểm tra trên máy đã cài dependencies:
 
-Chế độ Local vẫn gửi nội dung cần phân tích tới dịch vụ AI được chọn. Hạn mức dịch vụ, Internet và chính sách dữ liệu cần được đơn vị chuẩn bị. [So sánh và cách chọn](docs/articles/04-WINDOWS_VA_CLOUD.md).
+```powershell
+.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests
+.venv\Scripts\python.exe tools/check_documentation.py
+.venv\Scripts\python.exe tools/privacy_audit.py .
+```
 
-## Bắt đầu và bàn giao
+Phạm vi chưa được các kiểm thử giả lập chứng minh: độ đầy đủ lịch sử Chatwork, kết quả từ tài khoản/API thật, WebView trên mọi máy Windows, và tính chính xác của từng quyết định nghiệp vụ. Người phụ trách phải rà soát các dòng chưa xác minh trước khi sử dụng để tính công/lương.
 
-**Dùng EXE:** nhận bản build được xác nhận, đặt trong thư mục có quyền ghi và mở `ChamCong.exe`. Nhập khóa của chính nơi sử dụng tại Thiết lập, thêm danh sách nhân viên, thử bằng dữ liệu giả lập rồi nghiệm thu Excel. EXE bàn giao riêng, không có trong gói mã nguồn GitHub. File khởi tạo nhân sự nội bộ nếu có phải được chuyển riêng.
+[Phạm vi kiểm thử](docs/TESTING.md) · [Bản ghi kiểm thử giao diện](docs/verification/workbook-overview.json) · [Lịch sử thay đổi](CHANGELOG.md)
 
-**Chạy từ mã nguồn:** Python 3.11 x64 → `CAI_DAT_WINDOWS.bat` → `KIEM_TRA_LOCAL_WINDOWS.bat` → `CHAY_LOCAL_WINDOWS.bat`. Địa chỉ Local mặc định `http://127.0.0.1:8766`. Dùng `TAO_EXE_WINDOWS.bat` khi cần đóng gói lại.
+## Quyền riêng tư, giấy phép và hỗ trợ
 
-**Vận hành Cloud:** xem [hướng dẫn Cloud](docs/CLOUD_OPERATIONS.md), [thiết lập](docs/SETUP.md) và [lưu trữ 3 tháng](docs/RETENTION_3_MONTHS.md). Các biến bí mật được đặt trong môi trường hosting, không đưa vào Git.
+- **Không commit:** `.env`, API key/token, `*.db`, `*.credentials`, log, backup, workbook chấm công thật, tên hoặc tin nhắn nhân viên thật. Dữ liệu phân tích có thể được gửi tới dịch vụ AI mà người vận hành cấu hình.
+- **Khi báo lỗi:** mở [GitHub Issues](https://github.com/danggiakhanhgl2022-hash/AttendSift-AI/issues) và cung cấp phiên bản, bước tái hiện, log **đã che sạch dữ liệu nhạy cảm**.
+- **Giấy phép:** repository hiện **chưa công bố giấy phép mã nguồn mở**. Quyền xem mã nguồn công khai không tự động cấp quyền sao chép hoặc phân phối; xem [License decision](LICENSE_DECISION.md).
+- **Đóng góp:** dùng dữ liệu giả lập, đọc [CONTRIBUTING.md](CONTRIBUTING.md) và [SECURITY.md](SECURITY.md) trước khi gửi PR.
 
-EXE chưa ký số; máy người nhận cần được nghiệm thu WebView2, quyền ghi, Downloads và lịch chạy. Cập nhật mã trên GitHub không tự cập nhật EXE đã cài trên máy khác.
+<div align="center">
 
-## Đằng sau sản phẩm: những lựa chọn đáng giữ và cái giá phải trả
+**AttendSift AI · Đặng Gia Khánh · Bộ phận AI**
 
-| Bài | Câu hỏi trung tâm |
-|---|---|
-| [01. Thiết kế theo người dùng](docs/articles/01-TU_CONG_VIEC_DEN_THIET_KE.md) | Người phụ trách cần thấy điều gì trước? |
-| [02. AI và bằng chứng](docs/articles/02-AI_VA_BANG_CHUNG.md) | Làm sao dùng AI mà vẫn kiểm tra được kết quả? |
-| [03. Excel như một giao diện bàn giao](docs/articles/03-EXCEL_LA_GIAO_DIEN_BAN_GIAO.md) | Vì sao cần đủ 5 sheet và cách đọc từng sheet? |
-| [04. Windows và Cloud](docs/articles/04-WINDOWS_VA_CLOUD.md) | Tính năng chung, trách nhiệm vận hành khác nhau ở đâu? |
-| [05. Lựa chọn và đánh đổi](docs/articles/05-LUA_CHON_VA_DANH_DOI.md) | Giữ điều gì, giảm nhược điểm thế nào và khi nào đổi? |
-| [06. Kiểm chứng và giới hạn](docs/articles/06-KIEM_CHUNG_VA_GIOI_HAN.md) | Điều gì đã được thử và điều gì còn cần nghiệm thu? |
+[Hướng dẫn sử dụng](docs/README.md) · [Bảo mật và quyền riêng tư](docs/PRIVACY_AND_SECURITY.md) · [Xem thay đổi](CHANGELOG.md)
 
-Cách trình bày tham khảo **InfoQ**, **Stack Overflow Blog**, **C4**, **Diátaxis** và **GitHub Docs**. [Nguồn và cách chọn ý tưởng](docs/ARCHITECTURE_REVIEW_1.1.0.md).
+<sub>Dự án độc lập; không được Chatwork hoặc nhà cung cấp AI chứng nhận.</sub>
 
-## Bằng chứng và giới hạn
-
-**398 kiểm thử Python đạt** trong lần kiểm tra Windows/Python 3.11.9 ngày 16/10/2026. Có kiểm tra thư viện/mẫu workbook của EXE và kiểm tra gói nguồn, UTF-8. Các tình huống nghiệp vụ dùng dữ liệu giả lập, không gọi Chatwork hoặc AI thật.
-
-Số kiểm thử không phải tỷ lệ chính xác, thời gian tiết kiệm hoặc khả năng chịu tải. Chatwork có thể chỉ trả cửa sổ tin gần nhất; đồng bộ thành công không chứng minh đủ cả tháng. Cloud có giới hạn thời gian request, kích thước file và thời hạn lưu. Cần nghiệm thu riêng API thật, PostgreSQL staging, Microsoft Excel/WPS và máy Windows độc lập.
-
-[Kết quả hiện tại](docs/UPDATE_2026-10-16.md) · [Phương pháp kiểm thử](docs/TESTING.md) · [Biên bản bàn giao](docs/HANDOVER_ACCEPTANCE.md)
-
-## Quyền riêng tư, quyền sử dụng và hỗ trợ
-
-Ảnh mới và ví dụ trong README dùng dữ liệu giả lập. Token Chatwork, khóa AI, database, danh sách nhân sự và Excel thật không thuộc mã nguồn công khai. Không tải cả thư mục chạy ứng dụng lên GitHub; dùng gói nguồn đã kiểm tra.
-
-Khi báo lỗi, gửi phiên bản, bước tái hiện và thông báo đã che dữ liệu. Dự án chưa cấp giấy phép mã nguồn mở và không liên kết chính thức với Chatwork hoặc nhà cung cấp AI.
-
-[Bảo mật](SECURITY.md) · [Đóng góp](CONTRIBUTING.md) · [Quyền sử dụng](LICENSE_DECISION.md) · [Mục lục tài liệu](docs/README.md)
+</div>
