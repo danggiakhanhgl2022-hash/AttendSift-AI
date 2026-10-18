@@ -47,6 +47,8 @@ def create_app(app_path=APP_PATH):
     register_employee_routes(app, registry)
     export.employee_registry = registry
     app.extensions['services']['employees'] = registry
+    from .workbook_view import register_workbook_view
+    register_workbook_view(app,sessions,export)
 
     @app.before_request
     def protect():
