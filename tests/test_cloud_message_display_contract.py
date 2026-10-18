@@ -15,7 +15,7 @@ def test_cloud_template_displays_correct_date_order_and_feedback():
     html = (ROOT / 'cloud/templates/index.html').read_text(encoding='utf-8')
     assert html.index('Từ ngày<input id="messageStart"') < html.index('Đến ngày<input id="messageEnd"')
     assert 'id="messageViewSummary"' in html
-    assert '/static/cloud.js?v=20261016-exportlater' in html
+    assert '/static/cloud.js?v=20261018-export-validation' in html
 
 
 def test_sync_refresh_and_filter_validation_are_present():

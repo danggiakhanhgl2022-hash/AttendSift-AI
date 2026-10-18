@@ -80,6 +80,26 @@ def test_dashboard_auth_data_and_workbook_integrity():
         data={'file': (BytesIO(b'invalid workbook'), 'demo.xlsx')}).status_code != 200
 
 
+def test_session_validation_explains_acceptance_and_missing_messages():
+    app, repo = dashboard_app()
+    client = app.test_client()
+    login = client.post('/login', json={'password': 'synthetic-password'})
+    headers = {'X-CSRF-Token': login.json['data']['csrf_token']}
+    data = {'month': 10, 'year': 2026}
+    response = client.post('/api/sessions', json=data, headers=headers)
+    assert response.status_code == 400
+    assert 'Tôi đồng ý tạo bản tạm' in response.json['error']
+    response = client.post('/api/sessions', json={**data, 'accept_risk': True}, headers=headers)
+    assert response.status_code == 400
+    assert 'Đồng bộ' in response.json['error']
+    # Arbitrary ValueErrors from dependencies still must not disclose private details.
+    def fail(*args):
+        raise ValueError('synthetic-private-database-detail')
+    repo.messages = fail
+    response = client.post('/api/sessions', json={**data, 'accept_risk': True}, headers=headers)
+    assert 'synthetic-private-database-detail' not in response.get_data(as_text=True)
+
+
 @pytest.mark.parametrize('name', ASSETS)
 def test_shared_assets_match_both_cloud_delivery_paths(name):
     if name.endswith('.png'):

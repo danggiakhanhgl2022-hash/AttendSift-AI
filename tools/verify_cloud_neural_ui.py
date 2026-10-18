@@ -33,6 +33,12 @@ def main():
             page.on('request', lambda request: writes.append(request.url) if request.method == 'POST' else None)
             page.goto(base, wait_until='networkidle')
             page.wait_for_function("() => document.querySelector('#people-ot')?.textContent === '120'")
+            page.locator('.nav [data-section="export"]').click()
+            page.locator('#analyzeButton').click()
+            assert 'Tôi đồng ý tạo bản tạm' in page.locator('#notice').inner_text()
+            assert page.locator('#notice').get_attribute('data-kind') == 'error'
+            assert not writes, writes
+            page.locator('#dashboard-nav').click()
             assert page.locator('#control-dashboard.reference-console').is_visible()
             assert page.locator('[data-metric="messages"]').inner_text() == '7'
             page.wait_for_function('() => CinematicScene.getState().frames > 3')

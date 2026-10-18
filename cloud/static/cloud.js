@@ -1,11 +1,12 @@
 'use strict';
+const EXPORT_ACCEPTANCE_MESSAGE='Hãy tích “Tôi đồng ý tạo bản tạm” trước khi tạo bảng; lịch sử tin nhắn chưa được xác minh đầy đủ.';
 const $=id=>document.getElementById(id);let sid=null,current=null,selected=null;
 const csrf=document.querySelector('meta[name="csrf-token"]').content;
-const status=text=>{$('status').textContent=text;$('notice').hidden=!text;};
+const status=(text,kind='info')=>{$('status').textContent=text;$('notice').hidden=!text;$('notice').dataset.kind=kind;};
 async function api(path,data){const response=await fetch(path,{method:data===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:data===undefined?undefined:JSON.stringify(data)});if(response.status===401){location.assign('/login');throw Error('Cần đăng nhập.');}const value=await response.json();if(!response.ok||!value.success)throw Error(value.error||'Thao tác thất bại.');return value.data;}
 const month=id=>{const [year,month]=$ (id).value.split('-').map(Number);return {month,year};};
 function article(parent,title,content){const node=document.createElement('article'),strong=document.createElement('strong'),pre=document.createElement('pre');strong.textContent=title;pre.textContent=content;node.append(strong,pre);parent.append(node);return node;}
-function bind(id,action){$(id).addEventListener('click',async()=>{const button=$(id);button.disabled=true;try{await action();}catch(error){status(error.message);}finally{button.disabled=false;}});}
+function bind(id,action){$(id).addEventListener('click',async()=>{const button=$(id);button.disabled=true;try{await action();}catch(error){status(error.message,'error');}finally{button.disabled=false;}});}
 const headerActions=document.createElement('div');headerActions.className='header-actions';
 const version=$('appVersion');version.textContent='Bộ phận AI · Nhóm phát triển';headerActions.append(version);
 const logout=document.createElement('button');logout.id='logout';logout.textContent='Đăng xuất';headerActions.append(logout);document.querySelector('body > .header').append(headerActions);
@@ -157,7 +158,7 @@ function renderResults(){
  table.append(body);$('results').append(table);
 }
 $('reviewFilter').addEventListener('change',()=>{if(current)renderResults();});
-bind('analyzeButton',async()=>{const value=await api('/api/sessions',{...month('exportMonth'),accept_risk:$('acceptRisk').checked,...await globalThis.personnelUI.confirmRoster()});sid=value.session_id;$('exportButton').disabled=true;let running=true;while(running){status('Đang xử lý từng lô; tiến độ được lưu sau mỗi lô.');const progress=await api(`/api/sessions/${sid}/analyze`,{});$('progress').textContent=`Đã xử lý ${progress.completed}; còn ${progress.remaining} tin`;running=progress.remaining>0;}await loadSession();await downloadAttendanceExcel();status('Đã xuất Excel 5 sheet; các dòng chưa xác minh nằm ở sheet 4 để kiểm tra sau.');});
+bind('analyzeButton',async()=>{if(!$('acceptRisk').checked){$('acceptRisk').focus();throw Error(EXPORT_ACCEPTANCE_MESSAGE);}const value=await api('/api/sessions',{...month('exportMonth'),accept_risk:$('acceptRisk').checked,...await globalThis.personnelUI.confirmRoster()});sid=value.session_id;$('exportButton').disabled=true;let running=true;while(running){status('Đang xử lý từng lô; tiến độ được lưu sau mỗi lô.');const progress=await api(`/api/sessions/${sid}/analyze`,{});$('progress').textContent=`Đã xử lý ${progress.completed}; còn ${progress.remaining} tin`;running=progress.remaining>0;}await loadSession();await downloadAttendanceExcel();status('Đã xuất Excel 5 sheet; các dòng chưa xác minh nằm ở sheet 4 để kiểm tra sau.');});
 async function downloadAttendanceExcel(){
  if(!sid)throw Error('Tạo hoặc mở phiên trước.');
  const data=await api(`/api/sessions/${sid}/export`,{});
@@ -179,7 +180,7 @@ function renderHistory(){
  $('sessions').replaceChildren();$('actions').replaceChildren();
  for(const item of savedSessions.filter(inRange)){
   const row=article($('sessions'),item.month+'/'+item.year+' · '+item.status,item.error_message||item.session_id),button=document.createElement('button');
-  button.textContent='Mở phiên';button.addEventListener('click',async()=>{sid=item.session_id;try{await loadSession();document.querySelector('[data-tab="export"]').click();}catch(error){status(error.message);}});row.append(button);
+  button.textContent='Mở phiên';button.addEventListener('click',async()=>{sid=item.session_id;try{await loadSession();document.querySelector('[data-tab="export"]').click();}catch(error){status(error.message,'error');}});row.append(button);
   if(item.status==='exported'){const link=document.createElement('a');link.textContent='Tải Excel';link.href='/api/sessions/'+item.session_id+'/download';row.append(link);}
  }
  for(const item of savedActions.filter(item=>inRange(item)&&(!kind||item.kind===kind)&&(!outcome||item.status===outcome)))article($('actions'),item.created_at+' · '+item.kind+' · '+item.status,item.summary);

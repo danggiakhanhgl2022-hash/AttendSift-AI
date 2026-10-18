@@ -241,7 +241,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
             return selected['room_id']
         value = env.get('CHATWORK_ROOM_ID','')
         if not value.isdigit():
-            raise ValueError('Chưa cấu hình phòng Chatwork.')
+            raise PublicError('Chưa chọn phòng Chatwork. Vào Thiết lập để chọn phòng trước.')
         return value
 
     def get_session(sid):
@@ -259,7 +259,7 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
         key = unseal(saved.get('encrypted_key',''), secret) if saved.get('encrypted_key') else ''
         key = key or env.get(key_name or '', '')
         if not key_name or not key:
-            raise ValueError('Chưa cấu hình API key AI phía máy chủ.')
+            raise PublicError('Chưa cấu hình API key AI. Vào Thiết lập để kết nối dịch vụ phân tích.')
         return {'provider':provider,'model':saved.get('model') or env.get('AI_MODEL') or None,
                 'base_url':None}, key
 
@@ -447,10 +447,10 @@ def create_app(repository=None, config=None, ai_factory=bounded_ai, chatwork_fac
         data=body();month,year=data.get('month'),data.get('year')
         start,end=period(month,year)
         if data.get('accept_risk') is not True:
-            raise ValueError('Cần chấp nhận bản tạm do chưa xác minh lịch sử đầy đủ.')
+            raise PublicError('Hãy tích “Tôi đồng ý tạo bản tạm” trước khi tạo bảng; lịch sử tin nhắn chưa được xác minh đầy đủ.')
         selected=room();snapshot=repo.messages(selected,start,end)
         if not snapshot:
-            raise ValueError('Chưa có tin nguồn trong kỳ; đồng bộ trước.')
+            raise PublicError('Chưa có tin nguồn trong kỳ đã chọn. Vào Đồng bộ để tải tin nhắn, rồi thử lại.')
         ai,_=settings()
         ai['employee_registry'] = registry.snapshot(data.get('confirm_empty_roster', False))
         fingerprint=hashlib.sha256(json.dumps({'room':selected,'month':month,'year':year,

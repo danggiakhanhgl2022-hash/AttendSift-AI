@@ -17,3 +17,5 @@ body>.header,body>.nav{max-width:1800px}
 #reviewSummary{color:#adc2ce;font-size:12px}
 @media(max-width:1000px){.setup-grid{grid-template-columns:1fr}.filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.workspace{order:0}.intro{order:1}.filters{grid-template-columns:1fr}}
+
+#notice[data-kind="error"]{background:#351c24;border:1px solid #9c4d5b;color:#ffd6dc}
