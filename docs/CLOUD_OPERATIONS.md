@@ -2,6 +2,8 @@
 
 ## Thành phần và cấu hình
 
+`requirements.txt` tại gốc chứa trực tiếp các dependency Cloud để bộ đọc requirements của Vercel xử lý được. `requirements-web.txt` tham chiếu ngược về file gốc cho pip và bộ cài dev. Không chuyển file gốc thành `-r requirements-web.txt`: deployment đã gặp `PYTHON_REQUIREMENTS_PARSE_ERROR` với cấu trúc đó.
+
 Website dùng Flask trên Vercel và PostgreSQL trên Neon. Local Windows dùng SQLite riêng; hai bản không tự trao đổi dữ liệu.
 
 Dùng `.env.example` và phần kiểm tra cấu hình trong `cloud/app.py` làm tham chiếu. Thiết lập DATABASE_URL, session secret, password hash quản trị, allowed hosts và CRON_SECRET qua biến môi trường hosting; không đưa giá trị thật vào repository. Retention dùng bảng đã có, không cần migration riêng. Cài mới database vẫn cần chạy `python -m cloud.migrate` trong môi trường đã cấu hình.
